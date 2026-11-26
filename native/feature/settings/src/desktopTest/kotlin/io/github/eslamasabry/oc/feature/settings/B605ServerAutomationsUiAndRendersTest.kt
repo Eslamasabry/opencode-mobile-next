@@ -34,6 +34,7 @@ import java.util.Locale
 import javax.imageio.ImageIO
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @OptIn(ExperimentalTestApi::class)
@@ -57,11 +58,15 @@ class B605ServerAutomationsUiAndRendersTest {
             }
         } as ServerSettingsActions
 
-    // Fixed timestamps: 2026-11-26T08:00:00Z
-    private val nowMs = 1_795_680_000_000L
-    private val inOneHour = nowMs + 3_600_000L
-    private val oneHourAgo = nowMs - 3_600_000L
-    private val yesterday = nowMs - 86_400_000L
+    // Fixed timezone: Europe/Berlin (UTC+1 on 2026-11-26).
+    // nowMs = 2026-11-26T08:00:00+01:00 = 2026-11-26T07:00:00Z.
+    private val zoneId = "Europe/Berlin"
+    private val nowMs = 1_795_676_400_000L
+    private val today0900 = nowMs + 3_600_000L // 2026-11-26 09:00 Berlin
+    private val today0700 = nowMs - 3_600_000L // 2026-11-26 07:00 Berlin
+    private val today0300 = nowMs - 18_000_000L // 2026-11-26 03:00 Berlin
+    private val tomorrow0300 = nowMs + 68_400_000L // 2026-11-27 03:00 Berlin
+    private val yesterday1600 = nowMs - 57_600_000L // 2026-11-25 16:00 Berlin
 
     private val sampleAutomations =
         persistentListOf(
@@ -71,20 +76,22 @@ class B605ServerAutomationsUiAndRendersTest {
                 status = AutomationStatus.Active,
                 trigger = AutomationTrigger.Every("1h"),
                 action = AutomationAction.Prompt("Check CI and summarize any failures"),
-                nextDueAtMs = inOneHour,
+                timeZone = zoneId,
+                nextDueAtMs = today0900,
                 runCount = 4,
-                lastRunAtMs = oneHourAgo,
+                lastRunAtMs = today0700,
                 lastOutcome = AutomationOutcome.Fired,
             ),
             ServerAutomation(
                 id = "aut_2",
                 name = "Nightly cleanup",
                 status = AutomationStatus.Active,
-                trigger = AutomationTrigger.Cron("0 3 * * *"),
+                trigger = AutomationTrigger.Cron("0 3 * * *", timeZone = zoneId),
                 action = AutomationAction.Shell("git gc --prune=now"),
-                nextDueAtMs = inOneHour + 7_200_000L,
+                timeZone = zoneId,
+                nextDueAtMs = tomorrow0300,
                 runCount = 12,
-                lastRunAtMs = yesterday,
+                lastRunAtMs = today0300,
                 lastOutcome = AutomationOutcome.Failed,
                 lastOutput = Redactor().details("exit code 1: lock file exists"),
             ),
@@ -92,18 +99,18 @@ class B605ServerAutomationsUiAndRendersTest {
                 id = "aut_3",
                 name = "Release summary",
                 status = AutomationStatus.Paused,
-                trigger = AutomationTrigger.Event("github", "release.published"),
-                action = AutomationAction.Prompt("Write release notes", agent = "writer"),
+                trigger = AutomationTrigger.Event(server = "github", event = "release.published"),
+                action = AutomationAction.Prompt("Write release notes", subagent = "writer"),
+                timeZone = zoneId,
                 runCount = 2,
-                lastRunAtMs = yesterday,
+                lastRunAtMs = yesterday1600,
                 lastOutcome = AutomationOutcome.Skipped,
             ),
         )
 
     private fun laptopUi(
         supportsAutomations: Boolean = true,
-        automations: kotlinx.collections.immutable.ImmutableList<ServerAutomation> =
-            sampleAutomations,
+        automations: ImmutableList<ServerAutomation> = sampleAutomations,
     ) =
         ServerSettingsUi(
             page = ServerSettingsPage.Home,
@@ -136,10 +143,11 @@ class B605ServerAutomationsUiAndRendersTest {
                 ),
             automations = automations,
             nowMs = nowMs,
+            timeZoneId = zoneId,
         )
 
     @Test
-    fun `B-AUTO-014 server page lists Scheduled prompts and Automations with stop all and captures after pictures`() {
+    fun `B-AUTO-014 server page lists Automations with coherent times and pause all and captures after pictures`() {
         Locale.setDefault(Locale.ENGLISH)
         val variants =
             listOf(
@@ -158,13 +166,16 @@ class B605ServerAutomationsUiAndRendersTest {
                     }
                 }
                 waitForIdle()
-                onNodeWithText("Scheduled prompts").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Scheduled prompts").assertDoesNotExist()
                 onNodeWithText("Automations").performScrollTo().assertIsDisplayed()
                 onNodeWithText("CI check").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Next: Today 09:00 · Ran Today 07:00").assertIsDisplayed()
                 onNodeWithText("Nightly cleanup").performScrollTo().assertIsDisplayed()
+                onNodeWithText("Next: Tomorrow 03:00 · Last run failed Today 03:00")
+                    .assertIsDisplayed()
                 onNodeWithText("Release summary").performScrollTo().assertIsDisplayed()
                 onNodeWithTag("server-automations-stop-all").performScrollTo().assertIsDisplayed()
-                onNodeWithText("Stop all automations on Laptop").assertIsDisplayed()
+                onNodeWithText("Pause all automations on Laptop").assertIsDisplayed()
                 ImageIO.write(
                     onRoot().captureToImage().toAwtImage(),
                     "png",
@@ -207,7 +218,7 @@ class B605ServerAutomationsUiAndRendersTest {
     }
 
     @Test
-    fun `B-AUTO-016 detail sheet shows controls and captures after pictures`() {
+    fun `B-AUTO-016 detail sheet shows named actions, human schedule with tz, and captures after pictures`() {
         Locale.setDefault(Locale.ENGLISH)
         val sheetVariants =
             listOf(
@@ -229,8 +240,13 @@ class B605ServerAutomationsUiAndRendersTest {
                     }
                 }
                 waitForIdle()
-                onNodeWithText("Pause").assertIsDisplayed()
+                onNodeWithText("Pause").assertDoesNotExist()
+                onNodeWithText("Pause Nightly cleanup on Laptop").assertIsDisplayed()
                 onNodeWithText("Delete Nightly cleanup from Laptop").assertIsDisplayed()
+                onNodeWithText("Every day at 03:00 (Europe/Berlin) · Next: Tomorrow 03:00")
+                    .assertIsDisplayed()
+                onNodeWithText("Cron schedule: 0 3 * * *").assertDoesNotExist()
+                onNodeWithText("Schedule expression").assertIsDisplayed()
                 ImageIO.write(
                     onRoot().captureToImage().toAwtImage(),
                     "png",
@@ -241,7 +257,110 @@ class B605ServerAutomationsUiAndRendersTest {
     }
 
     @Test
-    fun `B-AUTO-016 delete confirm, stop all confirm and stopped count notice`() {
+    fun `B-AUTO-016 paused sheet and in-sheet failure`() {
+        Locale.setDefault(Locale.ENGLISH)
+        // Paused event + subagent automation sheet
+        runDesktopComposeUiTest(360, 800) {
+            setContent {
+                SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi().copy(selectedAutomationId = "aut_3"),
+                            actions,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            onNodeWithText("Resume").assertDoesNotExist()
+            onNodeWithText("Resume Release summary on Laptop").assertIsDisplayed()
+            onNodeWithText("When github sends release.published").assertIsDisplayed()
+            onNodeWithText("Prompt (writer)").assertIsDisplayed()
+        }
+        // B5: Failure while sheet is open is rendered inside the open sheet
+        runDesktopComposeUiTest(360, 800) {
+            setContent {
+                SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi().copy(
+                                selectedAutomationId = "aut_2",
+                                automationSheetFailed = true,
+                            ),
+                            actions,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            onNodeWithTag("server-automation-sheet-error").assertIsDisplayed()
+            onNodeWithText("Could not update automations on Laptop. Try again.").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `B-AUTO-016 relative at, unknown status, and Arabic localized duration`() {
+        Locale.setDefault(Locale.ENGLISH)
+        // m3 relative `at` + m5 Unknown status never labeled Active
+        val edgeCases =
+            persistentListOf(
+                ServerAutomation(
+                    id = "aut_rel",
+                    name = "Deploy check",
+                    status = AutomationStatus.Unknown,
+                    trigger = AutomationTrigger.At(atMs = null, raw = "in 10 minutes"),
+                    action = AutomationAction.Prompt("Check deploy"),
+                    timeZone = zoneId,
+                )
+            )
+        runDesktopComposeUiTest(360, 800) {
+            setContent {
+                SettingsThemed(dark = false, locale = "en", fontScale = 1.0f, width = 360f) {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi(automations = edgeCases).copy(selectedAutomationId = "aut_rel"),
+                            actions,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            onNodeWithText("Status unknown").assertIsDisplayed()
+            onNodeWithText("Active").assertDoesNotExist()
+            onNodeWithText("Once, in 10 minutes").assertIsDisplayed()
+        }
+        // B3: Arabic UI localizes duration units instead of echoing raw English "Every 5 minutes"
+        val fiveMin =
+            persistentListOf(
+                ServerAutomation(
+                    id = "aut_5m",
+                    name = "CI check",
+                    status = AutomationStatus.Active,
+                    trigger = AutomationTrigger.Every("5 minutes"),
+                    action = AutomationAction.Prompt("Check CI"),
+                    timeZone = zoneId,
+                )
+            )
+        Locale.setDefault(Locale.forLanguageTag("ar"))
+        runDesktopComposeUiTest(360, 800) {
+            setContent {
+                SettingsThemed(dark = false, locale = "ar", fontScale = 1.0f, width = 360f) {
+                    KitSheetHost(Modifier.fillMaxSize()) {
+                        ServerSettingsScreen(
+                            laptopUi(automations = fiveMin).copy(selectedAutomationId = "aut_5m"),
+                            actions,
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            onNodeWithText("Every 5 minutes").assertDoesNotExist()
+            onNodeWithText("كل 5 دقائق").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `B-AUTO-016 delete confirm, pause all confirm and paused count notice`() {
         Locale.setDefault(Locale.ENGLISH)
         runDesktopComposeUiTest(360, 800) {
             setContent {
@@ -270,7 +389,7 @@ class B605ServerAutomationsUiAndRendersTest {
                 }
             }
             waitForIdle()
-            onNodeWithText("Stop all automations on Laptop?").assertIsDisplayed()
+            onNodeWithText("Pause all automations on Laptop?").assertIsDisplayed()
             onNodeWithText("This pauses 2 active automations on Laptop. You can resume them later.")
                 .assertIsDisplayed()
         }
@@ -286,7 +405,7 @@ class B605ServerAutomationsUiAndRendersTest {
                 }
             }
             waitForIdle()
-            onNodeWithText("Stopped 2 automations on Laptop.").performScrollTo().assertIsDisplayed()
+            onNodeWithText("Paused 2 automations on Laptop.").performScrollTo().assertIsDisplayed()
         }
     }
 }

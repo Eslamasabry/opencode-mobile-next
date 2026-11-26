@@ -10,7 +10,6 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import io.github.eslamasabry.oc.core.common.Failure
-import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
@@ -23,7 +22,6 @@ import io.github.eslamasabry.oc.core.model.realShells
 import io.github.eslamasabry.oc.core.model.sameShellPath
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.ComputerRoute
-import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.oc.ui.routes.ServerIntegrationPage
 import io.github.eslamasabry.oc.ui.routes.ServerIntegrationRoute
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
@@ -184,10 +182,12 @@ public data class ServerSettingsUi(
     val automationsLoadFailed: Boolean = false,
     val automationsHidden: Boolean = false,
     val selectedAutomationId: String? = null,
+    val automationSheetFailed: Boolean = false,
     val deleteAutomationConfirmId: String? = null,
     val stopAllAutomationsConfirm: Boolean = false,
     val automationsNotice: AutomationsNotice? = null,
     val nowMs: Long = 0L,
+    val timeZoneId: String? = null,
 ) {
     /** What the Home page's top bar names (the screen turns it into words). */
     public val homeTitle: ServerSettingsTitle
@@ -271,8 +271,6 @@ public interface ServerSettingsActions {
 
     public fun integration(page: ServerIntegrationPage)
 
-    public fun openSchedules()
-
     public fun refreshAutomations()
 
     public fun openAutomation(id: String)
@@ -307,6 +305,7 @@ public class ServerSettingsViewModel(
 ) : ViewModel(), ServerSettingsActions {
     private val mutable = MutableStateFlow(ServerSettingsUi(page = route.page))
     public val state: StateFlow<ServerSettingsUi> = mutable.asStateFlow()
+    private var automationsMutationVersion: Long = 0L
 
     init {
         viewModelScope.launch {
@@ -341,6 +340,8 @@ public class ServerSettingsViewModel(
                             if (resetAutomations) false else current.automationsHidden,
                         selectedAutomationId =
                             if (resetAutomations) null else current.selectedAutomationId,
+                        automationSheetFailed =
+                            if (resetAutomations) false else current.automationSheetFailed,
                         deleteAutomationConfirmId =
                             if (resetAutomations) null else current.deleteAutomationConfirmId,
                         stopAllAutomationsConfirm =
@@ -585,10 +586,12 @@ public class ServerSettingsViewModel(
     override fun integration(page: ServerIntegrationPage): Unit =
         nav.open(ServerIntegrationRoute(route.profile, page))
 
-    override fun openSchedules(): Unit = nav.open(SchedulesRoute.List(route.profile))
-
     override fun refreshAutomations() {
-        if (!mutable.value.showAutomations || mutable.value.automationsLoading) return
+        val snapshot = mutable.value
+        if (!snapshot.showAutomations || snapshot.automationsLoading || snapshot.automationsWorking) {
+            return
+        }
+        val versionAtStart = automationsMutationVersion
         mutable.update {
             it.copy(
                 automationsLoading = true,
@@ -598,44 +601,46 @@ public class ServerSettingsViewModel(
         }
         viewModelScope.launch {
             when (val result = automationsSource.automations(route.profile)) {
-                is Outcome.Ok -> {
-                    val sorted = sortAutomations(result.value)
-                    mutable.update { current ->
-                        current.copy(
-                            automationsLoading = false,
-                            automations = sorted,
-                            automationsLoadFailed = false,
-                            selectedAutomationId =
-                                current.selectedAutomationId?.takeIf { id ->
-                                    sorted.any { it.id == id }
-                                },
-                            deleteAutomationConfirmId =
-                                current.deleteAutomationConfirmId?.takeIf { id ->
-                                    sorted.any { it.id == id }
-                                },
-                            nowMs = clock.now().toEpochMilliseconds(),
-                        )
-                    }
-                }
-                is Outcome.Failed ->
-                    if (result.failure is Failure.Unavailable) {
-                        mutable.update {
-                            it.copy(
-                                automationsLoading = false,
-                                automations = persistentListOf(),
-                                automationsLoadFailed = false,
-                                automationsHidden = true,
-                                selectedAutomationId = null,
-                                deleteAutomationConfirmId = null,
-                                stopAllAutomationsConfirm = false,
-                            )
-                        }
-                    } else {
-                        mutable.update {
-                            it.copy(automationsLoading = false, automationsLoadFailed = true)
-                        }
-                    }
+                is Outcome.Ok -> applyAutomationsRefresh(result.value, versionAtStart)
+                is Outcome.Failed -> applyAutomationsRefreshFailure(result.failure, versionAtStart)
             }
+        }
+    }
+
+    private fun applyAutomationsRefresh(
+        items: ImmutableList<ServerAutomation>,
+        versionAtStart: Long,
+    ) {
+        if (automationsMutationVersion != versionAtStart || mutable.value.automationsWorking) {
+            mutable.update { it.copy(automationsLoading = false) }
+            return
+        }
+        val sorted = sortAutomations(items)
+        mutable.update { current ->
+            val keptSelection = current.selectedAutomationId?.takeIf { id -> sorted.any { it.id == id } }
+            current.copy(
+                automationsLoading = false,
+                automations = sorted,
+                automationsLoadFailed = false,
+                selectedAutomationId = keptSelection,
+                automationSheetFailed =
+                    if (keptSelection == null) false else current.automationSheetFailed,
+                deleteAutomationConfirmId =
+                    current.deleteAutomationConfirmId?.takeIf { id -> sorted.any { it.id == id } },
+                nowMs = clock.now().toEpochMilliseconds(),
+            )
+        }
+    }
+
+    private fun applyAutomationsRefreshFailure(failure: Failure, versionAtStart: Long) {
+        when {
+            failure is Failure.Unavailable -> hideAutomationsSection()
+            automationsMutationVersion != versionAtStart ->
+                mutable.update { it.copy(automationsLoading = false) }
+            else ->
+                mutable.update {
+                    it.copy(automationsLoading = false, automationsLoadFailed = true)
+                }
         }
     }
 
@@ -644,6 +649,7 @@ public class ServerSettingsViewModel(
             mutable.update {
                 it.copy(
                     selectedAutomationId = id,
+                    automationSheetFailed = false,
                     nowMs = clock.now().toEpochMilliseconds(),
                 )
             }
@@ -651,7 +657,7 @@ public class ServerSettingsViewModel(
     }
 
     override fun closeAutomation() {
-        mutable.update { it.copy(selectedAutomationId = null) }
+        mutable.update { it.copy(selectedAutomationId = null, automationSheetFailed = false) }
     }
 
     override fun pauseAutomation(id: String) {
@@ -664,7 +670,14 @@ public class ServerSettingsViewModel(
 
     private fun mutateAutomation(id: String, call: suspend () -> Outcome<ServerAutomation>) {
         if (mutable.value.automationsWorking) return
-        mutable.update { it.copy(automationsWorking = true, automationsNotice = null) }
+        automationsMutationVersion++
+        mutable.update {
+            it.copy(
+                automationsWorking = true,
+                automationsNotice = null,
+                automationSheetFailed = false,
+            )
+        }
         viewModelScope.launch {
             when (val result = call()) {
                 is Outcome.Ok -> {
@@ -677,12 +690,12 @@ public class ServerSettingsViewModel(
                         current.copy(
                             automationsWorking = false,
                             automations = replaced,
+                            automationSheetFailed = false,
                             nowMs = clock.now().toEpochMilliseconds(),
                         )
                     }
                 }
-                is Outcome.Failed ->
-                    handleAutomationMutationFailure(result.failure)
+                is Outcome.Failed -> handleAutomationMutationFailure(result.failure, targetId = id)
             }
         }
     }
@@ -703,11 +716,13 @@ public class ServerSettingsViewModel(
     override fun confirmDeleteAutomation() {
         val targetId = mutable.value.deleteAutomationConfirmId ?: return
         if (mutable.value.automationsWorking) return
+        automationsMutationVersion++
         mutable.update {
             it.copy(
                 deleteAutomationConfirmId = null,
                 automationsWorking = true,
                 automationsNotice = null,
+                automationSheetFailed = false,
             )
         }
         viewModelScope.launch {
@@ -722,10 +737,12 @@ public class ServerSettingsViewModel(
                                     .toImmutableList(),
                             selectedAutomationId =
                                 current.selectedAutomationId?.takeUnless { it == targetId },
+                            automationSheetFailed = false,
                             nowMs = clock.now().toEpochMilliseconds(),
                         )
                     }
-                is Outcome.Failed -> handleAutomationMutationFailure(result.failure)
+                is Outcome.Failed ->
+                    handleAutomationMutationFailure(result.failure, targetId = targetId)
             }
         }
     }
@@ -744,11 +761,13 @@ public class ServerSettingsViewModel(
     override fun confirmStopAllAutomations() {
         if (!mutable.value.stopAllAutomationsConfirm || mutable.value.automationsWorking) return
         val active = mutable.value.automations.filter { it.status == AutomationStatus.Active }
+        if (active.isNotEmpty()) automationsMutationVersion++
         mutable.update {
             it.copy(
                 stopAllAutomationsConfirm = false,
                 automationsWorking = active.isNotEmpty(),
                 automationsNotice = null,
+                automationSheetFailed = false,
             )
         }
         if (active.isNotEmpty()) {
@@ -758,58 +777,99 @@ public class ServerSettingsViewModel(
 
     private suspend fun runStopAll(active: List<ServerAutomation>) {
         val updatedById = mutableMapOf<String, ServerAutomation>()
+        val missingIds = mutableSetOf<String>()
         var unavailable = false
         for (item in active) {
             when (val result = automationsSource.pauseAutomation(route.profile, item.id)) {
                 is Outcome.Ok -> updatedById[item.id] = result.value
                 is Outcome.Failed ->
-                    if (result.failure is Failure.Unavailable) {
-                        unavailable = true
-                        break
+                    when (result.failure) {
+                        is Failure.Unavailable -> {
+                            unavailable = true
+                            break
+                        }
+                        is Failure.NotFound -> missingIds += item.id
+                        else -> Unit
                     }
             }
         }
         if (unavailable) {
-            handleAutomationMutationFailure(Failure.Unavailable(FeatureId("serverAutomations")))
-        } else {
-            val stopped = updatedById.size
-            val notice =
-                when {
-                    stopped == active.size -> AutomationsNotice.StoppedAll(stopped)
-                    stopped > 0 -> AutomationsNotice.StoppedPartial(stopped, active.size)
-                    else -> AutomationsNotice.ActionFailed
-                }
-            mutable.update { current ->
-                val merged = sortAutomations(current.automations.map { updatedById[it.id] ?: it })
-                current.copy(
-                    automationsWorking = false,
-                    automations = merged,
-                    automationsNotice = notice,
-                    nowMs = clock.now().toEpochMilliseconds(),
-                )
+            hideAutomationsSection()
+            return
+        }
+        val expected = active.size - missingIds.size
+        val stopped = updatedById.size
+        val notice =
+            when {
+                expected == 0 -> null
+                stopped == expected -> AutomationsNotice.StoppedAll(stopped)
+                stopped > 0 -> AutomationsNotice.StoppedPartial(stopped, expected)
+                else -> AutomationsNotice.ActionFailed
             }
+        mutable.update { current ->
+            val merged =
+                sortAutomations(
+                    current.automations
+                        .filterNot { it.id in missingIds }
+                        .map { updatedById[it.id] ?: it }
+                )
+            current.copy(
+                automationsWorking = false,
+                automations = merged,
+                automationsNotice = notice,
+                nowMs = clock.now().toEpochMilliseconds(),
+            )
+        }
+        if (missingIds.isNotEmpty()) refreshAutomations()
+    }
+
+    private fun handleAutomationMutationFailure(failure: Failure, targetId: String) {
+        when (failure) {
+            is Failure.Unavailable -> hideAutomationsSection()
+            is Failure.NotFound -> {
+                mutable.update { current ->
+                    val closingSheet = current.selectedAutomationId == targetId
+                    current.copy(
+                        automationsWorking = false,
+                        automations =
+                            current.automations.filterNot { it.id == targetId }.toImmutableList(),
+                        selectedAutomationId =
+                            if (closingSheet) null else current.selectedAutomationId,
+                        automationSheetFailed =
+                            if (closingSheet) false else current.automationSheetFailed,
+                        deleteAutomationConfirmId =
+                            current.deleteAutomationConfirmId?.takeUnless { it == targetId },
+                        nowMs = clock.now().toEpochMilliseconds(),
+                    )
+                }
+                refreshAutomations()
+            }
+            else ->
+                mutable.update { current ->
+                    val sheetOpen = current.selectedAutomationId != null
+                    current.copy(
+                        automationsWorking = false,
+                        automationSheetFailed = sheetOpen,
+                        automationsNotice =
+                            if (sheetOpen) null else AutomationsNotice.ActionFailed,
+                    )
+                }
         }
     }
 
-    private fun handleAutomationMutationFailure(failure: Failure) {
-        if (failure is Failure.Unavailable) {
-            mutable.update {
-                it.copy(
-                    automationsWorking = false,
-                    automations = persistentListOf(),
-                    automationsHidden = true,
-                    selectedAutomationId = null,
-                    deleteAutomationConfirmId = null,
-                    stopAllAutomationsConfirm = false,
-                )
-            }
-        } else {
-            mutable.update {
-                it.copy(
-                    automationsWorking = false,
-                    automationsNotice = AutomationsNotice.ActionFailed,
-                )
-            }
+    private fun hideAutomationsSection() {
+        mutable.update {
+            it.copy(
+                automationsLoading = false,
+                automationsWorking = false,
+                automations = persistentListOf(),
+                automationsLoadFailed = false,
+                automationsHidden = true,
+                selectedAutomationId = null,
+                automationSheetFailed = false,
+                deleteAutomationConfirmId = null,
+                stopAllAutomationsConfirm = false,
+            )
         }
     }
 

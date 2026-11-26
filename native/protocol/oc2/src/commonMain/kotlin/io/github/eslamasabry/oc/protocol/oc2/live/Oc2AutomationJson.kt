@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.protocol.oc2.wire.str
 import kotlin.time.Instant
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -24,23 +25,26 @@ private const val MILLIS_PER_SECOND = 1_000L
 internal fun parseAutomation(obj: JsonObject, redactor: Redactor): ServerAutomation? {
     val id = obj.str("id")?.takeIf { it.isNotBlank() } ?: return null
     val name = obj.str("name")?.trim()?.takeIf { it.isNotEmpty() } ?: id
-    val lastOutput = obj.str("lastOutput")?.takeIf { it.isNotBlank() }?.let(redactor::details)
-    val pauseReason =
-        (obj.str("pauseReason") ?: obj.str("reason"))
+    val infoTz = obj.str("tz")?.trim()?.takeIf { it.isNotEmpty() }
+    val triggerObj = obj.obj("trigger")
+    val triggerTz = triggerObj?.str("tz")?.trim()?.takeIf { it.isNotEmpty() }
+    val effectiveTz = triggerTz ?: infoTz
+    val lastOutput =
+        (obj.str("lastOutput") ?: obj.str("last_output"))
             ?.takeIf { it.isNotBlank() }
             ?.let(redactor::details)
     return ServerAutomation(
         id = id,
         name = name,
         status = parseStatus(obj.str("status")),
-        trigger = parseTrigger(obj.obj("trigger")),
+        trigger = parseTrigger(triggerObj, effectiveTz, redactor),
         action = parseAction(obj.obj("action")),
+        timeZone = effectiveTz,
         nextDueAtMs = parseTimestampMs(obj["nextDueAt"]),
         runCount = (obj["runCount"] as? JsonPrimitive)?.intOrNull ?: 0,
         lastRunAtMs = parseTimestampMs(obj["lastRunAt"]),
         lastOutcome = obj.str("lastOutcome")?.let(::parseOutcome),
         lastOutput = lastOutput,
-        pauseReason = pauseReason,
         expiresAtMs = parseTimestampMs(obj["expiresAt"] ?: obj["expires"]),
         sessionId = obj.str("sessionID") ?: obj.str("sessionId"),
         directory = obj.str("directory"),
@@ -94,16 +98,49 @@ private fun parseOutcome(raw: String): AutomationOutcome =
         else -> AutomationOutcome.Unknown
     }
 
-private fun parseTrigger(obj: JsonObject?): AutomationTrigger {
+private fun parseTrigger(
+    obj: JsonObject?,
+    effectiveTz: String?,
+    redactor: Redactor,
+): AutomationTrigger {
     if (obj == null) return AutomationTrigger.Unknown
     return when (obj.str("type")?.lowercase()) {
-        "at" -> AutomationTrigger.At(parseTimestampMs(obj["at"] ?: obj["time"]))
+        "at" -> {
+            val rawEl = obj["at"] ?: obj["time"]
+            val rawText =
+                (rawEl as? JsonPrimitive)
+                    ?.takeIf { it.isString }
+                    ?.content
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+            AutomationTrigger.At(
+                atMs = parseTimestampMs(rawEl),
+                raw = rawText,
+                timeZone = effectiveTz,
+            )
+        }
         "every" ->
             AutomationTrigger.Every(
                 obj.str("every") ?: obj.str("interval") ?: obj.str("duration") ?: ""
             )
-        "cron" -> AutomationTrigger.Cron(obj.str("cron") ?: obj.str("expression") ?: "")
-        "event" -> AutomationTrigger.Event(obj.str("source"), obj.str("kind") ?: obj.str("event"))
+        "cron" ->
+            AutomationTrigger.Cron(
+                expression = obj.str("cron") ?: obj.str("expression") ?: "",
+                timeZone = effectiveTz,
+            )
+        "event" -> {
+            val rawArgs =
+                obj["args"]
+                    ?.takeUnless { it is JsonNull || (it is JsonObject && it.isEmpty()) }
+                    ?.toString()
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let(redactor::details)
+            AutomationTrigger.Event(
+                server = obj.str("server")?.trim()?.takeIf { it.isNotEmpty() },
+                event = obj.str("event")?.trim()?.takeIf { it.isNotEmpty() },
+                args = rawArgs,
+            )
+        }
         else -> AutomationTrigger.Unknown
     }
 }
@@ -111,11 +148,14 @@ private fun parseTrigger(obj: JsonObject?): AutomationTrigger {
 private fun parseAction(obj: JsonObject?): AutomationAction {
     if (obj == null) return AutomationAction.Unknown
     return when (obj.str("type")?.lowercase()) {
-        "prompt" ->
+        "prompt" -> {
+            val to = obj.obj("to")
             AutomationAction.Prompt(
                 text = obj.str("prompt") ?: obj.str("text") ?: "",
-                agent = obj.str("agent")?.takeIf { it.isNotBlank() },
+                subagent = to?.str("subagent")?.trim()?.takeIf { it.isNotEmpty() },
+                targetSessionId = to?.str("session")?.trim()?.takeIf { it.isNotEmpty() },
             )
+        }
         "shell" -> AutomationAction.Shell(command = obj.str("command") ?: obj.str("shell") ?: "")
         "code" -> AutomationAction.Code(source = obj.str("code") ?: obj.str("source") ?: "")
         else -> AutomationAction.Unknown

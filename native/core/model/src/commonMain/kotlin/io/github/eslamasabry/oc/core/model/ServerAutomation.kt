@@ -23,20 +23,35 @@ public enum class AutomationOutcome {
 
 /** When a server automation runs. */
 public sealed interface AutomationTrigger {
-    public data class At(val atMs: Long?) : AutomationTrigger
+    public data class At(
+        val atMs: Long? = null,
+        val raw: String? = null,
+        val timeZone: String? = null,
+    ) : AutomationTrigger
 
     public data class Every(val duration: String) : AutomationTrigger
 
-    public data class Cron(val expression: String) : AutomationTrigger
+    public data class Cron(
+        val expression: String,
+        val timeZone: String? = null,
+    ) : AutomationTrigger
 
-    public data class Event(val source: String?, val kind: String?) : AutomationTrigger
+    public data class Event(
+        val server: String?,
+        val event: String?,
+        val args: Redacted? = null,
+    ) : AutomationTrigger
 
     public data object Unknown : AutomationTrigger
 }
 
 /** What a server automation runs when triggered. */
 public sealed interface AutomationAction {
-    public data class Prompt(val text: String, val agent: String? = null) : AutomationAction
+    public data class Prompt(
+        val text: String,
+        val subagent: String? = null,
+        val targetSessionId: String? = null,
+    ) : AutomationAction
 
     public data class Shell(val command: String) : AutomationAction
 
@@ -47,8 +62,8 @@ public sealed interface AutomationAction {
 
 /**
  * One automation owned by an OpenCode 2.4+ server (`/api/experimental/automation`, B-605).
- * Server-supplied output and pause reasons are redacted before entering the model and shown only in
- * secondary disclosure surfaces.
+ * Server-supplied output and event arguments are redacted before entering the model and shown only
+ * in secondary disclosure surfaces.
  */
 public data class ServerAutomation(
     val id: String,
@@ -56,12 +71,12 @@ public data class ServerAutomation(
     val status: AutomationStatus,
     val trigger: AutomationTrigger,
     val action: AutomationAction,
+    val timeZone: String? = null,
     val nextDueAtMs: Long? = null,
     val runCount: Int = 0,
     val lastRunAtMs: Long? = null,
     val lastOutcome: AutomationOutcome? = null,
     val lastOutput: Redacted? = null,
-    val pauseReason: Redacted? = null,
     val expiresAtMs: Long? = null,
     val sessionId: String? = null,
     val directory: String? = null,

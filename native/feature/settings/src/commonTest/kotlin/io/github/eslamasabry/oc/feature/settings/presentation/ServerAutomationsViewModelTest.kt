@@ -16,7 +16,6 @@ import io.github.eslamasabry.oc.core.model.ServerAutomation
 import io.github.eslamasabry.oc.core.model.TerminalShellSettings
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
 import io.github.eslamasabry.oc.ui.routes.AppRoute
-import io.github.eslamasabry.oc.ui.routes.SchedulesRoute
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsPage
 import io.github.eslamasabry.oc.ui.routes.ServerSettingsRoute
 import kotlin.test.AfterTest
@@ -31,6 +30,7 @@ import kotlin.time.Instant
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +45,7 @@ import kotlinx.coroutines.test.setMain
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerAutomationsViewModelTest {
     private val pid = ProfileId("srv_1")
-    private val nowMs = 1_795_680_000_000L
+    private val nowMs = 1_795_676_400_000L
 
     private val fixedClock =
         object : Clock {
@@ -107,9 +107,14 @@ class ServerAutomationsViewModelTest {
         initialFacts: ServerSettingsFacts,
         var listResult: Outcome<ImmutableList<ServerAutomation>> = Outcome.Ok(persistentListOf()),
         val failPauseIds: MutableSet<String> = mutableSetOf(),
+        val notFoundPauseIds: MutableSet<String> = mutableSetOf(),
+        val failDeleteIds: MutableSet<String> = mutableSetOf(),
+        val notFoundDeleteIds: MutableSet<String> = mutableSetOf(),
     ) : ServerSettingsSource, ServerAutomationsSource {
         val factsFlow = MutableStateFlow<ServerSettingsFacts?>(initialFacts)
         var listCalls = 0
+        var nextListDeferred: CompletableDeferred<Outcome<ImmutableList<ServerAutomation>>>? = null
+        var nextPauseDeferred: CompletableDeferred<Outcome<ServerAutomation>>? = null
         val pausedIds = mutableListOf<String>()
         val resumedIds = mutableListOf<String>()
         val deletedIds = mutableListOf<String>()
@@ -142,6 +147,11 @@ class ServerAutomationsViewModelTest {
             profile: ProfileId
         ): Outcome<ImmutableList<ServerAutomation>> {
             listCalls++
+            val deferred = nextListDeferred
+            if (deferred != null) {
+                nextListDeferred = null
+                return deferred.await()
+            }
             return listResult
         }
 
@@ -150,9 +160,16 @@ class ServerAutomationsViewModelTest {
             id: String,
         ): Outcome<ServerAutomation> {
             pausedIds += id
+            val deferred = nextPauseDeferred
+            if (deferred != null) {
+                nextPauseDeferred = null
+                return deferred.await()
+            }
+            if (id in notFoundPauseIds) return Outcome.Failed(Failure.NotFound())
             if (id in failPauseIds) return Outcome.Failed(Failure.Network())
-            val found = (listResult as? Outcome.Ok)?.value?.first { it.id == id }
-                ?: error("Missing $id")
+            val found =
+                (listResult as? Outcome.Ok)?.value?.first { it.id == id }
+                    ?: error("Missing $id")
             return Outcome.Ok(found.copy(status = AutomationStatus.Paused, nextDueAtMs = null))
         }
 
@@ -161,13 +178,16 @@ class ServerAutomationsViewModelTest {
             id: String,
         ): Outcome<ServerAutomation> {
             resumedIds += id
-            val found = (listResult as? Outcome.Ok)?.value?.first { it.id == id }
-                ?: error("Missing $id")
+            val found =
+                (listResult as? Outcome.Ok)?.value?.first { it.id == id }
+                    ?: error("Missing $id")
             return Outcome.Ok(found.copy(status = AutomationStatus.Active))
         }
 
         override suspend fun deleteAutomation(profile: ProfileId, id: String): Outcome<Unit> {
             deletedIds += id
+            if (id in notFoundDeleteIds) return Outcome.Failed(Failure.NotFound())
+            if (id in failDeleteIds) return Outcome.Failed(Failure.Network())
             return Outcome.Ok(Unit)
         }
     }
@@ -193,15 +213,17 @@ class ServerAutomationsViewModelTest {
                     id = "aut_paused",
                     name = "Release summary",
                     status = AutomationStatus.Paused,
-                    trigger = AutomationTrigger.Event("github", "release"),
-                    action = AutomationAction.Prompt("Write notes"),
+                    trigger = AutomationTrigger.Event(server = "github", event = "release"),
+                    action = AutomationAction.Prompt("Write notes", subagent = "writer"),
+                    timeZone = "Europe/Berlin",
                 ),
                 ServerAutomation(
                     id = "aut_later",
                     name = "Nightly cleanup",
                     status = AutomationStatus.Active,
-                    trigger = AutomationTrigger.Cron("0 3 * * *"),
+                    trigger = AutomationTrigger.Cron("0 3 * * *", timeZone = "Europe/Berlin"),
                     action = AutomationAction.Shell("git gc"),
+                    timeZone = "Europe/Berlin",
                     nextDueAtMs = nowMs + 7_200_000L,
                     lastRunAtMs = nowMs - 86_400_000L,
                     lastOutcome = AutomationOutcome.Failed,
@@ -212,6 +234,7 @@ class ServerAutomationsViewModelTest {
                     status = AutomationStatus.Active,
                     trigger = AutomationTrigger.Every("1h"),
                     action = AutomationAction.Prompt("Check CI"),
+                    timeZone = "Europe/Berlin",
                     nextDueAtMs = nowMs + 3_600_000L,
                     lastRunAtMs = nowMs - 3_600_000L,
                     lastOutcome = AutomationOutcome.Fired,
@@ -219,39 +242,35 @@ class ServerAutomationsViewModelTest {
             )
             .toImmutableList()
 
+    private fun createVm(source: FakeSource, nav: FakeNav = FakeNav()) =
+        ServerSettingsViewModel(
+            ServerSettingsRoute(pid, ServerSettingsPage.Home),
+            source,
+            source,
+            FakePrefs(),
+            nav,
+            fixedClock,
+        )
+
     @Test
     fun `B-AUTO-009 unsupported server never loads automations and hides section`() = runTest {
         val source = FakeSource(facts(supportsAutomations = false))
-        val vm =
-            ServerSettingsViewModel(
-                ServerSettingsRoute(pid, ServerSettingsPage.Home),
-                source,
-                source,
-                FakePrefs(),
-                FakeNav(),
-                fixedClock,
-            )
+        val vm = createVm(source)
         assertEquals(0, source.listCalls)
         assertFalse(vm.state.value.showAutomations)
         assertTrue(vm.state.value.automations.isEmpty())
     }
 
     @Test
-    fun `B-AUTO-010 loads sorted automations, pauses and resumes, and opens Schedules`() = runTest {
+    fun `B-AUTO-010 loads sorted automations, pauses and resumes`() = runTest {
         val source = FakeSource(facts(supportsAutomations = true), Outcome.Ok(sampleAutomations()))
-        val nav = FakeNav()
-        val vm =
-            ServerSettingsViewModel(
-                ServerSettingsRoute(pid, ServerSettingsPage.Home),
-                source,
-                source,
-                FakePrefs(),
-                nav,
-                fixedClock,
-            )
+        val vm = createVm(source)
 
         assertTrue(vm.state.value.showAutomations)
-        assertEquals(listOf("aut_soon", "aut_later", "aut_paused"), vm.state.value.automations.map { it.id })
+        assertEquals(
+            listOf("aut_soon", "aut_later", "aut_paused"),
+            vm.state.value.automations.map { it.id },
+        )
         assertEquals(2, vm.state.value.activeAutomationsCount)
 
         vm.pauseAutomation("aut_soon")
@@ -267,9 +286,6 @@ class ServerAutomationsViewModelTest {
             AutomationStatus.Active,
             vm.state.value.automations.first { it.id == "aut_paused" }.status,
         )
-
-        vm.openSchedules()
-        assertEquals(listOf<AppRoute>(SchedulesRoute.List(pid)), nav.opened)
     }
 
     @Test
@@ -277,15 +293,7 @@ class ServerAutomationsViewModelTest {
         runTest {
             val source =
                 FakeSource(facts(supportsAutomations = true), Outcome.Ok(sampleAutomations()))
-            val vm =
-                ServerSettingsViewModel(
-                    ServerSettingsRoute(pid, ServerSettingsPage.Home),
-                    source,
-                    source,
-                    FakePrefs(),
-                    FakeNav(),
-                    fixedClock,
-                )
+            val vm = createVm(source)
 
             vm.openAutomation("aut_later")
             assertEquals("aut_later", vm.state.value.selectedAutomation?.id)
@@ -306,19 +314,11 @@ class ServerAutomationsViewModelTest {
         }
 
     @Test
-    fun `B-AUTO-012 stop all confirms first, pauses only active automations, and reports count`() =
+    fun `B-AUTO-012 pause all confirms first, pauses only active automations, and reports count`() =
         runTest {
             val source =
                 FakeSource(facts(supportsAutomations = true), Outcome.Ok(sampleAutomations()))
-            val vm =
-                ServerSettingsViewModel(
-                    ServerSettingsRoute(pid, ServerSettingsPage.Home),
-                    source,
-                    source,
-                    FakePrefs(),
-                    FakeNav(),
-                    fixedClock,
-                )
+            val vm = createVm(source)
 
             vm.askStopAllAutomations()
             assertTrue(vm.state.value.stopAllAutomationsConfirm)
@@ -332,22 +332,14 @@ class ServerAutomationsViewModelTest {
         }
 
     @Test
-    fun `B-AUTO-012 partial stop all reports exact stopped out of total`() = runTest {
+    fun `B-AUTO-012 partial pause all reports exact paused out of total`() = runTest {
         val source =
             FakeSource(
                 facts(supportsAutomations = true),
                 Outcome.Ok(sampleAutomations()),
                 failPauseIds = mutableSetOf("aut_later"),
             )
-        val vm =
-            ServerSettingsViewModel(
-                ServerSettingsRoute(pid, ServerSettingsPage.Home),
-                source,
-                source,
-                FakePrefs(),
-                FakeNav(),
-                fixedClock,
-            )
+        val vm = createVm(source)
 
         vm.askStopAllAutomations()
         vm.confirmStopAllAutomations()
@@ -356,37 +348,121 @@ class ServerAutomationsViewModelTest {
     }
 
     @Test
-    fun `B-AUTO-013 unavailable hides automations cleanly while network error offers retry`() =
+    fun `B-AUTO-013 unavailable from 403 disabled hides automations cleanly while network error offers retry`() =
         runTest {
             val unavailable =
                 FakeSource(
                     facts(supportsAutomations = true),
                     Outcome.Failed(Failure.Unavailable(FeatureId("serverAutomations"))),
                 )
-            val vmHidden =
-                ServerSettingsViewModel(
-                    ServerSettingsRoute(pid, ServerSettingsPage.Home),
-                    unavailable,
-                    unavailable,
-                    FakePrefs(),
-                    FakeNav(),
-                    fixedClock,
-                )
+            val vmHidden = createVm(unavailable)
             assertFalse(vmHidden.state.value.showAutomations)
+            assertTrue(vmHidden.state.value.automationsHidden)
             assertFalse(vmHidden.state.value.automationsLoadFailed)
 
             val failing =
                 FakeSource(facts(supportsAutomations = true), Outcome.Failed(Failure.Network()))
-            val vmFailed =
-                ServerSettingsViewModel(
-                    ServerSettingsRoute(pid, ServerSettingsPage.Home),
-                    failing,
-                    failing,
-                    FakePrefs(),
-                    FakeNav(),
-                    fixedClock,
-                )
+            val vmFailed = createVm(failing)
             assertTrue(vmFailed.state.value.showAutomations)
             assertTrue(vmFailed.state.value.automationsLoadFailed)
+        }
+
+    @Test
+    fun `B-AUTO-021 failed pause or delete while sheet is open surfaces error inside the open sheet`() =
+        runTest {
+            val source =
+                FakeSource(
+                    facts(supportsAutomations = true),
+                    Outcome.Ok(sampleAutomations()),
+                    failPauseIds = mutableSetOf("aut_later"),
+                    failDeleteIds = mutableSetOf("aut_later"),
+                )
+            val vm = createVm(source)
+
+            vm.openAutomation("aut_later")
+            assertFalse(vm.state.value.automationSheetFailed)
+
+            vm.pauseAutomation("aut_later")
+            assertEquals("aut_later", vm.state.value.selectedAutomationId)
+            assertTrue(vm.state.value.automationSheetFailed)
+            assertNull(vm.state.value.automationsNotice)
+
+            vm.askDeleteAutomation("aut_later")
+            vm.confirmDeleteAutomation()
+            assertEquals("aut_later", vm.state.value.selectedAutomationId)
+            assertTrue(vm.state.value.automationSheetFailed)
+
+            vm.closeAutomation()
+            assertNull(vm.state.value.selectedAutomationId)
+            assertFalse(vm.state.value.automationSheetFailed)
+        }
+
+    @Test
+    fun `B-AUTO-022 in-flight refresh does not overwrite a mutation and refresh skips while working`() =
+        runTest {
+            val initial = sampleAutomations()
+            val source = FakeSource(facts(supportsAutomations = true), Outcome.Ok(initial))
+            val vm = createVm(source)
+            assertEquals(1, source.listCalls)
+
+            // Start a slow refresh before pausing aut_soon.
+            val staleRefresh = CompletableDeferred<Outcome<ImmutableList<ServerAutomation>>>()
+            source.nextListDeferred = staleRefresh
+            vm.refreshAutomations()
+            assertEquals(2, source.listCalls)
+            assertTrue(vm.state.value.automationsLoading)
+
+            // Pause completes while stale refresh is still in flight.
+            vm.pauseAutomation("aut_soon")
+            assertEquals(
+                AutomationStatus.Paused,
+                vm.state.value.automations.first { it.id == "aut_soon" }.status,
+            )
+
+            // Stale refresh returns the old Active list; it must NOT revert aut_soon to Active.
+            staleRefresh.complete(Outcome.Ok(initial))
+            assertFalse(vm.state.value.automationsLoading)
+            assertEquals(
+                AutomationStatus.Paused,
+                vm.state.value.automations.first { it.id == "aut_soon" }.status,
+            )
+
+            // Refresh called while a mutation is in flight must be skipped.
+            val slowPause = CompletableDeferred<Outcome<ServerAutomation>>()
+            source.nextPauseDeferred = slowPause
+            vm.pauseAutomation("aut_later")
+            assertTrue(vm.state.value.automationsWorking)
+            val callsBefore = source.listCalls
+            vm.refreshAutomations()
+            assertEquals(callsBefore, source.listCalls)
+            slowPause.complete(
+                Outcome.Ok(
+                    initial.first { it.id == "aut_later" }.copy(status = AutomationStatus.Paused)
+                )
+            )
+            assertFalse(vm.state.value.automationsWorking)
+        }
+
+    @Test
+    fun `B-AUTO-023 404 on pause or delete removes stale row, closes sheet, and refreshes list`() =
+        runTest {
+            val remaining = sampleAutomations().filterNot { it.id == "aut_later" }.toImmutableList()
+            val source =
+                FakeSource(
+                    facts(supportsAutomations = true),
+                    Outcome.Ok(sampleAutomations()),
+                    notFoundPauseIds = mutableSetOf("aut_later"),
+                )
+            val vm = createVm(source)
+            assertEquals(1, source.listCalls)
+
+            vm.openAutomation("aut_later")
+            source.listResult = Outcome.Ok(remaining)
+            vm.pauseAutomation("aut_later")
+
+            assertEquals(2, source.listCalls)
+            assertNull(vm.state.value.selectedAutomationId)
+            assertFalse(vm.state.value.automationSheetFailed)
+            assertFalse(vm.state.value.automations.any { it.id == "aut_later" })
         }
 }

@@ -9,12 +9,16 @@ import io.github.eslamasabry.oc.core.model.AutomationAction
 import io.github.eslamasabry.oc.core.model.AutomationOutcome
 import io.github.eslamasabry.oc.core.model.AutomationStatus
 import io.github.eslamasabry.oc.core.model.AutomationTrigger
+import io.github.eslamasabry.oc.core.model.ServerAutomation
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2CoreProjection
 import io.github.eslamasabry.oc.protocol.oc2.adapter.Oc2EventAdapter
 import io.github.eslamasabry.oc.protocol.oc2.events.Oc2Envelope
 import io.ktor.client.engine.mock.respond
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -73,9 +77,10 @@ class Oc2AutomationsTest {
               "id": "aut_1",
               "name": "CI check",
               "status": "active",
-              "trigger": {"type": "every", "every": "1h"},
-              "action": {"type": "prompt", "prompt": "Check CI"},
-              "nextDueAt": "2026-11-26T09:00:00Z",
+              "tz": "Europe/Berlin",
+              "trigger": {"type": "every", "every": "5 minutes"},
+              "action": {"type": "prompt", "prompt": "Check CI", "to": {"session": "ses_42"}},
+              "nextDueAt": "2026-11-26T08:00:00Z",
               "runCount": 4,
               "lastRunAt": 1795676400000,
               "lastOutcome": "fired",
@@ -85,17 +90,43 @@ class Oc2AutomationsTest {
               "id": "aut_2",
               "name": "Cleanup",
               "status": "paused",
-              "trigger": {"type": "cron", "cron": "0 3 * * *"},
+              "trigger": {"type": "cron", "cron": "0 3 * * *", "tz": "America/New_York"},
               "action": {"type": "shell", "command": "git gc"},
               "lastRunAt": 1795590000000,
               "lastOutcome": "failed",
-              "pauseReason": "too many failures with sk-live-secret-token"
+              "last_output": "paused: directory missing with sk-live-secret-token"
+            },
+            {
+              "id": "aut_3",
+              "name": "Release watch",
+              "status": "active",
+              "trigger": {
+                "type": "event",
+                "server": "github",
+                "event": "release.published",
+                "args": {"repo": "oc_app", "token": "sk-live-secret-token"}
+              },
+              "action": {"type": "prompt", "prompt": "Write notes", "to": {"subagent": "writer"}}
+            },
+            {
+              "id": "aut_4",
+              "name": "Soon reminder",
+              "status": "active",
+              "trigger": {"type": "at", "at": "in 10 minutes", "tz": "Europe/Berlin"},
+              "action": {"type": "prompt", "prompt": "Check deploy"}
+            },
+            {
+              "id": "aut_5",
+              "name": "Wall-clock reminder",
+              "status": "active",
+              "trigger": {"type": "at", "at": "2026-11-27T09:00", "tz": "Europe/Berlin"},
+              "action": {"type": "prompt", "prompt": "Start release"}
             }
           ]
         }"""
 
     @Test
-    fun `B-AUTO-005 list decodes automations and redacts secrets in output and pause reason`() =
+    fun `B-AUTO-005 list decodes real v2_4_1 payloads with tz, event, to targets, at and redacts output`() =
         runTest {
             val redactor = Redactor()
             redactor.registerSecret("sk-live-secret-token")
@@ -109,17 +140,20 @@ class Oc2AutomationsTest {
                 }
 
             val listed = assertIs<Outcome.Ok<*>>(server.gateway.listAutomations(SessionId("ses_1")))
-            val items =
-                listed.value as List<io.github.eslamasabry.oc.core.model.ServerAutomation>
-            assertEquals(2, items.size)
+            val items = listed.value as List<ServerAutomation>
+            assertEquals(5, items.size)
             assertEquals("ses_1", server.seen.first().query["sessionID"])
 
             val first = items[0]
             assertEquals("aut_1", first.id)
             assertEquals("CI check", first.name)
+            assertEquals("Europe/Berlin", first.timeZone)
             assertEquals(AutomationStatus.Active, first.status)
-            assertEquals(AutomationTrigger.Every("1h"), first.trigger)
-            assertEquals(AutomationAction.Prompt("Check CI"), first.action)
+            assertEquals(AutomationTrigger.Every("5 minutes"), first.trigger)
+            assertEquals(
+                AutomationAction.Prompt("Check CI", subagent = null, targetSessionId = "ses_42"),
+                first.action,
+            )
             assertEquals(AutomationOutcome.Fired, first.lastOutcome)
             assertEquals(4, first.runCount)
             assertNotNull(first.nextDueAtMs)
@@ -127,10 +161,35 @@ class Oc2AutomationsTest {
 
             val second = items[1]
             assertEquals(AutomationStatus.Paused, second.status)
-            assertEquals(AutomationTrigger.Cron("0 3 * * *"), second.trigger)
+            assertEquals("America/New_York", second.timeZone)
+            assertEquals(AutomationTrigger.Cron("0 3 * * *", timeZone = "America/New_York"), second.trigger)
             assertEquals(AutomationAction.Shell("git gc"), second.action)
             assertEquals(AutomationOutcome.Failed, second.lastOutcome)
-            assertFalse(second.pauseReason!!.text.contains("sk-live-secret-token"))
+            assertNotNull(second.lastOutput)
+            assertFalse(second.lastOutput!!.text.contains("sk-live-secret-token"))
+
+            val third = items[2]
+            val ev = assertIs<AutomationTrigger.Event>(third.trigger)
+            assertEquals("github", ev.server)
+            assertEquals("release.published", ev.event)
+            assertNotNull(ev.args)
+            assertFalse(ev.args!!.text.contains("sk-live-secret-token"))
+            assertEquals(
+                AutomationAction.Prompt("Write notes", subagent = "writer", targetSessionId = null),
+                third.action,
+            )
+
+            val fourth = items[3]
+            val relAt = assertIs<AutomationTrigger.At>(fourth.trigger)
+            assertNull(relAt.atMs)
+            assertEquals("in 10 minutes", relAt.raw)
+            assertEquals("Europe/Berlin", relAt.timeZone)
+
+            val fifth = items[4]
+            val wallAt = assertIs<AutomationTrigger.At>(fifth.trigger)
+            assertNull(wallAt.atMs)
+            assertEquals("2026-11-27T09:00", wallAt.raw)
+            assertEquals("Europe/Berlin", wallAt.timeZone)
             server.gateway.close()
         }
 
@@ -160,15 +219,11 @@ class Oc2AutomationsTest {
             }
 
         val paused =
-            assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.ServerAutomation>>(
-                server.gateway.pauseAutomation("aut_1")
-            )
+            assertIs<Outcome.Ok<ServerAutomation>>(server.gateway.pauseAutomation("aut_1"))
         assertEquals(AutomationStatus.Paused, paused.value.status)
 
         val resumed =
-            assertIs<Outcome.Ok<io.github.eslamasabry.oc.core.model.ServerAutomation>>(
-                server.gateway.resumeAutomation("aut_1")
-            )
+            assertIs<Outcome.Ok<ServerAutomation>>(server.gateway.resumeAutomation("aut_1"))
         assertEquals(AutomationStatus.Active, resumed.value.status)
 
         assertIs<Outcome.Ok<Unit>>(server.gateway.deleteAutomation("aut_2"))
@@ -198,6 +253,75 @@ class Oc2AutomationsTest {
             val second = assertIs<Outcome.Failed>(server.gateway.listAutomations())
             assertEquals(Failure.Unavailable(FeatureId("serverAutomations")), second.failure)
             assertEquals(countBefore, server.seen.size, "disabled capability should not hit the network again")
+            server.gateway.close()
+        }
+
+    @Test
+    fun `B-AUTO-018 HTTP 403 ForbiddenError when automations are disabled maps to Unavailable`() =
+        runTest {
+            val server =
+                RowServer(dialect = null) { seen ->
+                    when (seen.path) {
+                        "/api/health" -> respond("", HttpStatusCode.NotFound)
+                        "/api/info" -> json("""{"version":"2.4.1"}""")
+                        "/api/experimental/automation" ->
+                            respond(
+                                """{"_tag":"ForbiddenError","name":"AutomationDisabledError",""" +
+                                    """"message":"Automations are disabled"}""",
+                                HttpStatusCode.Forbidden,
+                                headersOf(
+                                    HttpHeaders.ContentType,
+                                    ContentType.Application.Json.toString(),
+                                ),
+                            )
+                        else -> error("Unexpected ${seen.path}")
+                    }
+                }
+            assertIs<Outcome.Ok<*>>(server.gateway.health())
+            assertTrue(server.gateway.capabilities.value.serverAutomations)
+
+            val result = assertIs<Outcome.Failed>(server.gateway.listAutomations())
+            assertEquals(Failure.Unavailable(FeatureId("serverAutomations")), result.failure)
+            assertFalse(server.gateway.capabilities.value.serverAutomations)
+            server.gateway.close()
+        }
+
+    @Test
+    fun `B-AUTO-019 health refresh resets automationsDisabled latch after transient 403 or server upgrade`() =
+        runTest {
+            var automationsEnabled = false
+            var version = "2.4.1"
+            val server =
+                RowServer(dialect = null) { seen ->
+                    when (seen.path) {
+                        "/api/health" -> respond("", HttpStatusCode.NotFound)
+                        "/api/info" -> json("""{"version":"$version"}""")
+                        "/api/experimental/automation" ->
+                            if (!automationsEnabled) {
+                                respond(
+                                    """{"_tag":"ForbiddenError","message":"Automations are disabled"}""",
+                                    HttpStatusCode.Forbidden,
+                                    headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                                )
+                            } else {
+                                json("""{"data":[]}""")
+                            }
+                        else -> error("Unexpected ${seen.path}")
+                    }
+                }
+            assertIs<Outcome.Ok<*>>(server.gateway.health())
+            assertTrue(server.gateway.capabilities.value.serverAutomations)
+
+            assertIs<Outcome.Failed>(server.gateway.listAutomations())
+            assertFalse(server.gateway.capabilities.value.serverAutomations)
+
+            automationsEnabled = true
+            version = "2.4.2"
+            assertIs<Outcome.Ok<*>>(server.gateway.health())
+            assertTrue(server.gateway.capabilities.value.serverAutomations)
+
+            val recovered = assertIs<Outcome.Ok<*>>(server.gateway.listAutomations())
+            assertEquals(emptyList<ServerAutomation>(), recovered.value)
             server.gateway.close()
         }
 

@@ -127,6 +127,7 @@ internal class Oc2Gateway(
     private val signIns by lazy { Oc2ProviderSignIn(this, { location.value }, redactor) }
 
     @kotlin.concurrent.Volatile private var automationsDisabled: Boolean = false
+    @kotlin.concurrent.Volatile private var lastHealthyVersion: String? = null
 
     private val automations by lazy {
         Oc2Automations(this, redactor) {
@@ -515,8 +516,7 @@ internal class Oc2Gateway(
                         is StreamSignal.Status -> {
                             status.value = signal.status
                             if (signal.status == StreamStatus.Connected) {
-                                lastConnectedAtMs = clock.now().toEpochMilliseconds()
-                                connects.value += 1
+                                onStreamConnected()
                                 envelopes.emit(
                                     GatewayEnvelope(
                                         GatewayEvent.Connected,
@@ -543,6 +543,20 @@ internal class Oc2Gateway(
                     }
                 }
             }
+    }
+
+    private fun onStreamConnected() {
+        lastConnectedAtMs = clock.now().toEpochMilliseconds()
+        val reconnected = connects.value > 0
+        connects.value += 1
+        if (!reconnected || !automationsDisabled) return
+        automationsDisabled = false
+        if (
+            dialect.value == Oc2Dialect.Stable &&
+                Oc2Dialect.supportsAutomations(lastHealthyVersion)
+        ) {
+            mutableCapabilities.update { it.copy(serverAutomations = true) }
+        }
     }
 
     private fun HttpRequestBuilder.request(
@@ -850,9 +864,10 @@ internal class Oc2Gateway(
                 if (known != null && known != detected) return@withLock mismatch.failed()
                 if (healthy) {
                     dialect.value = detected
+                    lastHealthyVersion = version
                     if (detected == Oc2Dialect.Stable) {
-                        val hasAutomations =
-                            !automationsDisabled && Oc2Dialect.supportsAutomations(version)
+                        automationsDisabled = false
+                        val hasAutomations = Oc2Dialect.supportsAutomations(version)
                         mutableCapabilities.update {
                             it.stableWrites().copy(serverAutomations = hasAutomations)
                         }

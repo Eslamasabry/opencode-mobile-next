@@ -2,8 +2,6 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="serverAutomationsSection">Автоматизации</string>
-    <string name="serverAutomationsEmpty">На сервере %1$s нет автоматизаций.</string>
-    <string name="serverAutomationsLoading">Загрузка автоматизаций…</string>
     <string name="serverAutomationsLoadFailed">Не удалось загрузить автоматизации с %1$s.</string>
     <string name="serverAutomationsActionFailed">Не удалось обновить автоматизации на %1$s. Попробуйте ещё раз.</string>
     <string name="serverAutomationsNext">Следующий запуск: %1$s</string>
@@ -19,13 +17,13 @@
     <string name="serverAutomationsLastExpired">Срок истёк %1$s</string>
     <string name="serverAutomationsLastUnknown">Запускалась %1$s</string>
     <string name="serverAutomationsNeverRan">Ещё не запускалась</string>
-    <string name="serverAutomationsPause">Пауза</string>
-    <string name="serverAutomationsResume">Возобновить</string>
+    <string name="serverAutomationsPause">Приостановить %1$s на %2$s</string>
+    <string name="serverAutomationsResume">Возобновить %1$s на %2$s</string>
     <string name="serverAutomationsDeleteFrom">Удалить %1$s с %2$s</string>
     <string name="serverAutomationsDeleteTitle">Удалить %1$s с %2$s?</string>
     <string name="serverAutomationsDeleteBody">Автоматизация будет удалена с %1$s. Уже отправленные сообщения останутся в чатах.</string>
-    <string name="serverAutomationsStopAll">Остановить все автоматизации на %1$s</string>
-    <string name="serverAutomationsStopAllTitle">Остановить все автоматизации на %1$s?</string>
+    <string name="serverAutomationsStopAll">Приостановить все автоматизации на %1$s</string>
+    <string name="serverAutomationsStopAllTitle">Приостановить все автоматизации на %1$s?</string>
     <plurals name="serverAutomationsStopAllBody">
         <item quantity="one">Будет приостановлена %1$d активная автоматизация на %2$s. Вы сможете возобновить её позже.</item>
         <item quantity="few">Будут приостановлены %1$d активные автоматизации на %2$s. Вы сможете возобновить их позже.</item>
@@ -33,16 +31,16 @@
         <item quantity="other">Будут приостановлены %1$d активных автоматизаций на %2$s. Вы сможете возобновить их позже.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedAll">
-        <item quantity="one">Остановлена %1$d автоматизация на %2$s.</item>
-        <item quantity="few">Остановлены %1$d автоматизации на %2$s.</item>
-        <item quantity="many">Остановлено %1$d автоматизаций на %2$s.</item>
-        <item quantity="other">Остановлено %1$d автоматизаций на %2$s.</item>
+        <item quantity="one">Приостановлена %1$d автоматизация на %2$s.</item>
+        <item quantity="few">Приостановлены %1$d автоматизации на %2$s.</item>
+        <item quantity="many">Приостановлено %1$d автоматизаций на %2$s.</item>
+        <item quantity="other">Приостановлено %1$d автоматизаций на %2$s.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedPartial">
-        <item quantity="one">Остановлена %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
-        <item quantity="few">Остановлены %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
-        <item quantity="many">Остановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
-        <item quantity="other">Остановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+        <item quantity="one">Приостановлена %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+        <item quantity="few">Приостановлены %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+        <item quantity="many">Приостановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
+        <item quantity="other">Приостановлено %1$d из %2$d активных автоматизаций на %3$s. Попробуйте ещё раз для остальных.</item>
     </plurals>
     <string name="serverAutomationsDetailSchedule">Расписание</string>
     <string name="serverAutomationsDetailAction">Действие</string>
@@ -50,8 +48,7 @@
     <string name="serverAutomationsDetailRuns">Запусков</string>
     <string name="serverAutomationsDetailOutput">Последний вывод</string>
     <string name="serverAutomationsTriggerEvery">Каждые %1$s</string>
-    <string name="serverAutomationsTriggerCron">Расписание cron: %1$s</string>
-    <string name="serverAutomationsTriggerOnce">Один раз · %1$s</string>
+    <string name="serverAutomationsTriggerOnce">Один раз, %1$s</string>
     <string name="serverAutomationsTriggerEvent">Когда %1$s отправляет %2$s</string>
     <string name="serverAutomationsTriggerEventAny">Когда срабатывает %1$s</string>
     <string name="serverAutomationsActionPrompt">Запрос</string>
@@ -63,4 +60,70 @@
     <string name="serverAutomationsYesterday">Вчера</string>
     <string name="chatAutomationOrigin">Из автоматизации · %1$s</string>
     <string name="chatAutomationOriginRun">Из автоматизации · %1$s · запуск %2$s</string>
+    <string name="serverAutomationsStatusUnknown">Статус неизвестен</string>
+    <string name="serverAutomationsDetailExpression">Выражение расписания</string>
+    <plurals name="serverAutomationsEverySeconds">
+        <item quantity="one">Каждую секунду</item>
+        <item quantity="few">Каждые %1$d секунды</item>
+        <item quantity="many">Каждые %1$d секунд</item>
+        <item quantity="other">Каждые %1$d секунды</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryMinutes">
+        <item quantity="one">Каждую минуту</item>
+        <item quantity="few">Каждые %1$d минуты</item>
+        <item quantity="many">Каждые %1$d минут</item>
+        <item quantity="other">Каждые %1$d минуты</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryHours">
+        <item quantity="one">Каждый час</item>
+        <item quantity="few">Каждые %1$d часа</item>
+        <item quantity="many">Каждые %1$d часов</item>
+        <item quantity="other">Каждые %1$d часа</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryDays">
+        <item quantity="one">Каждый день</item>
+        <item quantity="few">Каждые %1$d дня</item>
+        <item quantity="many">Каждые %1$d дней</item>
+        <item quantity="other">Каждые %1$d дня</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryWeeks">
+        <item quantity="one">Каждую неделю</item>
+        <item quantity="few">Каждые %1$d недели</item>
+        <item quantity="many">Каждые %1$d недель</item>
+        <item quantity="other">Каждые %1$d недели</item>
+    </plurals>
+    <plurals name="serverAutomationsInSeconds">
+        <item quantity="one">через 1 секунду</item>
+        <item quantity="few">через %1$d секунды</item>
+        <item quantity="many">через %1$d секунд</item>
+        <item quantity="other">через %1$d секунды</item>
+    </plurals>
+    <plurals name="serverAutomationsInMinutes">
+        <item quantity="one">через 1 минуту</item>
+        <item quantity="few">через %1$d минуты</item>
+        <item quantity="many">через %1$d минут</item>
+        <item quantity="other">через %1$d минуты</item>
+    </plurals>
+    <plurals name="serverAutomationsInHours">
+        <item quantity="one">через 1 час</item>
+        <item quantity="few">через %1$d часа</item>
+        <item quantity="many">через %1$d часов</item>
+        <item quantity="other">через %1$d часа</item>
+    </plurals>
+    <plurals name="serverAutomationsInDays">
+        <item quantity="one">через 1 день</item>
+        <item quantity="few">через %1$d дня</item>
+        <item quantity="many">через %1$d дней</item>
+        <item quantity="other">через %1$d дня</item>
+    </plurals>
+    <string name="serverAutomationsCronHourlyAt">Каждый час в :%1$s</string>
+    <string name="serverAutomationsCronDaily">Каждый день в %1$s</string>
+    <string name="serverAutomationsCronWeekdays">По будням в %1$s</string>
+    <string name="serverAutomationsCronWeekends">По выходным в %1$s</string>
+    <string name="serverAutomationsCronWeekly">Каждую неделю (%1$s) в %2$s</string>
+    <string name="serverAutomationsCronMonthly">%1$s-го числа каждого месяца в %2$s</string>
+    <string name="serverAutomationsCronCustom">Особое расписание</string>
+    <string name="serverAutomationsWithZone">%1$s (%2$s)</string>
+    <string name="serverAutomationsSummaryPair">%1$s · %2$s</string>
+    <string name="serverAutomationsDayTime">%1$s %2$s</string>
 </resources>

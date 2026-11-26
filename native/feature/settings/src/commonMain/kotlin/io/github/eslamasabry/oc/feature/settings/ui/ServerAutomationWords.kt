@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.model.AutomationOutcome
 import io.github.eslamasabry.oc.core.model.AutomationStatus
 import io.github.eslamasabry.oc.core.model.AutomationTrigger
 import io.github.eslamasabry.oc.core.model.ServerAutomation
+import io.github.eslamasabry.oc.engine.schedules.LocalMoment
 import io.github.eslamasabry.oc.engine.schedules.ScheduleTime
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.schedule40Friday
@@ -20,6 +21,7 @@ import io.github.eslamasabry.oc.ui.words.res.serverAutomationsActionCode
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsActionPrompt
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsActionPromptAgent
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsActionShell
+import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDayTime
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsLastDisabled
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsLastExpired
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsLastFailed
@@ -33,18 +35,20 @@ import io.github.eslamasabry.oc.ui.words.res.serverAutomationsOnEvent
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStatusActive
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStatusDone
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStatusPaused
+import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStatusUnknown
+import io.github.eslamasabry.oc.ui.words.res.serverAutomationsSummaryPair
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsToday
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsTomorrow
-import io.github.eslamasabry.oc.ui.words.res.serverAutomationsTriggerCron
-import io.github.eslamasabry.oc.ui.words.res.serverAutomationsTriggerEvent
-import io.github.eslamasabry.oc.ui.words.res.serverAutomationsTriggerEventAny
-import io.github.eslamasabry.oc.ui.words.res.serverAutomationsTriggerEvery
-import io.github.eslamasabry.oc.ui.words.res.serverAutomationsTriggerOnce
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsYesterday
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun automationRowSummary(item: ServerAutomation, nowMs: Long): String {
+internal fun automationRowSummary(
+    item: ServerAutomation,
+    nowMs: Long,
+    fallbackZoneId: String? = null,
+): String {
+    val zoneId = item.timeZone ?: fallbackZoneId
     val nextDue = item.nextDueAtMs
     val nextPart =
         when {
@@ -52,17 +56,19 @@ internal fun automationRowSummary(item: ServerAutomation, nowMs: Long): String {
                 stringResource(Res.string.serverAutomationsStatusPaused)
             item.status == AutomationStatus.Done ->
                 stringResource(Res.string.serverAutomationsStatusDone)
+            item.status == AutomationStatus.Unknown ->
+                stringResource(Res.string.serverAutomationsStatusUnknown)
             nextDue != null ->
                 stringResource(
                     Res.string.serverAutomationsNext,
-                    formatAutomationMoment(nextDue, nowMs),
+                    formatAutomationMoment(nextDue, nowMs, zoneId),
                 )
             item.trigger is AutomationTrigger.Event ->
                 stringResource(Res.string.serverAutomationsOnEvent)
             else -> stringResource(Res.string.serverAutomationsStatusActive)
         }
-    val lastPart = automationLastRunDescription(item, nowMs)
-    return "$nextPart · $lastPart"
+    val lastPart = automationLastRunDescription(item, nowMs, zoneId)
+    return stringResource(Res.string.serverAutomationsSummaryPair, nextPart, lastPart)
 }
 
 @Composable
@@ -72,14 +78,18 @@ internal fun automationStatusLabel(status: AutomationStatus): String =
             AutomationStatus.Active -> Res.string.serverAutomationsStatusActive
             AutomationStatus.Paused -> Res.string.serverAutomationsStatusPaused
             AutomationStatus.Done -> Res.string.serverAutomationsStatusDone
-            AutomationStatus.Unknown -> Res.string.serverAutomationsStatusActive
+            AutomationStatus.Unknown -> Res.string.serverAutomationsStatusUnknown
         }
     )
 
 @Composable
-internal fun automationLastRunDescription(item: ServerAutomation, nowMs: Long): String {
+internal fun automationLastRunDescription(
+    item: ServerAutomation,
+    nowMs: Long,
+    zoneId: String? = null,
+): String {
     val ranAt = item.lastRunAtMs ?: return stringResource(Res.string.serverAutomationsNeverRan)
-    val whenText = formatAutomationMoment(ranAt, nowMs)
+    val whenText = formatAutomationMoment(ranAt, nowMs, zoneId)
     val res =
         when (item.lastOutcome) {
             AutomationOutcome.Fired -> Res.string.serverAutomationsLastFired
@@ -95,42 +105,10 @@ internal fun automationLastRunDescription(item: ServerAutomation, nowMs: Long): 
 }
 
 @Composable
-internal fun automationTriggerDescription(trigger: AutomationTrigger, nowMs: Long): String? =
-    when (trigger) {
-        is AutomationTrigger.Every ->
-            trigger.duration.takeIf { it.isNotBlank() }?.let {
-                stringResource(Res.string.serverAutomationsTriggerEvery, it)
-            }
-        is AutomationTrigger.Cron ->
-            trigger.expression.takeIf { it.isNotBlank() }?.let {
-                stringResource(Res.string.serverAutomationsTriggerCron, it)
-            }
-        is AutomationTrigger.At ->
-            trigger.atMs?.let {
-                stringResource(
-                    Res.string.serverAutomationsTriggerOnce,
-                    formatAutomationMoment(it, nowMs),
-                )
-            }
-        is AutomationTrigger.Event -> {
-            val source = trigger.source?.takeIf { it.isNotBlank() }
-            val kind = trigger.kind?.takeIf { it.isNotBlank() }
-            when {
-                source != null && kind != null ->
-                    stringResource(Res.string.serverAutomationsTriggerEvent, source, kind)
-                source != null ->
-                    stringResource(Res.string.serverAutomationsTriggerEventAny, source)
-                else -> stringResource(Res.string.serverAutomationsOnEvent)
-            }
-        }
-        AutomationTrigger.Unknown -> null
-    }
-
-@Composable
 internal fun automationActionKindLabel(action: AutomationAction): String =
     when (action) {
         is AutomationAction.Prompt ->
-            action.agent?.takeIf { it.isNotBlank() }?.let {
+            action.subagent?.takeIf { it.isNotBlank() }?.let {
                 stringResource(Res.string.serverAutomationsActionPromptAgent, it)
             } ?: stringResource(Res.string.serverAutomationsActionPrompt)
         is AutomationAction.Shell -> stringResource(Res.string.serverAutomationsActionShell)
@@ -139,15 +117,10 @@ internal fun automationActionKindLabel(action: AutomationAction): String =
     }
 
 @Composable
-internal fun formatAutomationMoment(ms: Long, nowMs: Long): String {
+internal fun formatAutomationMoment(ms: Long, nowMs: Long, zoneId: String? = null): String {
     val reference = if (nowMs > 0L) nowMs else ms
-    val m = ScheduleTime.moment(ms, reference)
-    val clock =
-        Numbers.digits(
-            m.hour.toString().padStart(TIME_DIGITS, '0') +
-                ":" +
-                m.minute.toString().padStart(TIME_DIGITS, '0')
-        )
+    val m = safeMoment(ms, reference, zoneId)
+    val clock = formatAutomationClock(m.hour, m.minute)
     val day =
         when (m.dayOffset) {
             0L -> stringResource(Res.string.serverAutomationsToday)
@@ -157,8 +130,22 @@ internal fun formatAutomationMoment(ms: Long, nowMs: Long): String {
                 stringResource(WEEKDAY_SHORT.getOrElse(m.weekday) { Res.string.schedule40Sunday })
             else -> Numbers.digits(m.date)
         }
-    return "$day $clock"
+    return stringResource(Res.string.serverAutomationsDayTime, day, clock)
 }
+
+internal fun formatAutomationClock(hour: Int, minute: Int): String =
+    Numbers.digits(
+        hour.toString().padStart(TIME_DIGITS, '0') +
+            ":" +
+            minute.toString().padStart(TIME_DIGITS, '0')
+    )
+
+private fun safeMoment(ms: Long, reference: Long, zoneId: String?): LocalMoment =
+    try {
+        ScheduleTime.moment(ms, reference, zoneId)
+    } catch (_: IllegalArgumentException) {
+        ScheduleTime.moment(ms, reference, null)
+    }
 
 private val WEEKDAY_SHORT =
     listOf(

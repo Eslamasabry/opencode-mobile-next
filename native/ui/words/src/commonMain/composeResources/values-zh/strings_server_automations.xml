@@ -2,8 +2,6 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="serverAutomationsSection">自动化</string>
-    <string name="serverAutomationsEmpty">%1$s 上没有自动化任务。</string>
-    <string name="serverAutomationsLoading">正在加载自动化任务…</string>
     <string name="serverAutomationsLoadFailed">无法从 %1$s 加载自动化任务。</string>
     <string name="serverAutomationsActionFailed">无法更新 %1$s 上的自动化任务，请重试。</string>
     <string name="serverAutomationsNext">下次运行：%1$s</string>
@@ -19,21 +17,21 @@
     <string name="serverAutomationsLastExpired">已过期 %1$s</string>
     <string name="serverAutomationsLastUnknown">已运行 %1$s</string>
     <string name="serverAutomationsNeverRan">尚未运行</string>
-    <string name="serverAutomationsPause">暂停</string>
-    <string name="serverAutomationsResume">恢复</string>
+    <string name="serverAutomationsPause">暂停 %2$s 上的 %1$s</string>
+    <string name="serverAutomationsResume">恢复 %2$s 上的 %1$s</string>
     <string name="serverAutomationsDeleteFrom">从 %2$s 删除 %1$s</string>
     <string name="serverAutomationsDeleteTitle">从 %2$s 删除 %1$s？</string>
     <string name="serverAutomationsDeleteBody">这将从 %1$s 移除该自动化任务。它已发送的消息会保留在对话中。</string>
-    <string name="serverAutomationsStopAll">停止 %1$s 上的所有自动化</string>
-    <string name="serverAutomationsStopAllTitle">停止 %1$s 上的所有自动化？</string>
+    <string name="serverAutomationsStopAll">暂停 %1$s 上的所有自动化</string>
+    <string name="serverAutomationsStopAllTitle">暂停 %1$s 上的所有自动化？</string>
     <plurals name="serverAutomationsStopAllBody">
         <item quantity="other">这将暂停 %2$s 上 %1$d 个正在运行的自动化任务。你可以稍后恢复。</item>
     </plurals>
     <plurals name="serverAutomationsStoppedAll">
-        <item quantity="other">已停止 %2$s 上的 %1$d 个自动化任务。</item>
+        <item quantity="other">已暂停 %2$s 上的 %1$d 个自动化任务。</item>
     </plurals>
     <plurals name="serverAutomationsStoppedPartial">
-        <item quantity="other">已停止 %3$s 上 %2$d 个活动自动化中的 %1$d 个，请重试其余任务。</item>
+        <item quantity="other">已暂停 %3$s 上 %2$d 个活动自动化中的 %1$d 个，请重试其余任务。</item>
     </plurals>
     <string name="serverAutomationsDetailSchedule">计划</string>
     <string name="serverAutomationsDetailAction">操作</string>
@@ -41,8 +39,7 @@
     <string name="serverAutomationsDetailRuns">运行次数</string>
     <string name="serverAutomationsDetailOutput">上次输出</string>
     <string name="serverAutomationsTriggerEvery">每 %1$s</string>
-    <string name="serverAutomationsTriggerCron">Cron 计划：%1$s</string>
-    <string name="serverAutomationsTriggerOnce">单次 · %1$s</string>
+    <string name="serverAutomationsTriggerOnce">单次，%1$s</string>
     <string name="serverAutomationsTriggerEvent">当 %1$s 发送 %2$s 时</string>
     <string name="serverAutomationsTriggerEventAny">当 %1$s 触发时</string>
     <string name="serverAutomationsActionPrompt">提示词</string>
@@ -54,4 +51,43 @@
     <string name="serverAutomationsYesterday">昨天</string>
     <string name="chatAutomationOrigin">来自自动化 · %1$s</string>
     <string name="chatAutomationOriginRun">来自自动化 · %1$s · 第 %2$s 次运行</string>
+    <string name="serverAutomationsStatusUnknown">状态未知</string>
+    <string name="serverAutomationsDetailExpression">计划表达式</string>
+    <plurals name="serverAutomationsEverySeconds">
+        <item quantity="other">每 %1$d 秒</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryMinutes">
+        <item quantity="other">每 %1$d 分钟</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryHours">
+        <item quantity="other">每 %1$d 小时</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryDays">
+        <item quantity="other">每 %1$d 天</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryWeeks">
+        <item quantity="other">每 %1$d 周</item>
+    </plurals>
+    <plurals name="serverAutomationsInSeconds">
+        <item quantity="other">%1$d 秒后</item>
+    </plurals>
+    <plurals name="serverAutomationsInMinutes">
+        <item quantity="other">%1$d 分钟后</item>
+    </plurals>
+    <plurals name="serverAutomationsInHours">
+        <item quantity="other">%1$d 小时后</item>
+    </plurals>
+    <plurals name="serverAutomationsInDays">
+        <item quantity="other">%1$d 天后</item>
+    </plurals>
+    <string name="serverAutomationsCronHourlyAt">每小时 :%1$s</string>
+    <string name="serverAutomationsCronDaily">每天 %1$s</string>
+    <string name="serverAutomationsCronWeekdays">工作日 %1$s</string>
+    <string name="serverAutomationsCronWeekends">周末 %1$s</string>
+    <string name="serverAutomationsCronWeekly">每周%1$s %2$s</string>
+    <string name="serverAutomationsCronMonthly">每月 %1$s 日 %2$s</string>
+    <string name="serverAutomationsCronCustom">自定义计划</string>
+    <string name="serverAutomationsWithZone">%1$s (%2$s)</string>
+    <string name="serverAutomationsSummaryPair">%1$s · %2$s</string>
+    <string name="serverAutomationsDayTime">%1$s %2$s</string>
 </resources>

@@ -2,8 +2,6 @@
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
     <string name="serverAutomationsSection">Tự động hóa</string>
-    <string name="serverAutomationsEmpty">Không có tác vụ tự động hóa nào trên %1$s.</string>
-    <string name="serverAutomationsLoading">Đang tải tác vụ tự động hóa…</string>
     <string name="serverAutomationsLoadFailed">Không thể tải tác vụ tự động hóa từ %1$s.</string>
     <string name="serverAutomationsActionFailed">Không thể cập nhật tác vụ tự động hóa trên %1$s. Hãy thử lại.</string>
     <string name="serverAutomationsNext">Tiếp theo: %1$s</string>
@@ -19,21 +17,21 @@
     <string name="serverAutomationsLastExpired">Đã hết hạn %1$s</string>
     <string name="serverAutomationsLastUnknown">Đã chạy %1$s</string>
     <string name="serverAutomationsNeverRan">Chưa chạy lần nào</string>
-    <string name="serverAutomationsPause">Tạm dừng</string>
-    <string name="serverAutomationsResume">Tiếp tục</string>
+    <string name="serverAutomationsPause">Tạm dừng %1$s trên %2$s</string>
+    <string name="serverAutomationsResume">Tiếp tục %1$s trên %2$s</string>
     <string name="serverAutomationsDeleteFrom">Xóa %1$s khỏi %2$s</string>
     <string name="serverAutomationsDeleteTitle">Xóa %1$s khỏi %2$s?</string>
     <string name="serverAutomationsDeleteBody">Thao tác này sẽ xóa tác vụ tự động hóa khỏi %1$s. Các tin nhắn đã gửi vẫn giữ nguyên trong cuộc trò chuyện.</string>
-    <string name="serverAutomationsStopAll">Dừng mọi tự động hóa trên %1$s</string>
-    <string name="serverAutomationsStopAllTitle">Dừng mọi tự động hóa trên %1$s?</string>
+    <string name="serverAutomationsStopAll">Tạm dừng mọi tự động hóa trên %1$s</string>
+    <string name="serverAutomationsStopAllTitle">Tạm dừng mọi tự động hóa trên %1$s?</string>
     <plurals name="serverAutomationsStopAllBody">
         <item quantity="other">Thao tác này sẽ tạm dừng %1$d tác vụ tự động hóa đang hoạt động trên %2$s. Bạn có thể tiếp tục lại sau.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedAll">
-        <item quantity="other">Đã dừng %1$d tác vụ tự động hóa trên %2$s.</item>
+        <item quantity="other">Đã tạm dừng %1$d tác vụ tự động hóa trên %2$s.</item>
     </plurals>
     <plurals name="serverAutomationsStoppedPartial">
-        <item quantity="other">Đã dừng %1$d trong số %2$d tác vụ đang hoạt động trên %3$s. Hãy thử lại với phần còn lại.</item>
+        <item quantity="other">Đã tạm dừng %1$d trong số %2$d tác vụ đang hoạt động trên %3$s. Hãy thử lại với phần còn lại.</item>
     </plurals>
     <string name="serverAutomationsDetailSchedule">Lịch chạy</string>
     <string name="serverAutomationsDetailAction">Hành động</string>
@@ -41,8 +39,7 @@
     <string name="serverAutomationsDetailRuns">Số lần chạy</string>
     <string name="serverAutomationsDetailOutput">Kết quả gần nhất</string>
     <string name="serverAutomationsTriggerEvery">Mỗi %1$s</string>
-    <string name="serverAutomationsTriggerCron">Lịch cron: %1$s</string>
-    <string name="serverAutomationsTriggerOnce">Một lần · %1$s</string>
+    <string name="serverAutomationsTriggerOnce">Một lần, %1$s</string>
     <string name="serverAutomationsTriggerEvent">Khi %1$s gửi %2$s</string>
     <string name="serverAutomationsTriggerEventAny">Khi %1$s kích hoạt</string>
     <string name="serverAutomationsActionPrompt">Lời nhắc</string>
@@ -54,4 +51,43 @@
     <string name="serverAutomationsYesterday">Hôm qua</string>
     <string name="chatAutomationOrigin">Từ tự động hóa · %1$s</string>
     <string name="chatAutomationOriginRun">Từ tự động hóa · %1$s · lần chạy %2$s</string>
+    <string name="serverAutomationsStatusUnknown">Trạng thái không xác định</string>
+    <string name="serverAutomationsDetailExpression">Biểu thức lịch chạy</string>
+    <plurals name="serverAutomationsEverySeconds">
+        <item quantity="other">Mỗi %1$d giây</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryMinutes">
+        <item quantity="other">Mỗi %1$d phút</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryHours">
+        <item quantity="other">Mỗi %1$d giờ</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryDays">
+        <item quantity="other">Mỗi %1$d ngày</item>
+    </plurals>
+    <plurals name="serverAutomationsEveryWeeks">
+        <item quantity="other">Mỗi %1$d tuần</item>
+    </plurals>
+    <plurals name="serverAutomationsInSeconds">
+        <item quantity="other">sau %1$d giây</item>
+    </plurals>
+    <plurals name="serverAutomationsInMinutes">
+        <item quantity="other">sau %1$d phút</item>
+    </plurals>
+    <plurals name="serverAutomationsInHours">
+        <item quantity="other">sau %1$d giờ</item>
+    </plurals>
+    <plurals name="serverAutomationsInDays">
+        <item quantity="other">sau %1$d ngày</item>
+    </plurals>
+    <string name="serverAutomationsCronHourlyAt">Mỗi giờ lúc :%1$s</string>
+    <string name="serverAutomationsCronDaily">Mỗi ngày lúc %1$s</string>
+    <string name="serverAutomationsCronWeekdays">Các ngày trong tuần lúc %1$s</string>
+    <string name="serverAutomationsCronWeekends">Cuối tuần lúc %1$s</string>
+    <string name="serverAutomationsCronWeekly">Mỗi %1$s lúc %2$s</string>
+    <string name="serverAutomationsCronMonthly">Ngày %1$s hằng tháng lúc %2$s</string>
+    <string name="serverAutomationsCronCustom">Lịch tùy chỉnh</string>
+    <string name="serverAutomationsWithZone">%1$s (%2$s)</string>
+    <string name="serverAutomationsSummaryPair">%1$s · %2$s</string>
+    <string name="serverAutomationsDayTime">%1$s %2$s</string>
 </resources>

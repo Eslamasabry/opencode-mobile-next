@@ -277,13 +277,6 @@ private fun ServerHome(state: ServerSettingsUi, actions: ServerSettingsActions) 
                     onClick = actions::savedPermissions,
                     trailing = KitRowTrailing.Chevron,
                 )
-            if (flags?.scheduledPrompts == true)
-                KitRow(
-                    title = stringResource(Res.string.serverSettingsSchedules),
-                    onClick = actions::openSchedules,
-                    trailing = KitRowTrailing.Chevron,
-                    modifier = Modifier.testTag("server-settings-schedules"),
-                )
         }
         ServerAutomationsSection(state, actions)
     } else

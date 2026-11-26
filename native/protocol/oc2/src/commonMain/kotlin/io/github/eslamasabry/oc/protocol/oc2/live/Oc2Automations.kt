@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.protocol.oc2.live
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
+import io.github.eslamasabry.oc.core.common.SignInWhy
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.map
@@ -76,6 +77,7 @@ internal class Oc2Automations(
         val f = failed.failure
         val unsupported =
             (treatNotFoundAsUnsupported && f is Failure.NotFound) ||
+                (f is Failure.SignIn && f.why == SignInWhy.Forbidden) ||
                 (f is Failure.Rejected && f.status in UNSUPPORTED_STATUSES) ||
                 (f is Failure.Server && f.status == HTTP_NOT_IMPLEMENTED)
         return if (unsupported) {

@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.model.AutomationAction
 import io.github.eslamasabry.oc.core.model.AutomationStatus
+import io.github.eslamasabry.oc.core.model.AutomationTrigger
 import io.github.eslamasabry.oc.core.model.ServerAutomation
 import io.github.eslamasabry.oc.feature.settings.presentation.AutomationsNotice
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerSettingsActions
@@ -44,6 +45,7 @@ import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDeleteBody
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDeleteFrom
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDeleteTitle
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDetailAction
+import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDetailExpression
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDetailLastRun
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDetailOutput
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsDetailRuns
@@ -58,13 +60,15 @@ import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStopAllBody
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStopAllTitle
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStoppedAll
 import io.github.eslamasabry.oc.ui.words.res.serverAutomationsStoppedPartial
+import io.github.eslamasabry.oc.ui.words.res.serverAutomationsSummaryPair
 import io.github.eslamasabry.oc.ui.words.res.serverSettingsSaving
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * B-605: server-owned automations listed beside Scheduled prompts on the server page. Hidden when
- * the server does not support automations or has none (unless an error or stop notice is shown).
+ * B-605: server-owned automations listed under one clear "Automations" section on the server page.
+ * Hidden when the server does not support automations, disables them (403), or has none (unless a
+ * transient error or pause notice is shown).
  */
 @Composable
 internal fun ServerAutomationsSection(state: ServerSettingsUi, actions: ServerSettingsActions) {
@@ -94,7 +98,7 @@ internal fun ServerAutomationsSection(state: ServerSettingsUi, actions: ServerSe
             state.automations.forEach { item ->
                 KitRow(
                     title = item.name,
-                    supporting = automationRowSummary(item, state.nowMs),
+                    supporting = automationRowSummary(item, state.nowMs, state.timeZoneId),
                     supportingMaxLines = ROW_SUPPORTING_LINES,
                     onClick = { actions.openAutomation(item.id) },
                     trailing = KitRowTrailing.Chevron,
@@ -158,7 +162,7 @@ internal fun ServerAutomationsOverlays(state: ServerSettingsUi, actions: ServerS
                     title = stringResource(Res.string.serverAutomationsStopAllTitle, serverName),
                     confirmLabel = stringResource(Res.string.serverAutomationsStopAll, serverName),
                     kind = KitConfirmKind.Stop,
-                    icon = KitIcons.stop,
+                    icon = KitIcons.pause,
                     body =
                         pluralStringResource(
                             Res.plurals.serverAutomationsStopAllBody,
@@ -223,14 +227,31 @@ private fun AutomationDetailSheet(
         title = item.name,
         subtitle = automationStatusLabel(item.status),
         closeLabel = stringResource(Res.string.kitSheetClose),
-        primary = automationPrimaryAction(item, enabled, actions),
+        primary = automationPrimaryAction(item, serverName, enabled, actions),
         tertiary = listOf(deleteAction),
         loading = state.automationsWorking,
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-            AutomationDetailFacts(item, state.nowMs)
+            if (state.automationSheetFailed) {
+                KitNotice(
+                    message = stringResource(Res.string.serverAutomationsActionFailed, serverName),
+                    modifier = Modifier.testTag("server-automation-sheet-error"),
+                )
+            }
+            AutomationDetailFacts(item, state.nowMs, state.timeZoneId)
             AutomationActionBody(item.action)
-            val output = item.lastOutput ?: item.pauseReason
+            val cronExpr =
+                (item.trigger as? AutomationTrigger.Cron)?.expression?.trim()?.takeIf {
+                    it.isNotEmpty()
+                }
+            if (cronExpr != null) {
+                KitDetailsFold(
+                    label = stringResource(Res.string.serverAutomationsDetailExpression),
+                    copyLabel = stringResource(Res.string.kitCopyDetails),
+                    notes = listOf(cronExpr),
+                )
+            }
+            val output = item.lastOutput
             if (output != null) {
                 KitDetailsFold(
                     label = stringResource(Res.string.serverAutomationsDetailOutput),
@@ -245,20 +266,21 @@ private fun AutomationDetailSheet(
 @Composable
 private fun automationPrimaryAction(
     item: ServerAutomation,
+    serverName: String,
     enabled: KitEnabled,
     actions: ServerSettingsActions,
 ): KitAction? =
     when (item.status) {
         AutomationStatus.Active ->
             KitAction(
-                label = stringResource(Res.string.serverAutomationsPause),
+                label = stringResource(Res.string.serverAutomationsPause, item.name, serverName),
                 onClick = { actions.pauseAutomation(item.id) },
                 enabled = enabled,
                 icon = KitIcons.pause,
             )
         AutomationStatus.Paused ->
             KitAction(
-                label = stringResource(Res.string.serverAutomationsResume),
+                label = stringResource(Res.string.serverAutomationsResume, item.name, serverName),
                 onClick = { actions.resumeAutomation(item.id) },
                 enabled = enabled,
                 icon = KitIcons.play,
@@ -268,20 +290,30 @@ private fun automationPrimaryAction(
     }
 
 @Composable
-private fun AutomationDetailFacts(item: ServerAutomation, nowMs: Long) {
+private fun AutomationDetailFacts(
+    item: ServerAutomation,
+    nowMs: Long,
+    fallbackZoneId: String?,
+) {
+    val zoneId = item.timeZone ?: fallbackZoneId
+    val triggerText = automationTriggerDescription(item.trigger, nowMs, zoneId)
+    val nextText =
+        item.nextDueAtMs
+            ?.takeIf { item.status == AutomationStatus.Active }
+            ?.let {
+                stringResource(
+                    Res.string.serverAutomationsNext,
+                    formatAutomationMoment(it, nowMs, zoneId),
+                )
+            }
     val scheduleText =
-        listOfNotNull(
-                automationTriggerDescription(item.trigger, nowMs),
-                item.nextDueAtMs
-                    ?.takeIf { item.status == AutomationStatus.Active }
-                    ?.let {
-                        stringResource(
-                            Res.string.serverAutomationsNext,
-                            formatAutomationMoment(it, nowMs),
-                        )
-                    },
-            )
-            .joinToString(" · ")
+        when {
+            triggerText != null && nextText != null ->
+                stringResource(Res.string.serverAutomationsSummaryPair, triggerText, nextText)
+            triggerText != null -> triggerText
+            nextText != null -> nextText
+            else -> ""
+        }
     KitRowGroup {
         if (scheduleText.isNotEmpty()) {
             KitRow(
@@ -296,7 +328,7 @@ private fun AutomationDetailFacts(item: ServerAutomation, nowMs: Long) {
         )
         KitRow(
             title = stringResource(Res.string.serverAutomationsDetailLastRun),
-            supporting = automationLastRunDescription(item, nowMs),
+            supporting = automationLastRunDescription(item, nowMs, zoneId),
             supportingMaxLines = 2,
         )
         if (item.runCount > 0) {
