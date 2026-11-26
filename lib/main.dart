@@ -64,6 +64,7 @@ import 'platform/platform_capabilities.dart';
 import 'platform/share_intent.dart';
 import 'domain/session_handoff.dart';
 import 'domain/team_link.dart';
+import 'domain/while_away.dart' show AutomaticActKind;
 import 'state/app_locale.dart' show resolveAppLocales;
 import 'state/connection.dart';
 import 'state/in_app_auto_update.dart';
