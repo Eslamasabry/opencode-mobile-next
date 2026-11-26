@@ -81,8 +81,13 @@ class DemoSampleOneTapTest {
         try {
             kitUiTest(PHONE_WIDTH, PHONE_HEIGHT, block = block)
         } catch (e: FlickerFailure) {
-            val detail = e.findings.joinToString(" | ") { "${it.rule} ${it.detail}" }
-            throw AssertionError("FLICKER(${e.findings.size}): $detail", e)
+            val framePattern = Regex("""frame \d+""")
+            val summary =
+                e.findings.joinToString("; ") { f ->
+                    val frames = framePattern.findAll(f.detail).joinToString("->") { it.value }
+                    "${f.rule} \"${f.key.take(NODE_CHARS)}\" ($frames)"
+                }
+            throw AssertionError("FLICKER(${e.findings.size}): $summary", e)
         }
     }
 
@@ -222,6 +227,7 @@ class DemoSampleOneTapTest {
     private companion object {
         const val PHONE_WIDTH = 360
         const val PHONE_HEIGHT = 780
+        const val NODE_CHARS = 24
         const val OWN_QUESTION = "Which Excel formula adds up column B?"
         const val OWN_HONEST_LINE = "This demo can’t answer your own questions."
         const val SAMPLE_PROMPT = "Make the welcome message friendlier."
