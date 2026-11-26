@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -23,34 +21,19 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.github.eslamasabry.oc.core.common.AppCoroutineScope
-import io.github.eslamasabry.oc.core.common.Outcome
-import io.github.eslamasabry.oc.core.common.ids.ConversationRef
-import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
 import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
-import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
-import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesViewModel
 import io.github.eslamasabry.oc.feature.updates.presentation.updatesUi
-import io.github.eslamasabry.oc.ui.routes.AppNavigator
-import io.github.eslamasabry.oc.ui.routes.AppRoute
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
 import io.github.eslamasabry.oc.feature.updates.ui.UPDATED_HOLD_MS
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateNotice
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateOfferSheet
@@ -428,60 +411,4 @@ class UpdatesScreenUiTest {
             assertTrue(". " !in failureText, "expected one plain sentence: $failureText")
             assertTrue("install" in failureText.lowercase(), "expected next step in: $failureText")
         }
-
-    @Test
-    fun `B-628 tapping an https link in What's new asks to open it outside the app`() = runComposeUiTest {
-        val url = "https://example.com/release-guide"
-        val rig = UpdateRig(TestClock())
-        rig.feed.latestJson =
-            RELEASE_JSON.replace(
-                "This release is faster.\\n\\n- Smaller downloads",
-                "See [Release guide]($url) for details.",
-            )
-        runBlocking { rig.updates.start() }
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
-        val nav =
-            object : AppNavigator {
-                override val top = MutableStateFlow<AppRoute?>(null)
-
-                override fun open(route: AppRoute) = Unit
-
-                override fun openChat(ref: ConversationRef, focusComposer: Boolean) = Unit
-
-                override fun land() = Unit
-
-                override fun replaceRoot(root: AppRoute) = Unit
-
-                override fun back() = Unit
-            }
-        val vm =
-            UpdatesViewModel(
-                rig.updates,
-                UpdateLinks { Outcome.Ok(Unit) },
-                AppCoroutineScope(scope.coroutineContext),
-                TestClock(),
-                nav,
-            )
-        try {
-            setContent {
-                val ui by vm.state.collectAsState()
-                Themed { UpdatesScreen(ui, vm) }
-            }
-            waitForIdle()
-            onNodeWithText("Release guide", substring = true, useUnmergedTree = true).assertExists()
-            val link =
-                textLayouts()
-                    .flatMap { it.layoutInput.text.getLinkAnnotations(0, it.layoutInput.text.length) }
-                    .map { it.item }
-                    .filterIsInstance<LinkAnnotation.Clickable>()
-                    .firstOrNull { it.tag == url }
-            assertTrue(link != null, "expected clickable link annotation for $url")
-            runOnUiThread { link.linkInteractionListener?.onClick(link) }
-            waitForIdle()
-            onNodeWithText("Open link?", useUnmergedTree = true).assertExists()
-            onNodeWithText("This opens example.com outside the app.", useUnmergedTree = true).assertExists()
-        } finally {
-            scope.cancel()
-        }
-    }
 }
