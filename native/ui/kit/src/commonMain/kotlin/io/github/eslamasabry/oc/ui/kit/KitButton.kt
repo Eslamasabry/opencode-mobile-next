@@ -54,6 +54,8 @@ import io.github.eslamasabry.oc.ui.kit.foundation.kitSurfaceLook
 import io.github.eslamasabry.oc.ui.kit.foundation.kitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.shape
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
+import io.github.eslamasabry.oc.ui.kit.motion.KitPace
+import io.github.eslamasabry.oc.ui.kit.motion.KitSwap
 import io.github.eslamasabry.oc.ui.kit.style.LocalKitSignalInSlip
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
@@ -472,17 +474,15 @@ private fun KitTextColored(text: String, color: Color, maxLines: Int, underline:
     val arabic = LocalKitLocaleTag.current.startsWith("ar")
     val firm = LocalKitStyle.current.spec.tokens.type.firmWeights || arabic
     val base = LocalKitTypography.current.style(TypeRole.Button)
-    ButtonLine(
-        text,
+    val style =
         base.copy(
             color = color,
             fontWeight = if (firm) FontWeight.W600 else base.fontWeight, // F: lib/ui/kit/kit_buttons.dart:805
             textAlign = TextAlign.Center,
             textDirection = TextDirection.Content,
             textDecoration = if (underline) androidx.compose.ui.text.style.TextDecoration.Underline else null,
-        ),
-        maxLines,
-    )
+        )
+    KitSwap(text, pace = KitPace.Quick) { shown -> ButtonLine(shown, style, maxLines) }
 }
 
 /**
