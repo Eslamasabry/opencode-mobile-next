@@ -1,21 +1,36 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
+import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
+import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
+import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
+import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy as DeliveryAutomationPolicy
+import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
+import io.github.eslamasabry.oc.engine.delivery.port.SendLink
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueue
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueueStore
-import io.github.eslamasabry.oc.engine.delivery.queue.QueueLimits
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRead
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRefusal
 import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicy as ConsentAutomationPolicy
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicyOwner
+import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
+import kotlin.coroutines.ContinuationInterceptor
 import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /** Immutable payload of one prompt held in the offline outbox. */
 internal data class OutboxDraft(
@@ -28,29 +43,60 @@ internal data class OutboxDraft(
 )
 
 /**
- * B-500: durable offline outbox over the adopted `oc.offlineQueue` store.
+ * B-500: durable offline outbox routed exclusively through `:engine:delivery`'s [OfflineQueue].
  *
- * Holds unsent prompts when the connection is down (including when no live connection graph exists
- * yet after an app restart) and coordinates cleanly with [OfflineQueue] so each waiting message
- * sends once on reconnect and never duplicates.
+ * Never writes directly to `oc.offlineQueue`: every enqueue and cancel runs through a real
+ * [OfflineQueue] instance (preferring the active connection's queue, then any live connection's
+ * queue, then a single app-scoped detached [OfflineQueue] over the same [DeliveryStorage.journals]),
+ * preserving the engine queue lock, closed-profile checks, tombstone checks, and B-STATE-046
+ * eviction notices.
  */
 internal class OfflineOutbox(
-    storage: DeliveryStorage,
+    private val storage: DeliveryStorage,
+    private val registry: ConnectionRegistry,
     private val clock: Clock? = null,
+    dispatchers: AppDispatchers? = null,
 ) {
-    private val queueStore = OfflineQueueStore(storage.store, storage.lanes.app)
+    private val reader = OfflineQueueStore(storage.store, storage.lanes.app)
+    private val effectiveDispatchers: AppDispatchers? =
+        dispatchers
+            ?: (registry.mainContext[ContinuationInterceptor] as? CoroutineDispatcher)
+                ?.let(::ContextDispatchers)
+    private val detachedQueue: OfflineQueue? =
+        effectiveDispatchers?.let { d ->
+            OfflineQueue(
+                store = OfflineQueueStore(storage.store, storage.lanes.app),
+                journals = storage.journals,
+                connection = DetachedConnection,
+                policy = DeliveryAutomationPolicy { false },
+                clock = clock ?: ZeroClock,
+                scope = registry.appScope,
+                dispatchers = d,
+            )
+        }
     private var seq = 0L
 
-    /** Unsent waiting entries for [ref], oldest first. Readable even while completely offline. */
+    /** Read-only snapshot of unsent waiting entries for [ref], oldest first. Never mutates disk. */
     fun readWaiting(ref: ConversationRef): List<QueuedPrompt> {
-        val read = queueStore.load() as? QueueRead.Readable ?: return emptyList()
+        val read = reader.load() as? QueueRead.Readable ?: return emptyList()
         return read.entries.filter { it.ref == ref && !it.dispatched }
     }
 
-    /** Persists a new waiting prompt either through the active [queue] or directly to storage. */
+    /**
+     * Honors the user's `reconcileQueuedSends` automation consent for [profileId]. Absent uses the
+     * default (`true`); corrupt or wrongly typed storage grants nothing (`false`).
+     */
+    fun allowsAutomaticQueuedSends(profileId: ProfileId): Boolean {
+        val raw = storage.store.get(AutomationPolicyOwner.keyFor(profileId.raw)) ?: return true
+        val text = (raw as? PrefValue.Str)?.value ?: return false
+        return ConsentAutomationPolicy.fromJson(text).allows(AutomationBehavior.ReconcileQueuedSends)
+    }
+
+    /** Persists a new waiting prompt through [OfflineQueue.queuePrompt]. */
     suspend fun enqueue(draft: OutboxDraft, queue: OfflineQueue?): Outcome<QueuedPrompt> {
+        val target = queueFor(queue) ?: return Outcome.Failed(Failure.StorageRefused())
         val now = clock?.now()?.toEpochMilliseconds() ?: 0L
-        val existingIds = existingIds(queue)
+        val existingIds = target.entries().mapTo(HashSet()) { it.id }
         val entry =
             QueuedPrompt(
                 id = nextId(now, existingIds),
@@ -66,35 +112,24 @@ internal class OfflineOutbox(
                 createdAt = now,
                 dispatchedAt = null,
             )
-        return if (queue != null) enqueueWithQueue(queue, entry) else enqueueDirect(entry, now)
+        return enqueueWithQueue(target, entry)
     }
 
     /**
-     * Cancels a waiting entry by [entryId]. Returns `Ok(true)` when removed (or already absent),
-     * `Ok(false)` if it is already dispatched or on the wire, and `Failed` if storage refused.
+     * Removes a waiting entry by [entryId] through [OfflineQueue.remove]. Returns `Ok(true)` when
+     * removed (or already absent), `Ok(false)` when on the wire, and `Failed` if storage refused.
      */
-    suspend fun cancel(entryId: String, queue: OfflineQueue?): Outcome<Boolean> =
-        if (queue != null) queue.remove(entryId) else cancelDirect(entryId)
-
-    private suspend fun cancelDirect(entryId: String): Outcome<Boolean> {
-        val read = queueStore.load() as? QueueRead.Readable
-        val existing = read?.entries?.firstOrNull { it.id == entryId }
-        return when {
-            read == null -> Outcome.Failed(Failure.StorageRefused())
-            existing == null -> Outcome.Ok(true)
-            existing.dispatched -> Outcome.Ok(false)
-            queueStore.save(read.entries.filterNot { it.id == entryId }) -> Outcome.Ok(true)
-            else -> Outcome.Failed(Failure.StorageRefused())
-        }
+    suspend fun cancel(entryId: String, queue: OfflineQueue?): Outcome<Boolean> {
+        val target = queueFor(queue) ?: return Outcome.Failed(Failure.StorageRefused())
+        return target.remove(entryId)
     }
 
-    private fun existingIds(queue: OfflineQueue?): Set<String> {
-        val entries =
-            queue?.entries()
-                ?: (queueStore.load() as? QueueRead.Readable)?.entries
-                ?: emptyList()
-        return entries.mapTo(HashSet()) { it.id }
-    }
+    private fun queueFor(preferred: OfflineQueue?): OfflineQueue? =
+        preferred
+            ?: registry.live.value.values.firstNotNullOfOrNull {
+                (it as? ChatGraphAccessors)?.chatDelivery?.queue
+            }
+            ?: detachedQueue
 
     private fun nextId(now: Long, existingIds: Set<String>): String {
         var id = "outbox-$now-${++seq}"
@@ -120,19 +155,21 @@ internal class OfflineOutbox(
                 }
         }
 
-    private suspend fun enqueueDirect(entry: QueuedPrompt, now: Long): Outcome<QueuedPrompt> {
-        val read = queueStore.load() as? QueueRead.Readable
-        val limited = read?.let { QueueLimits.enforce(it.entries + entry, now) }
-        return when {
-            entry.payloadBytes > QueueLimits.MAX_ENTRY_BYTES ->
-                Outcome.Failed(Failure.Refused(RefusalReason.OfflineQueueFull))
-            read == null || limited == null ->
-                Outcome.Failed(Failure.StorageRefused())
-            limited.kept.none { it.id == entry.id } ->
-                Outcome.Failed(Failure.Refused(RefusalReason.OfflineQueueFull))
-            queueStore.save(limited.kept) -> Outcome.Ok(entry)
-            else -> Outcome.Failed(Failure.StorageRefused())
-        }
+    private object DetachedConnection : DeliveryConnection {
+        override val link: StateFlow<SendLink?> = MutableStateFlow(null)
+        override val activeProfile: StateFlow<ProfileId?> = MutableStateFlow(null)
+    }
+
+    private object ZeroClock : Clock {
+        override fun now(): Instant = Instant.fromEpochMilliseconds(0L)
+    }
+
+    private class ContextDispatchers(private val dispatcher: CoroutineDispatcher) : AppDispatchers {
+        override val main: CoroutineDispatcher = dispatcher
+        override val default: CoroutineDispatcher = dispatcher
+        override val io: CoroutineDispatcher = dispatcher
+
+        override fun serial(name: String): CoroutineDispatcher = dispatcher
     }
 
     companion object {

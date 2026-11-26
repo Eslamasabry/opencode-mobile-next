@@ -453,7 +453,9 @@ class OfflineOutboxTest {
             assertIs<Outcome.Ok<Unit>>(f.world.send("Survive failed reconnect dispatch"))
             runCurrent()
 
-            f.gateway.onPrompt = { _, _ -> Outcome.Failed(Failure.Network(NetworkWhy.Offline)) }
+            f.gateway.onPrompt = { _, _ ->
+                Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+            }
             f.reconnect()
             advanceTimeBy(1_000)
             runCurrent()
@@ -466,7 +468,7 @@ class OfflineOutboxTest {
             )
             assertNotNull(
                 f.world.pending.value.waitingBubble(),
-                "failed offline dispatch must remain waiting for next reconnect",
+                "failed pre-wire dispatch must remain waiting for next reconnect",
             )
 
             f.goOffline()
@@ -482,6 +484,33 @@ class OfflineOutboxTest {
                 assertIs<QueueRead.Readable>(OfflineQueueStore(f.kv, f.storage.lanes.app).load())
             assertTrue(afterSent.entries.isEmpty(), "saved entry is removed only after dispatch accepts")
         }
+
+    @Test
+    fun `B-500 non-queue backend preserves saved entry on uncertain network drop`() = runTest {
+        val f = Fixture(this, offlineQueueCapable = false)
+        f.openOnline()
+        f.goOffline()
+        f.world.draftChanged("Survive uncertain wire drop")
+        assertIs<Outcome.Ok<Unit>>(f.world.send("Survive uncertain wire drop"))
+        runCurrent()
+
+        f.gateway.onPrompt = { _, _ -> Outcome.Failed(Failure.Network(NetworkWhy.Offline)) }
+        f.reconnect()
+        advanceTimeBy(1_000)
+        runCurrent()
+        val saved =
+            assertIs<QueueRead.Readable>(OfflineQueueStore(f.kv, f.storage.lanes.app).load())
+        assertEquals(
+            listOf("Survive uncertain wire drop"),
+            saved.entries.map { it.text },
+            "uncertain dispatch must never delete the saved offline entry",
+        )
+        assertEquals(
+            PendingState.Unconfirmed,
+            f.world.pending.value.single().state,
+            "uncertain post-wire drop must stay unconfirmed instead of auto-replaying",
+        )
+    }
 
     @Test
     fun `B-500 non-queue backend honors disabled automatic queued sends policy`() = runTest {

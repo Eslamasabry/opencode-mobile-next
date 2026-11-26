@@ -325,16 +325,12 @@ public class BasicComposerViewModel(
                         },
                     ) { t, caps, inFlight, load, draftAndMode ->
                         val (draft, readOnly) = draftAndMode
-                        val canCompose =
-                            load is io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Live ||
-                                (load is io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Failed &&
-                                    load.failure is Failure.Network &&
-                                    t.rows.isNotEmpty())
                         BasicComposerUi(
                             readOnly = readOnly,
                             available =
                                 readOnly == null &&
-                                    canCompose &&
+                                    load is
+                                        io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Live &&
                                     draft.ready &&
                                     draft.failure == null &&
                                     !draft.sendBlocked,
