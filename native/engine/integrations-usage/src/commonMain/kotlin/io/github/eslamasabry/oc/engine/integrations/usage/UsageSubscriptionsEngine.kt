@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.integrations.usage
 
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.attempt
@@ -136,7 +137,10 @@ public class UsageSubscriptionsEngine(
     public var widgetSettings: UsageWidgetSettings = UsageWidgetSettings.load(store)
         private set
 
-    public val historyStore: UsageHistory = UsageHistory(store, lane, clock)
+    private val log = AppLog.tagged("usage")
+
+    public val historyStore: UsageHistory =
+        UsageHistory(store, lane, clock, connections().map { it.id })
 
     public val history: StateFlow<Map<WindowKey, List<UsageSample>>>
         get() = historyStore.samples
@@ -146,10 +150,7 @@ public class UsageSubscriptionsEngine(
 
     init {
         loadAlerts()
-        for (c in connections()) {
-            loadCache(c.id)
-            historyStore.loadConnection(c.id)
-        }
+        for (c in connections()) loadCache(c.id)
         rebuild(loaded = false)
     }
 
@@ -328,14 +329,15 @@ public class UsageSubscriptionsEngine(
         cache[id] = slot
     }
 
-    private suspend fun saveCache(id: String) {
-        if (id in removedProfiles) return
-        val slot = cache[id] ?: return
-        if (slot.isEmpty()) {
-            store.commit(lane) { remove(lastKey(id)) }
-        } else {
-            val payload = DartJson.encode(slot.values.map { it.toJson() })
-            store.commit(lane) { putString(lastKey(id), payload) }
+    private suspend fun saveCache(id: String): Boolean {
+        val slot = if (id in removedProfiles) null else cache[id]
+        return when {
+            slot == null -> true
+            slot.isEmpty() -> store.commit(lane) { remove(lastKey(id)) } is Outcome.Ok
+            else -> {
+                val payload = DartJson.encode(slot.values.map { it.toJson() })
+                store.commit(lane) { putString(lastKey(id), payload) } is Outcome.Ok
+            }
         }
     }
 
@@ -568,13 +570,17 @@ public class UsageSubscriptionsEngine(
     // ------------------------------------------------------------------------------------------------------ deletion
 
     /** Consent withdrawn: forget that reader's measurements and redraw the subscriptions feed. */
-    public suspend fun removeProvider(profileId: String, providerId: String) {
+    public suspend fun removeProvider(profileId: String, providerId: String): Boolean {
         epoch++
         cache[profileId]?.remove(providerId)
-        saveCache(profileId)
-        historyStore.removeProvider(profileId, providerId)
+        val cacheOk = saveCache(profileId)
+        val historyOk = historyStore.removeProvider(profileId, providerId)
+        if (!historyOk) {
+            log.w { "usage history provider removal failed for $profileId" }
+        }
         rebuild(loaded)
         publishWidget()
+        return cacheOk && historyOk
     }
 
     /**

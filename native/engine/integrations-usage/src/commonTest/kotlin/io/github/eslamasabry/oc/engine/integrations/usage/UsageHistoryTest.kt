@@ -12,6 +12,9 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -161,7 +164,7 @@ class UsageHistoryTest {
         history.recordSample("pc", key, s6)
         assertEquals(listOf(s5, s6), history.forWindow(key))
 
-        val reloaded = UsageHistory(kv, LANE, clock = { now }).apply { loadConnection("pc") }
+        val reloaded = UsageHistory(kv, LANE, clock = { now }, initialConnections = listOf("pc"))
         assertEquals(listOf(s5, s6), reloaded.forWindow(key))
     }
 
@@ -182,7 +185,8 @@ class UsageHistoryTest {
         assertEquals(now + 50.seconds, kept.first().fetchedAt)
         assertEquals(now + (total - 1).seconds, kept.last().fetchedAt)
 
-        val reloaded = UsageHistory(kv, LANE, clock = { now }).apply { loadConnection("pc") }
+        val reloaded = UsageHistory(kv, LANE, clock = { now })
+        reloaded.loadConnection("pc")
         assertEquals(kept, reloaded.forWindow(key))
     }
 
@@ -288,7 +292,7 @@ class UsageHistoryTest {
         assertEquals(1, engine.history.value[pcGlm]?.size)
         assertEquals(1, engine.history.value[inAppCodex]?.size)
 
-        engine.removeProvider("pc", "codex")
+        assertTrue(engine.removeProvider("pc", "codex"))
         assertNull(engine.history.value[pcCodex])
         assertEquals(1, engine.history.value[pcGlm]?.size)
 
@@ -297,6 +301,63 @@ class UsageHistoryTest {
         assertNull(kv.str(UsageHistory.key("pc")))
         assertNull(engine.history.value[pcGlm])
         assertEquals(1, engine.history.value[inAppCodex]?.size)
+    }
+
+    @Test
+    fun `B-SEC-178 removeProvider returns false and keeps history intact when storage refuses`() = runTest {
+        val reset = now + 5.hours
+        val source =
+            HistoryScriptedSource(
+                UsageSourceResult(
+                    readings =
+                        listOf(
+                            sampleReading(
+                                provider = "codex",
+                                connection = "pc",
+                                account = "a",
+                                used = 20.0,
+                                resetsAt = reset,
+                            ),
+                            sampleReading(
+                                provider = "glm",
+                                connection = "pc",
+                                account = "g",
+                                used = 50.0,
+                                resetsAt = reset,
+                            ),
+                        )
+                )
+            )
+        val engine = makeEngine(source)
+        engine.refresh()
+        val pcCodex = WindowKey(usageSubscriptionKey("codex", "a", "pc"), "5h")
+        assertEquals(1, engine.history.value[pcCodex]?.size)
+
+        kv.refuse = true
+        assertFalse(engine.removeProvider("pc", "codex"))
+        assertEquals(1, engine.history.value[pcCodex]?.size)
+    }
+
+    @Test
+    fun `B-STATE-149 concurrent loadConnection and recordSample stay serialized without losing samples`() = runTest {
+        val reset = now + 5.hours
+        val key = WindowKey("codex|acct-1", "5h")
+        val seed = UsageHistory(kv, LANE, clock = { now })
+        seed.recordSample("pc", key, UsageSample(now, 10.0, reset))
+
+        val fresh = UsageHistory(kv, LANE, clock = { now })
+        coroutineScope {
+            listOf(
+                async { fresh.loadConnection("pc") },
+                async { fresh.recordSample("pc", key, UsageSample(now + 1.minutes, 25.0, reset)) },
+                async { fresh.loadConnection("pc") },
+            ).awaitAll()
+        }
+
+        val samples = fresh.forWindow(key)
+        assertEquals(2, samples.size)
+        assertEquals(10.0, samples[0].usedPercent)
+        assertEquals(25.0, samples[1].usedPercent)
     }
 
     @Test

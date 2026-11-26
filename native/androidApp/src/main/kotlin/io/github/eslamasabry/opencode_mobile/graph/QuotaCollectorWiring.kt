@@ -270,24 +270,12 @@ class CollectorUsageSource(
                                         )
                                     continue
                                 }
-                                val windows =
-                                    s.windows.mapNotNull { w ->
-                                        w.usedPercent?.let {
-                                            UsageWindow(w.id, it, w.durationSeconds, w.resetsAt)
-                                        }
-                                    }
                                 readings +=
-                                    UsageReading(
-                                        provider.wire,
-                                        name(provider),
+                                    collectorSnapshotReading(
                                         p.id.raw,
-                                        if (windows.isEmpty()) UsageReadingStatus.NoLimits
-                                        else UsageReadingStatus.Ok,
-                                        s.fetchedAt,
-                                        windows,
-                                        s.account.ref,
-                                        s.account.plan,
-                                        SignInMethod.Plan,
+                                        provider,
+                                        name(provider),
+                                        s,
                                     )
                             }
                             s.status == ProviderQuotaStatus.Unconfigured ->
@@ -321,7 +309,7 @@ class CollectorUsageSource(
                     }
                 }
             }
-            if (readings.isNotEmpty()) history?.recordReadings(readings)
+            recordCollectorQuotaHistory(history, readings)
             Outcome.Ok(
                 UsageSourceResult(readings = readings, failures = failures, unreached = unreached)
             )
@@ -913,4 +901,34 @@ class QuotaCollectorProfileCloser(private val source: CollectorUsageSource) : Pr
     override fun reopen(profile: ProfileId) = source.reopen(profile)
 
     override suspend fun drain(profile: ProfileId): Outcome<Unit> = source.drain(profile)
+}
+
+internal fun collectorSnapshotReading(
+    profileId: String,
+    provider: QuotaProvider,
+    displayName: String,
+    snapshot: ProviderQuotaSnapshot,
+): UsageReading {
+    val windows =
+        snapshot.windows.mapNotNull { w ->
+            w.usedPercent?.let { UsageWindow(w.id, it, w.durationSeconds, w.resetsAt) }
+        }
+    return UsageReading(
+        provider.wire,
+        displayName,
+        profileId,
+        if (windows.isEmpty()) UsageReadingStatus.NoLimits else UsageReadingStatus.Ok,
+        snapshot.fetchedAt,
+        windows,
+        snapshot.account.ref,
+        snapshot.account.plan,
+        SignInMethod.Plan,
+    )
+}
+
+internal suspend fun recordCollectorQuotaHistory(
+    history: UsageHistory?,
+    readings: List<UsageReading>,
+) {
+    if (readings.isNotEmpty()) history?.recordReadings(readings)
 }

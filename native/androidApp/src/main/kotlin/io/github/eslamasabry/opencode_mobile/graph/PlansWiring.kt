@@ -616,12 +616,16 @@ class AndroidPlansSource(
                 paseo?.setEnabled(target, enabled) == true
             else quota?.setEnabled(target, enabled) == true
         if (changed && !enabled) {
-            if (
-                target.provider == AndroidPlansPaseoSource.PROVIDER ||
-                    target.provider == PlansQuotaSource.BUILTIN
-            )
-                engine?.removeProfile(target.profile.raw, deleted = false)
-            else engine?.removeProvider(target.profile.raw, target.provider)
+            val cleared =
+                if (
+                    target.provider == AndroidPlansPaseoSource.PROVIDER ||
+                        target.provider == PlansQuotaSource.BUILTIN
+                ) {
+                    engine?.removeProfile(target.profile.raw, deleted = false) == true
+                } else {
+                    engine?.removeProvider(target.profile.raw, target.provider) == true
+                }
+            return cleared
         }
         return changed
     }

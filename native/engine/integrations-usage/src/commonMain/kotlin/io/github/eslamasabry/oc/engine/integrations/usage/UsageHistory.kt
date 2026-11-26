@@ -40,8 +40,7 @@ public class UsageHistory(
     private val store: KeyValueStore,
     private val lane: WriterLane,
     private val clock: () -> Instant,
-    private val maxSamplesPerWindow: Int = MAX_SAMPLES_PER_WINDOW,
-    private val dedupeRefreshInterval: Duration = DEDUPE_REFRESH_INTERVAL,
+    initialConnections: Collection<String> = emptyList(),
 ) {
     private val lock = Mutex()
     private val byConnection = LinkedHashMap<String, MutableMap<WindowKey, List<UsageSample>>>()
@@ -51,13 +50,21 @@ public class UsageHistory(
     /** Reactive view of every loaded window's ordered samples. */
     public val samples: StateFlow<Map<WindowKey, List<UsageSample>>> = _samples.asStateFlow()
 
-    /** Loads persisted history for [connectionId] once; corrupt or missing data loads as empty. */
-    public fun loadConnection(connectionId: String) {
+    init {
+        for (connectionId in initialConnections) ensureLoadedLocked(connectionId)
+    }
+
+    /** Loads persisted history for [connectionId] once under [lock]; corrupt/missing data is empty. */
+    public suspend fun loadConnection(connectionId: String): Unit = lock.withLock {
+        ensureLoadedLocked(connectionId)
+    }
+
+    private fun ensureLoadedLocked(connectionId: String) {
         if (connectionId.isEmpty() || !loadedConnections.add(connectionId)) return
-        val decoded = decodeUsageHistoryConnection(store.string(key(connectionId)), maxSamplesPerWindow)
+        val decoded = decodeUsageHistoryConnection(store.string(key(connectionId)), MAX_SAMPLES_PER_WINDOW)
         if (decoded.isNotEmpty()) {
             byConnection[connectionId] = decoded
-            _samples.value = mergeUsageHistory(byConnection, maxSamplesPerWindow, dedupeRefreshInterval)
+            _samples.value = mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
         }
     }
 
@@ -100,21 +107,25 @@ public class UsageHistory(
         byConnection.remove(connectionId)
         loadedConnections -= connectionId
         val ok = store.commit(lane) { remove(key(connectionId)) } is Outcome.Ok
-        _samples.value = mergeUsageHistory(byConnection, maxSamplesPerWindow, dedupeRefreshInterval)
+        _samples.value = mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
         ok
     }
 
     /** Drops history for [providerId] on [connectionId] (e.g. consent withdrawn). */
     public suspend fun removeProvider(connectionId: String, providerId: String): Boolean = lock.withLock {
-        loadConnection(connectionId)
+        ensureLoadedLocked(connectionId)
         val slot = byConnection[connectionId]
+        val previous = slot?.toMap()
         val prefix = "$providerId|"
         val removed = slot != null && slot.keys.removeAll { it.subscriptionKey.startsWith(prefix) }
         if (!removed) {
             true
         } else {
             val ok = persistConnection(store, lane, byConnection, connectionId)
-            _samples.value = mergeUsageHistory(byConnection, maxSamplesPerWindow, dedupeRefreshInterval)
+            if (!ok && previous != null) {
+                byConnection[connectionId] = LinkedHashMap(previous)
+            }
+            _samples.value = mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
             ok
         }
     }
@@ -125,12 +136,12 @@ public class UsageHistory(
     ): Boolean = lock.withLock {
         var result = true
         if (connectionId.isNotEmpty() && updates.isNotEmpty()) {
-            loadConnection(connectionId)
+            ensureLoadedLocked(connectionId)
             val slot = byConnection.getOrPut(connectionId) { LinkedHashMap() }
             var changed = false
             for ((windowKey, sample) in updates) {
                 val prior = slot[windowKey].orEmpty()
-                val next = appendSample(prior, sample, maxSamplesPerWindow, dedupeRefreshInterval)
+                val next = appendSample(prior, sample, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
                 if (next != prior) {
                     slot[windowKey] = next
                     changed = true
@@ -139,7 +150,7 @@ public class UsageHistory(
             if (changed) {
                 result = persistConnection(store, lane, byConnection, connectionId)
                 _samples.value =
-                    mergeUsageHistory(byConnection, maxSamplesPerWindow, dedupeRefreshInterval)
+                    mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
             }
         }
         result

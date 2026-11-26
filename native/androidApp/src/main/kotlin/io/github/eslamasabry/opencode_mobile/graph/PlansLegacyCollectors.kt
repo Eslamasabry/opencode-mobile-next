@@ -310,7 +310,7 @@ class PlansLegacyCollectors(
         fun key(id: String) = "oc.quotaMonitor.$id"
 
         fun register(scope: ProfileScope) {
-            listOf("oc.quotaMonitor.", "oc.usageLast.", UsageHistory.KEY_PREFIX, "oc.widgetUsage.").forEach { prefix ->
+            listOf("oc.quotaMonitor.", "oc.usageLast.", "oc.widgetUsage.").forEach { prefix ->
                 scope.register(
                     KeyShape(
                         prefix,
