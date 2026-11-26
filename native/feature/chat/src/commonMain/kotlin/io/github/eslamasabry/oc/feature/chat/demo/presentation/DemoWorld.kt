@@ -133,7 +133,7 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         words = content
         model.value = content.model
         title.value = content.title
-        if (stage.value == DemoStage.Ready && transcript.value.rows.isEmpty() && draft.value.text.isEmpty()) {
+        if (stage.value == DemoStage.Ready && draft.value.text.isEmpty()) {
             draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
             draftChanged(content.prompt)
         }

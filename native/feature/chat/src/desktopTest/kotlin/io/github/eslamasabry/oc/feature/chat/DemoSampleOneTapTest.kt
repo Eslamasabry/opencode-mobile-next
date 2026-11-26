@@ -119,7 +119,7 @@ class DemoSampleOneTapTest {
             kitUiTest(PHONE_WIDTH, PHONE_HEIGHT, options = KitUiOptions(mode = FlickerMode.Off)) {
                 setContent { DemoRouteHost(vm, store) }
                 waitForIdle()
-                onNodeWithText(SAMPLE_PROMPT).assertIsDisplayed().performClick()
+                onNodeWithTag("demo-run-sample").assertIsDisplayed().performClick()
                 waitForIdle()
                 assertEquals(DemoStage.Review, vm.ui.value.stage)
                 assertNotNull(vm.ui.value.requests.card)
