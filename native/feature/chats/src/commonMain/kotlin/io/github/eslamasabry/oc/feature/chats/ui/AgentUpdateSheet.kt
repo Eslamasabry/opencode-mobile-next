@@ -18,10 +18,13 @@ import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateRowUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateHomeUi
+import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSubmit
 import io.github.eslamasabry.oc.ui.design.color.StatusTone
 import io.github.eslamasabry.oc.ui.design.type.TextTone
 import io.github.eslamasabry.oc.ui.design.type.TypeRole
 import io.github.eslamasabry.oc.ui.kit.KitAction
+import io.github.eslamasabry.oc.ui.kit.KitButton
+import io.github.eslamasabry.oc.ui.kit.KitButtonRole
 import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
@@ -54,6 +57,7 @@ import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNeededLabel
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNetworkUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesNotRemoved
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesReady
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesSkipVersions
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesTitle
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesTotalDownload
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesTotalFrees
@@ -127,6 +131,16 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
         stringResource(Res.string.agentUpdatesAgentsLine),
         action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
     )
+    if (shown.optional.isNotEmpty() && shown.optional.all { it.keepBlock == null }) {
+        KitButton(
+            KitAction(
+                stringResource(Res.string.agentUpdatesSkipVersions),
+                { actions.proceedAgentUpdates(AgentUpdateSubmit.SkipAll) },
+                working = shown.working,
+            ),
+            role = KitButtonRole.Tertiary,
+        )
+    }
 }
 
 /** The answer's result: each removal that did not happen, by name, with the Agents page's own reason words. */
@@ -149,24 +163,20 @@ private fun ResultBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions) {
 private fun WifiOnlyRow(wifiOnly: Boolean, actions: AgentUpdateActions) {
     val onText = stringResource(Res.string.agentsStateUpdateWifi)
     val offText = stringResource(Res.string.agentUpdatesMetered)
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val minLines =
-            kitSwitchSupportingLines(
-                texts = listOf(onText, offText),
-                rowWidth = maxWidth,
-                supportingMaxLines = 4,
-                hasLeading = true,
-            )
-        KitSwitchRow(
-            title = stringResource(Res.string.m40UsageWifi),
-            checked = wifiOnly,
-            leading = KitRowLeading.Glyph(KitIcons.networkCheck),
-            supporting = if (wifiOnly) onText else offText,
-            supportingMaxLines = 4,
-            supportingMinLines = minLines,
-            onCheckedChange = actions::chooseAgentUpdateWifi,
-        )
-    }
+    KitSwitchRow(
+        title = stringResource(Res.string.m40UsageWifi),
+        checked = wifiOnly,
+        leading = KitRowLeading.Glyph(KitIcons.networkCheck),
+        below = {
+            KitReveal(visible = wifiOnly) {
+                KitText(onText, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            }
+            KitReveal(visible = !wifiOnly) {
+                KitText(offText, role = TypeRole.Secondary, tone = TextTone.Secondary)
+            }
+        },
+        onCheckedChange = actions::chooseAgentUpdateWifi,
+    )
 }
 
 /** One agent: its name, versions and size (or what keeping/removing does), and one switch. */

@@ -16,7 +16,6 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ok
@@ -44,8 +43,13 @@ import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
 import java.io.File
 import java.util.Locale
+import java.util.zip.CRC32
 import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlinx.coroutines.CoroutineScope
@@ -227,12 +231,14 @@ class AgentUpdateSheetRedrawRenders {
         val allNames = setOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
         val five = sheetState(redrawFiveOffer())
         val fiveWifiOff = sheetState(redrawFiveOffer(), waitForWifi = false)
-        val fiveOneOn = sheetState(noLockedFiveOffer(), keepNames = allNames - "Qwen Code")
+        val fiveOneOn = sheetState(noLockedFiveOffer(), keepNames = allNames - "Claude Code")
+        val fiveTwoOn = sheetState(noLockedFiveOffer(), keepNames = allNames - setOf("Claude Code", "Codex"))
         val fiveAllOff = sheetState(noLockedFiveOffer(), keepNames = allNames)
         val one = sheetState(redrawOneOffer())
         shootMatrix("us-plus-five-agents-mobile-data", five)
         shoot("us-plus-five-agents-mobile-data-wifi-off-text100-dark", fiveWifiOff, dark = true, fontScale = 1f)
         shootMatrix("us-plus-five-agents-one-on", fiveOneOn)
+        shootMatrix("us-plus-five-agents-two-on", fiveTwoOn)
         shootMatrix("us-plus-five-agents-all-off", fiveAllOff)
         shootMatrix("us-plus-one-agent", one)
     }
@@ -246,34 +252,17 @@ class AgentUpdateSheetRedrawRenders {
             val offer = noLockedFiveOffer()
             val model = AgentUpdateSheetModel(RedrawOffered(offer), scope)
             offer.items
-                .filter { it.group == AgentUpdateGroup.Optional && it.name != "Qwen Code" }
+                .filter { it.group == AgentUpdateGroup.Optional && it.name != "Claude Code" }
                 .forEach { model.choose(it.id, AgentUpdateChoice.Keep) }
             kitUiTest(900, 2000) {
-                setContent {
-                    val updates by model.ui.collectAsState(initial = remember { model.current() })
-                    CompositionLocalProvider(LocalDensity provides Density(2.5f, 1f)) {
-                        ChatEnvironment {
-                            KitTheme(
-                                appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Full),
-                                platform = DesktopKitPlatform(),
-                                localeTag = "en",
-                                stillFrame = true,
-                            ) {
-                                Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
-                                    ChatsScreen(mixed().copy(agentUpdates = updates), foldActions(model))
-                                }
-                            }
-                        }
-                    }
-                }
-                val qwen = onNode(isToggleable() and hasText("Qwen Code", substring = true))
-                qwen.performScrollTo()
+                setContent { FullMotionSheet(model) }
+                val claude = onNode(isToggleable() and hasText("Claude Code", substring = true))
                 waitForIdle()
                 mainClock.advanceTimeBy(1_500)
                 waitForIdle()
                 mainClock.autoAdvance = false
                 write("us-plus-fold-frame-00")
-                qwen.performClick()
+                claude.performClick()
                 var frame = 0
                 FOLD_SHOTS.forEach { at ->
                     while (frame < at) {
@@ -291,6 +280,195 @@ class AgentUpdateSheetRedrawRenders {
         }
     }
 
+    @Test
+    fun `journey recording switching one, two and none at full motion`() {
+        val previous = Locale.getDefault()
+        val scope = CoroutineScope(Job())
+        try {
+            Locale.setDefault(Locale.forLanguageTag("en"))
+            val offer = noLockedFiveOffer()
+            val model = AgentUpdateSheetModel(RedrawOffered(offer), scope)
+            offer.items
+                .filter { it.group == AgentUpdateGroup.Optional }
+                .forEach { model.choose(it.id, AgentUpdateChoice.Keep) }
+            val frames = mutableListOf<Pair<BufferedImage, Int>>()
+            val strip = mutableListOf<BufferedImage>()
+            kitUiTest(900, 2000) {
+                setContent { FullMotionSheet(model) }
+                waitForIdle()
+                mainClock.advanceTimeBy(1_500)
+                waitForIdle()
+                mainClock.autoAdvance = false
+                val startImg = captureScaled()
+                frames += startImg to HOLD_MS
+                strip += startImg
+                recordTap("Claude Code", UNFOLD_STEPS, frames, strip)
+                recordTap("Codex", SWAP_STEPS, frames, strip)
+                recordTap("Codex", SWAP_STEPS, frames, strip)
+                recordTap("Claude Code", UNFOLD_STEPS, frames, strip)
+                mainClock.autoAdvance = true
+                waitForIdle()
+            }
+            writeApng(frames, File(out, "us-plus-journey-recording.png"))
+            writeStrip(strip, File(out, "us-plus-journey-strip.png"))
+        } finally {
+            scope.cancel()
+            Locale.setDefault(previous)
+        }
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun FullMotionSheet(model: AgentUpdateSheetModel) {
+        val updates by model.ui.collectAsState(initial = remember { model.current() })
+        CompositionLocalProvider(LocalDensity provides Density(2.5f, 1f)) {
+            ChatEnvironment {
+                KitTheme(
+                    appearance = KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Full),
+                    platform = DesktopKitPlatform(),
+                    localeTag = "en",
+                    stillFrame = true,
+                ) {
+                    Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
+                        ChatsScreen(mixed().copy(agentUpdates = updates), foldActions(model))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun KitUiTest.recordTap(
+        agent: String,
+        steps: Int,
+        frames: MutableList<Pair<BufferedImage, Int>>,
+        strip: MutableList<BufferedImage>,
+    ) {
+        onNode(isToggleable() and hasText(agent, substring = true)).performClick()
+        repeat(steps) {
+            repeat(FRAME_STRIDE) { mainClock.advanceTimeByFrame() }
+            frames += captureScaled() to STEP_DELAY_MS
+        }
+        repeat(SETTLE_FRAMES) { mainClock.advanceTimeByFrame() }
+        val settled = captureScaled()
+        frames += settled to HOLD_MS
+        strip += settled
+        mainClock.autoAdvance = true
+        mainClock.advanceTimeBy(1_500)
+        waitForIdle()
+        mainClock.autoAdvance = false
+    }
+
+    private fun KitUiTest.captureScaled(): BufferedImage {
+        val raw = onRoot().captureToImage().toAwtImage()
+        val dst = BufferedImage(RECORD_W, RECORD_H, BufferedImage.TYPE_INT_ARGB)
+        val g = dst.createGraphics()
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+        g.drawImage(raw, 0, 0, RECORD_W, RECORD_H, null)
+        g.dispose()
+        return dst
+    }
+
+    private fun writeStrip(images: List<BufferedImage>, file: File) {
+        val gap = STRIP_GAP
+        val totalW = images.size * RECORD_W + (images.size - 1) * gap
+        val canvas = BufferedImage(totalW, RECORD_H, BufferedImage.TYPE_INT_ARGB)
+        val g = canvas.createGraphics()
+        images.forEachIndexed { idx, img -> g.drawImage(img, idx * (RECORD_W + gap), 0, null) }
+        g.dispose()
+        ImageIO.write(canvas, "png", file)
+    }
+
+    private fun writeApng(frames: List<Pair<BufferedImage, Int>>, file: File) {
+        val encoded = frames.map { (img, ms) -> pngChunks(img) to ms }
+        val ihdr = encoded.first().first.first { it.first == "IHDR" }.second
+        val outBytes = ByteArrayOutputStream()
+        outBytes.write(PNG_SIG)
+        writeChunk(outBytes, "IHDR", ihdr)
+        writeChunk(outBytes, "acTL", intPair(frames.size, 0))
+        var seq = 0
+        encoded.forEachIndexed { index, (chunks, delayMs) ->
+            val idat = concatIdat(chunks)
+            writeChunk(outBytes, "fcTL", fctlData(seq++, RECORD_W, RECORD_H, delayMs))
+            if (index == 0) {
+                writeChunk(outBytes, "IDAT", idat)
+            } else {
+                writeChunk(outBytes, "fdAT", intPrefix(seq++, idat))
+            }
+        }
+        writeChunk(outBytes, "IEND", ByteArray(0))
+        file.writeBytes(outBytes.toByteArray())
+    }
+
+    private fun pngChunks(img: BufferedImage): List<Pair<String, ByteArray>> {
+        val raw = ByteArrayOutputStream()
+        ImageIO.write(img, "png", raw)
+        val bytes = raw.toByteArray()
+        val chunks = mutableListOf<Pair<String, ByteArray>>()
+        var pos = PNG_SIG.size
+        while (pos + CHUNK_HEADER <= bytes.size) {
+            val len = readInt(bytes, pos)
+            val type = String(bytes, pos + 4, 4, Charsets.US_ASCII)
+            val data = bytes.copyOfRange(pos + CHUNK_HEADER, pos + CHUNK_HEADER + len)
+            chunks += type to data
+            pos += CHUNK_HEADER + len + 4
+        }
+        return chunks
+    }
+
+    private fun concatIdat(chunks: List<Pair<String, ByteArray>>): ByteArray {
+        val out = ByteArrayOutputStream()
+        chunks.filter { it.first == "IDAT" }.forEach { out.write(it.second) }
+        return out.toByteArray()
+    }
+
+    private fun fctlData(seq: Int, w: Int, h: Int, delayMs: Int): ByteArray =
+        ByteArrayOutputStream().also { baos ->
+            DataOutputStream(baos).apply {
+                writeInt(seq)
+                writeInt(w)
+                writeInt(h)
+                writeInt(0)
+                writeInt(0)
+                writeShort(delayMs)
+                writeShort(1000)
+                writeByte(0)
+                writeByte(0)
+            }
+        }.toByteArray()
+
+    private fun intPair(a: Int, b: Int): ByteArray =
+        ByteArrayOutputStream().also { baos ->
+            DataOutputStream(baos).apply {
+                writeInt(a)
+                writeInt(b)
+            }
+        }.toByteArray()
+
+    private fun intPrefix(value: Int, payload: ByteArray): ByteArray =
+        ByteArrayOutputStream(4 + payload.size).also { baos ->
+            DataOutputStream(baos).writeInt(value)
+            baos.write(payload)
+        }.toByteArray()
+
+    private fun writeChunk(out: ByteArrayOutputStream, type: String, data: ByteArray) {
+        val typeBytes = type.toByteArray(Charsets.US_ASCII)
+        val crc = CRC32().apply {
+            update(typeBytes)
+            update(data)
+        }.value.toInt()
+        DataOutputStream(out).apply {
+            writeInt(data.size)
+            write(typeBytes)
+            write(data)
+            writeInt(crc)
+        }
+    }
+
+    private fun readInt(b: ByteArray, offset: Int): Int =
+        ((b[offset].toInt() and 0xFF) shl 24) or
+            ((b[offset + 1].toInt() and 0xFF) shl 16) or
+            ((b[offset + 2].toInt() and 0xFF) shl 8) or
+            (b[offset + 3].toInt() and 0xFF)
+
     private fun KitUiTest.write(name: String) {
         ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", File(out, "$name.png"))
     }
@@ -307,5 +485,16 @@ class AgentUpdateSheetRedrawRenders {
 
     private companion object {
         val FOLD_SHOTS = listOf(4, 8, 12, 24)
+        const val RECORD_W = 450
+        const val RECORD_H = 1000
+        const val STRIP_GAP = 16
+        const val FRAME_STRIDE = 2
+        const val UNFOLD_STEPS = 12
+        const val SWAP_STEPS = 8
+        const val SETTLE_FRAMES = 20
+        const val STEP_DELAY_MS = 48
+        const val HOLD_MS = 700
+        const val CHUNK_HEADER = 8
+        val PNG_SIG = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
     }
 }

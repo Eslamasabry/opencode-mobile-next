@@ -92,7 +92,8 @@ class AgentUpdateChainTest {
         onNodeWithText(TITLE).assertDoesNotExist()
         runOnIdle { port.offer.value = FakeAgentUpdateChoices.dueOffer() }
         onNodeWithText(TITLE).assertExists()
-        onNodeWithText("Update 1 agent").assertIsEnabled()
+        val needed = checkNotNull(port.current.items.single().downloadBytes)
+        onNodeWithText("Update all · ${PhoneSizes.text(needed)}").assertIsEnabled()
     }
 
     @Test
@@ -178,8 +179,8 @@ class AgentUpdateChainTest {
         val port = FakeAgentUpdateChoices(FakeAgentUpdateChoices.dueOffer().copy(freeBytes = free))
         val vm = home(port)
         setContent { Home(vm) }
-        val button = onNodeWithText("Update 1 agent")
         val needed = checkNotNull(port.current.items.single().downloadBytes)
+        val button = onNodeWithText("Update all · ${PhoneSizes.text(needed)}")
         val reason = button.assertIsNotEnabled().fetchSemanticsNode().config[SemanticsProperties.StateDescription]
         assertEquals(
             "These updates need about ${PhoneSizes.text(needed)} and this phone has ${PhoneSizes.text(free)} free. " +

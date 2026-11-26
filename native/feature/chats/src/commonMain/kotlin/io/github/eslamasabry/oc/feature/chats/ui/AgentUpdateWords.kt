@@ -3,10 +3,12 @@ package io.github.eslamasabry.oc.feature.chats.ui
 import androidx.compose.runtime.Composable
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.MediaProblem
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.engine.agents.removal.RemovalRefusal
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetUi
+import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSubmit
 import io.github.eslamasabry.oc.ui.kit.KitAction
 import io.github.eslamasabry.oc.ui.kit.foundation.KitEnabled
 import io.github.eslamasabry.oc.ui.kit.text.KitBidi
@@ -14,10 +16,9 @@ import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAbout
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesAtLeast
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonBoth
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonKeep
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonRemove
-import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonUpdate
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonUpdateAll
+import io.github.eslamasabry.oc.ui.words.res.agentUpdatesButtonUpdateSelected
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesDownloadsUnknown
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFailed
 import io.github.eslamasabry.oc.ui.words.res.agentUpdatesFrees
@@ -36,16 +37,29 @@ import io.github.eslamasabry.oc.ui.words.res.linuxAgentPayloadUnsafe
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
-/** "Update 2 and remove 1" / "Update 3" / "Remove 1" / "Keep these versions": the button names what it does. */
+/**
+ * Main button copy: "Update all · 660 MB" when nothing or everything is switched on, "Update 1 selected · 390 MB"
+ * when a subset is chosen (numbers through [Numbers.format], size matching the total line above).
+ */
 @Composable
-internal fun agentUpdatesButton(sheet: AgentUpdateSheetUi): String =
-    when {
+internal fun agentUpdatesButton(sheet: AgentUpdateSheetUi): String {
+    val nothingChosen = sheet.updating == 0 && sheet.removing == 0
+    val allUpdating = sheet.optional.isNotEmpty() && sheet.updating == sheet.optional.size && sheet.removing == 0
+    return when {
         sheet.updating > 0 && sheet.removing > 0 ->
             pluralStringResource(Res.plurals.agentUpdatesButtonBoth, sheet.removing, sheet.updating, sheet.removing)
-        sheet.updating > 0 -> pluralStringResource(Res.plurals.agentUpdatesButtonUpdate, sheet.updating, sheet.updating)
-        sheet.removing > 0 -> pluralStringResource(Res.plurals.agentUpdatesButtonRemove, sheet.removing, sheet.removing)
-        else -> stringResource(Res.string.agentUpdatesButtonKeep)
+        nothingChosen -> agentUpdatesUpdateAllButton(sheet)
+        allUpdating -> stringResource(Res.string.agentUpdatesButtonUpdateAll, PhoneSizes.text(sheet.downloadBytes))
+        sheet.updating > 0 ->
+            pluralStringResource(
+                Res.plurals.agentUpdatesButtonUpdateSelected,
+                sheet.updating,
+                Numbers.format(sheet.updating),
+                PhoneSizes.text(sheet.downloadBytes),
+            )
+        else -> pluralStringResource(Res.plurals.agentUpdatesButtonRemove, sheet.removing, sheet.removing)
     }
+}
 
 /** "Update all · 660 MB": primary button when every agent switch is off. */
 @Composable
@@ -58,7 +72,7 @@ internal data class SheetButtons(
     val tertiary: List<KitAction> = emptyList(),
 )
 
-/** The sheet's pinned actions: Update all + Keep + Not now when all switches are off, else Update/Remove + Not now. */
+/** The sheet's two pinned actions: primary follows selection (Update all / Update N selected) and quiet Not now. */
 @Composable
 internal fun sheetButtons(shown: AgentUpdateSheetUi, result: Boolean, actions: AgentUpdateActions): SheetButtons {
     if (result) {
@@ -75,35 +89,17 @@ internal fun sheetButtons(shown: AgentUpdateSheetUi, result: Boolean, actions: A
             val needs = PhoneSizes.text(it.neededBytes)
             KitEnabled.Disabled(stringResource(Res.string.agentUpdatesShortSpace, needs, PhoneSizes.text(it.freeBytes)))
         } ?: KitEnabled.Enabled
-    return if (nothingChosen) {
-        SheetButtons(
-            primary =
-                KitAction(
-                    agentUpdatesUpdateAllButton(shown),
-                    { actions.proceedAgentUpdates(updateAll = true) },
-                    enabled = noRoom,
-                    working = shown.working,
-                ),
-            secondary =
-                KitAction(
-                    stringResource(Res.string.agentUpdatesButtonKeep),
-                    { actions.proceedAgentUpdates() },
-                    working = shown.working,
-                ),
-            tertiary = listOf(notNow),
-        )
-    } else {
-        SheetButtons(
-            primary =
-                KitAction(
-                    agentUpdatesButton(shown),
-                    { actions.proceedAgentUpdates() },
-                    enabled = noRoom,
-                    working = shown.working,
-                ),
-            secondary = notNow,
-        )
-    }
+    val submit = if (nothingChosen) AgentUpdateSubmit.UpdateAll else AgentUpdateSubmit.Chosen
+    return SheetButtons(
+        primary =
+            KitAction(
+                agentUpdatesButton(shown),
+                { actions.proceedAgentUpdates(submit) },
+                enabled = noRoom,
+                working = shown.working,
+            ),
+        secondary = notNow,
+    )
 }
 
 /** "Version 0.16.1 → 0.17.2 · 330 MB", or "… · Download size not known" when the size is null. */

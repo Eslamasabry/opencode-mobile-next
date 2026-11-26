@@ -35,6 +35,7 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetModel
+import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSubmit
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsActions
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsPhase
 import io.github.eslamasabry.oc.feature.chats.presentation.ChatsUi
@@ -110,8 +111,8 @@ class AgentUpdateSheetRedrawTest {
                         model.chooseWifiOnly(waitForWifi)
                     }
 
-                    override fun proceedAgentUpdates(updateAll: Boolean) {
-                        model.applyChoices(updateAll)
+                    override fun proceedAgentUpdates(submit: AgentUpdateSubmit) {
+                        model.applyChoices(submit)
                     }
                 }
         }

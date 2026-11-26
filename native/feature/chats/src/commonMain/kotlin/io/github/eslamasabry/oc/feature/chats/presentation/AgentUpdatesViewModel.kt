@@ -58,7 +58,7 @@ public class AgentUpdatesViewModel(
 
     override fun chooseAgentUpdateWifi(waitForWifi: Boolean): Unit = model.chooseWifiOnly(waitForWifi)
 
-    override fun proceedAgentUpdates(updateAll: Boolean): Unit = model.applyChoices(updateAll)
+    override fun proceedAgentUpdates(submit: AgentUpdateSubmit): Unit = model.applyChoices(submit)
 
     override fun confirmAgentRemoval(): Unit = model.confirmRemoval()
 

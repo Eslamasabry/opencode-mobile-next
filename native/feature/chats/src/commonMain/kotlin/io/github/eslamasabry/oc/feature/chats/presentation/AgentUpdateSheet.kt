@@ -67,6 +67,9 @@ public data class AgentRefusalUi(val name: String, val why: RemovalRefusal)
 /** The room the chosen updates need and the room the phone has, when the first is larger. */
 public data class AgentUpdateShortSpace(val neededBytes: Long, val freeBytes: Long)
 
+/** How the person submits the update sheet: their per-agent picks, every agent on, or every agent kept. */
+public enum class AgentUpdateSubmit { Chosen, UpdateAll, SkipAll }
+
 /** "Updates for your agents": what the sheet shows (no words: the screen owns them). */
 public data class AgentUpdateSheetUi(
     val visible: Boolean = false,
@@ -144,7 +147,7 @@ public object AgentUpdateSheetRules {
         offer != null &&
             (!offer.answered || offer.items.any { it.group == AgentUpdateGroup.Optional && it.choice == null })
 
-    /** What the sheet shows for [offer] with the person's [picked] answers (the confirm and progress come after). */
+        /** What the sheet shows for [offer] with the person's [picked] answers. */
     public fun sheet(
         offer: AgentUpdateOffer?,
         picked: Map<AgentId, AgentUpdateChoice>,
@@ -261,31 +264,39 @@ public class AgentUpdateSheetModel(private val choices: AgentUpdateChoices?, pri
         local.update { it.copy(wifiOnly = waitForWifi, failure = null) }
     }
 
-    /** The sheet's button: confirms removals and starts chosen work, or turns all on when [updateAll] is set. */
-    public fun applyChoices(updateAll: Boolean = false) {
+    /** The sheet's submit action: confirms removals and starts chosen work, updates all, or skips all versions. */
+    public fun applyChoices(submit: AgentUpdateSubmit = AgentUpdateSubmit.Chosen) {
         val offer = offers.value ?: return
         val now = local.value
         if (now.working || choices == null) return
-        if (updateAll) {
-            val all =
-                offer.items
-                    .filter { it.group == AgentUpdateGroup.Optional }
-                    .associate { it.id to AgentUpdateChoice.Update }
-            local.update { it.copy(picked = all, toConfirm = emptyList(), failure = null) }
-            start()
-        } else {
-            val asks =
-                AgentUpdateSheetRules.removals(offer, now.picked).map { id ->
-                    val item = offer.items.first { it.id == id }
-                    val facts = choices.removalFacts(id)
-                    AgentRemovalAskUi(
-                        id = id,
-                        name = item.name,
-                        freesBytes = facts.freesBytes ?: item.installedBytes,
-                        keepsAccountsAndConversations = facts.keepsSignIn && facts.keepsConversations,
-                    )
+        when (submit) {
+            AgentUpdateSubmit.UpdateAll -> {
+                val all = allOptional(offer, AgentUpdateChoice.Update)
+                local.update { it.copy(picked = all, toConfirm = emptyList(), failure = null) }
+                start()
+            }
+            AgentUpdateSubmit.SkipAll -> {
+                val optional = offer.items.filter { it.group == AgentUpdateGroup.Optional }
+                if (optional.isNotEmpty() && optional.all { it.keepAllowed }) {
+                    val keep = allOptional(offer, AgentUpdateChoice.Keep)
+                    local.update { it.copy(picked = keep, toConfirm = emptyList(), failure = null) }
+                    start()
                 }
-            if (asks.isEmpty()) start() else local.update { it.copy(toConfirm = asks, failure = null) }
+            }
+            AgentUpdateSubmit.Chosen -> {
+                val asks =
+                    AgentUpdateSheetRules.removals(offer, now.picked).map { id ->
+                        val item = offer.items.first { it.id == id }
+                        val facts = choices.removalFacts(id)
+                        AgentRemovalAskUi(
+                            id = id,
+                            name = item.name,
+                            freesBytes = facts.freesBytes ?: item.installedBytes,
+                            keepsAccountsAndConversations = facts.keepsSignIn && facts.keepsConversations,
+                        )
+                    }
+                if (asks.isEmpty()) start() else local.update { it.copy(toConfirm = asks, failure = null) }
+            }
         }
     }
 
@@ -369,8 +380,8 @@ public interface AgentUpdateActions {
     /** On mobile data: whether chosen updates wait for Wi-Fi (true by default) or download now. */
     public fun chooseAgentUpdateWifi(waitForWifi: Boolean) {}
 
-    /** The sheet's button: confirms removals and starts chosen work, or turns all on when [updateAll] is set. */
-    public fun proceedAgentUpdates(updateAll: Boolean = false) {}
+    /** The sheet's submit action: starts chosen work, updates all, or skips these versions. */
+    public fun proceedAgentUpdates(submit: AgentUpdateSubmit = AgentUpdateSubmit.Chosen) {}
 
     /** The removal confirm's Remove. */
     public fun confirmAgentRemoval() {}
@@ -477,6 +488,9 @@ private data class SheetLocal(
     /** The removals the engine refused in the last answer: told on the sheet until the person closes it. */
     val refused: List<AgentRefusalUi> = emptyList(),
 )
+
+private fun allOptional(offer: AgentUpdateOffer, choice: AgentUpdateChoice): Map<AgentId, AgentUpdateChoice> =
+    offer.items.filter { it.group == AgentUpdateGroup.Optional }.associate { it.id to choice }
 
 private fun buildHomeUi(offer: AgentUpdateOffer?, now: SheetLocal): AgentUpdateHomeUi {
     // Closed for exactly the offer it was answered on: a Review (here, or from the Agents page) brings a new offer
