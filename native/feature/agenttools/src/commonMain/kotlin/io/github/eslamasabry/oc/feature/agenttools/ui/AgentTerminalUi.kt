@@ -7,10 +7,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.agenttools.presentation.AgentTerminalActions
@@ -34,7 +30,6 @@ import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
 import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.modal.KitInputDialog
-import io.github.eslamasabry.oc.ui.kit.modal.KitMenu
 import io.github.eslamasabry.oc.ui.kit.modal.KitMenuItem
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
@@ -53,7 +48,6 @@ internal fun plainFolderName(directory: String): String {
 
 @Composable
 internal fun AgentTerminalRows(state: AgentTerminalUi, actions: AgentTerminalActions) {
-    var menu by remember { mutableStateOf<String?>(null) }
     val gutter = LocalKitTokens.current.gutter.dp
     val working = stringResource(Res.string.agentToolsWorking)
     val disabled =
@@ -70,48 +64,32 @@ internal fun AgentTerminalRows(state: AgentTerminalUi, actions: AgentTerminalAct
             tone = TextTone.Secondary,
         )
     if (state.terminals.isNotEmpty()) KitRowGroup {
-        for (terminal in state.terminals) KitMenu(
-            expanded = menu == terminal.id,
+        for (terminal in state.terminals) KitRow(
             title = terminal.title,
-            onDismissRequest = { menu = null },
-            items =
-                listOf(
-                    KitMenuItem(
-                        stringResource(Res.string.agentToolsRenameTerminal),
-                        {
-                            menu = null
-                            actions.askRenameTerminal(terminal.id)
-                        },
-                        enabled = disabled,
-                    ),
-                    KitMenuItem(
-                        stringResource(Res.string.agentToolsCloseTerminal),
-                        {
-                            menu = null
-                            actions.askCloseTerminal(terminal.id)
-                        },
-                        destructive = true,
-                        enabled = disabled,
-                    ),
+            supporting = plainFolderName(terminal.directory).ifEmpty { null },
+            trailing =
+                KitRowTrailing.Menu(
+                    label = stringResource(Res.string.agentToolsTerminalMore),
+                    title = terminal.title,
+                    items =
+                        listOf(
+                            KitMenuItem(
+                                stringResource(Res.string.agentToolsRenameTerminal),
+                                { actions.askRenameTerminal(terminal.id) },
+                                enabled = disabled,
+                            ),
+                            KitMenuItem(
+                                stringResource(Res.string.agentToolsCloseTerminal),
+                                { actions.askCloseTerminal(terminal.id) },
+                                destructive = true,
+                                enabled = disabled,
+                            ),
+                        ),
                 ),
-        ) {
-            KitRow(
-                title = terminal.title,
-                supporting = plainFolderName(terminal.directory).ifEmpty { null },
-                trailing =
-                    KitRowTrailing.Action(
-                        KitLineAction(
-                            stringResource(Res.string.agentToolsTerminalMore),
-                            { menu = terminal.id },
-                            enabled = !state.busy,
-                            disabledReason = working,
-                        )
-                    ),
-                onClick = { actions.openTerminal(terminal.id) },
-                enabled = !state.busy,
-                disabledReason = working,
-            )
-        }
+            onClick = { actions.openTerminal(terminal.id) },
+            enabled = !state.busy,
+            disabledReason = working,
+        )
     }
     state.failure?.let { failure ->
         KitErrorNotice(
