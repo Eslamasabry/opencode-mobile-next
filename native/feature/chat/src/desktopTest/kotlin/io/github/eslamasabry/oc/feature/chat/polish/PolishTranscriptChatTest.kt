@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -156,6 +157,49 @@ class PolishTranscriptChatTest {
             val sub = onNodeWithText("shopfront", useUnmergedTree = true).getBoundsInRoot()
             val titleGap = (sub.top - title.bottom).value
             assertTrue(titleGap <= 4.5f, "subtitle top must be <= title bottom + 4 dp, was $titleGap dp")
+        }
+
+    @Test
+    fun `B-561 loading words show under a top skeleton`() =
+        kitUiTest(360, 780) {
+            val scene = ChatScene()
+            val state = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())
+            mainClock.autoAdvance = false
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    KitTheme(
+                        KitAppearance(style = Style.Solid, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                        DesktopKitPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                            scene.Screen(state, canGoBack = true)
+                        }
+                    }
+                }
+            }
+            mainClock.advanceTimeBy(ChatPane.LOADING_WORDS_AFTER_MS + 500)
+            waitForIdle()
+            val header = onNodeWithTag("kit-header-capsule", useUnmergedTree = true).getBoundsInRoot()
+            val prompts = onAllNodesWithTag("kit-skeleton-prompt", useUnmergedTree = true)
+            val promptTop = prompts.fetchSemanticsNodes().indices.minOf { prompts[it].getBoundsInRoot().top }
+            val promptGap = (promptTop - header.bottom).value
+            assertTrue(promptGap in -1f..24f, "kit-skeleton-prompt top must be within 24 dp of header, was $promptGap")
+            val lineMatcher =
+                SemanticsMatcher("kit-skeleton-line-*") {
+                    it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("kit-skeleton-line-") == true
+                }
+            val lines = onAllNodes(lineMatcher, useUnmergedTree = true)
+            val lineCount = lines.fetchSemanticsNodes().size
+            assertTrue(lineCount > 0, "expected kit-skeleton-line-* nodes")
+            val lastLineBottom = (0 until lineCount).maxOf { lines[it].getBoundsInRoot().bottom }
+            val words = onNodeWithTag("chat-loading-words", useUnmergedTree = true).getBoundsInRoot()
+            assertTrue((words.bottom - words.top).value > 0f, "chat-loading-words height must be > 0, was $words")
+            assertTrue(
+                words.top >= lastLineBottom,
+                "chat-loading-words top (${words.top}) must sit below last skeleton line ($lastLineBottom)",
+            )
         }
 
     @Test

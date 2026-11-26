@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -28,9 +29,13 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
+import io.github.eslamasabry.oc.ui.kitchat.diff.DiffModel
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
+import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffView
 import io.github.eslamasabry.oc.ui.kitchat.request.KitPermissionCard
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestChange
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestLook
@@ -154,6 +159,40 @@ class PolishTranscriptKitTest {
                 detailsLayout.first().layoutInput.style.textDecoration == TextDecoration.Underline,
                 "Details link must be underlined",
             )
+        }
+
+    @Test
+    fun `B-567 wrapped preview never hides lines silently`() =
+        kitUiTest(360, 780) {
+            val lines =
+                (1..8).map { i ->
+                    "val wrappedLine$i = computeLongPreviewValueForCompactWidth(index = $i, label = \"segment-$i\")"
+                }
+            val file = DiffModel.fromBeforeAfter("LongPreview.kt", null, lines.joinToString("\n"))
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    ChatTestTheme(dark = true, fontScale = 1.3f) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                            Box(Modifier.width(360.dp).background(LocalKitColors.current.ground)) {
+                                KitDiffView(
+                                    file = file,
+                                    maxLines = 12,
+                                    hunkLabel = { _, _, _, _ -> "hunk" },
+                                    gapLabel = { hidden -> "$hidden hidden lines" },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val allText =
+                onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Text), useUnmergedTree = true)
+                    .fetchSemanticsNodes()
+                    .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty().map { s -> s.text } }
+            val allShown = (1..8).all { i -> allText.any { "wrappedLine$i" in it } }
+            val hasGap = allText.any { "hidden lines" in it }
+            assertTrue(allShown || hasGap, "dropped lines must show a hidden-lines label; texts=$allText")
         }
 
     @Test
