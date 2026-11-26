@@ -8,6 +8,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -188,6 +189,44 @@ class UsageHistoryTest {
         val reloaded = UsageHistory(kv, LANE, clock = { now })
         reloaded.loadConnection("pc")
         assertEquals(kept, reloaded.forWindow(key))
+    }
+
+    @Test
+    fun `B-STATE-149 enforces 90-day retention age cap on append and restart reload alongside count cap`() = runTest {
+        assertEquals(90.days, UsageHistory.MAX_SAMPLE_AGE)
+        val key = WindowKey("codex|acct-1", "weekly")
+        val reset = now + 7.days
+        val history = UsageHistory(kv, LANE, clock = { now })
+
+        val tooOld = UsageSample(now, 10.0, reset)
+        history.recordSample("pc", key, tooOld)
+
+        // Advance 1 day and record a second sample (will be exactly 90 days old later).
+        now += 1.days
+        val boundary = UsageSample(now, 25.0, reset)
+        history.recordSample("pc", key, boundary)
+
+        // Advance another 90 days: tooOld is 91 days old (dropped), boundary is 90 days old (kept).
+        now += 90.days
+        val reloaded = UsageHistory(kv, LANE, clock = { now }, initialConnections = listOf("pc"))
+        assertEquals(listOf(boundary), reloaded.forWindow(key))
+
+        // Appending a fresh sample keeps boundary while it is 90 days old.
+        val currentReset = now + 7.days
+        val fresh = UsageSample(now, 40.0, currentReset)
+        reloaded.recordSample("pc", key, fresh)
+        assertEquals(listOf(boundary, fresh), reloaded.forWindow(key))
+
+        // Advance 2 more days within the same window: boundary is 92 days old and pruned by age cap.
+        now += 2.days
+        val newer = UsageSample(now, 55.0, currentReset)
+        reloaded.recordSample("pc", key, newer)
+        assertEquals(listOf(fresh, newer), reloaded.forWindow(key))
+
+        // Already-expired sample (> 90 days old) is never stored.
+        val expiredKey = WindowKey("claude|acct-2", "5h")
+        reloaded.recordSample("pc", expiredKey, UsageSample(now - 91.days, 15.0, now - 90.days))
+        assertTrue(reloaded.forWindow(expiredKey).isEmpty())
     }
 
     @Test
