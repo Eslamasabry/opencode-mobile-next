@@ -18,6 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -137,7 +140,9 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
         )
     KitTappable(
         onClick = action.onPick,
-        modifier = if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier,
+        modifier =
+            (if (action.testTag != null) Modifier.testTag(action.testTag) else Modifier)
+                .semantics { contentDescription = action.label },
         enabled = enabled,
         disabledReason = action.disabledReason,
         onClickLabel = action.label,
@@ -159,6 +164,7 @@ private fun TrayButton(action: KitComposerTrayAction, labelDensity: Density?) {
             ) {
                 KitIcon(
                     action.icon,
+                    modifier = Modifier.clearAndSetSemantics {},
                     size = KitIconSize.Medium,
                     tone = if (enabled) TextTone.Primary else TextTone.Tertiary,
                 )

@@ -61,8 +61,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.design.generated.FlutterKitTokens
@@ -386,7 +388,12 @@ public fun KitComposerChip(
                     .testTag(COMPOSER_CHIP_FACE_TAG),
                 contentAlignment = Alignment.Center,
             ) {
-                KitIcon(icon, size = KitIconSize.Small, tone = if (active) TextTone.Accent else TextTone.Secondary)
+                KitIcon(
+                    icon,
+                    modifier = Modifier.clearAndSetSemantics {},
+                    size = KitIconSize.Small,
+                    tone = if (active) TextTone.Accent else TextTone.Secondary,
+                )
             }
         }
         return
@@ -412,6 +419,7 @@ public fun KitComposerChip(
             icon?.let {
                 KitIcon(
                     it,
+                    modifier = Modifier.clearAndSetSemantics {},
                     size = KitIconSize.Small,
                     tone = if (active) TextTone.Accent else TextTone.Secondary,
                 )
@@ -458,7 +466,10 @@ public fun KitComposerAdd(
         KitSpin(turns = if (open) ADD_OPEN_TURNS else 0f, pace = KitPace.Quick) {
             KitIcon(
                 KitIcons.add,
-                modifier = Modifier.testTag(if (open) "kit-composer-add-open" else "kit-composer-add"),
+                modifier =
+                    Modifier.clearAndSetSemantics {
+                        testTag = if (open) "kit-composer-add-open" else "kit-composer-add"
+                    },
                 size = KitIconSize.Large,
                 tone = TextTone.Primary,
             )
