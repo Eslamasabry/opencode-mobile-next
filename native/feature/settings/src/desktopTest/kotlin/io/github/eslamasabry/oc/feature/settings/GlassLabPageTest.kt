@@ -75,7 +75,8 @@ class GlassLabPageTest {
         waitForIdle()
         val t = lab!!.state.value.tuning
         assertEquals(8f, t.knobs(GlassPaneKind.Bar, true).blurDp)
-        assertEquals(LiquidEdge.MODAL_BLUR_DP + 5f, t.knobs(GlassPaneKind.Menu, true).blurDp)
+        val delta = 8f - GlassTuning.shipped(GlassPaneKind.Bar, true).blurDp
+        assertEquals(LiquidEdge.MODAL_BLUR_DP + delta, t.knobs(GlassPaneKind.Menu, true).blurDp)
         // One kind: only the menu moves.
         onNodeWithText("Menu", useUnmergedTree = true).performClick()
         onNode(hasContentDescription("Refraction strength") and canSetProgress).performSemanticsAction(SemanticsActions.SetProgress) { it(90f) }

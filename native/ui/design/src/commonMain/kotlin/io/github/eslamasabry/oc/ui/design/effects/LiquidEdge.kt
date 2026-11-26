@@ -285,21 +285,89 @@ public object LiquidEdge {
     public fun swellRecipe(dark: Boolean, look: GlassLookPreset = GlassLooks.Glossy): LiquidRecipe =
         recipe(LiquidRole.Menu, dark, look).copy(blurDp = if (dark) 6f else 3f, hold = LiquidHold.Off)
 
+    private const val BAR_BLUR_DP: Float = 2f
+    private const val COMPOSER_BLUR_DP: Float = 1.5f
+    private const val PILL_BLUR_DP: Float = .5f
+    private const val BAR_REFRACTION_DP: Float = 26f
+    private const val SHEET_REFRACTION_DP: Float = 38f
+    private const val MENU_REFRACTION_DP: Float = 36f
+    private const val PILL_REFRACTION_DP: Float = 14f
+    private const val ACTION_REFRACTION_DP: Float = 24f
+    private const val BAR_RIM_MAX_DP: Float = 26f
+    private const val PILL_RIM_MAX_DP: Float = 16f
+    private const val ACTION_RIM_MAX_DP: Float = 36f
+    private const val WIDE_RIM_SHARE: Float = .42f
+    private const val ACTION_RIM_SHARE: Float = .5f
+    private const val BAR_SHADOW: Float = .16f
+    private const val COMPOSER_SHADOW: Float = .18f
+    private const val SHEET_SHADOW: Float = .22f
+    private const val MENU_SHADOW: Float = .24f
+    private const val PILL_SHADOW: Float = .14f
+    private const val ACTION_SHADOW: Float = .22f
+    private const val BAR_TINT_DARK: Float = .14f
+    private const val BAR_TINT_LIGHT: Float = .10f
+    private const val COMPOSER_TINT_DARK: Float = .16f
+    private const val COMPOSER_TINT_LIGHT: Float = .12f
+    private const val SHEET_TINT_DARK: Float = .22f
+    private const val SHEET_TINT_LIGHT: Float = .16f
+    private const val MENU_TINT_DARK: Float = .20f
+    private const val MENU_TINT_LIGHT: Float = .14f
+
     private fun baseRecipe(role: LiquidRole, dark: Boolean): LiquidRecipe {
         val lift = if (dark) -PRESS_LIFT_DARK else PRESS_LIFT_LIGHT
-        // Apple Liquid Glass (B-609, B-612, B-613): scale-dependent optical weight, clear bar/pill centers, deeper
-        // modal glass, luminous low-tint light mode, and content-aware adaptive elevation shadow.
-        fun r(blur: Float, refraction: Float, shadow: Float, tintDark: Float, tintLight: Float, rimMax: Float = RIM_MAX_DP, share: Float = RIM_SHARE, depth: Boolean = false, hold: LiquidHold = LiquidHold.Off) =
-            LiquidRecipe(SATURATION, PRESS, lift, blur, refraction, shadow, rimMax, share, depth, if (dark) tintDark else tintLight, hold)
+        // Apple Liquid Glass (B-609, B-612, B-613): scale-dependent optical weight, clear bar/pill centers,
+        // deeper modal glass, luminous low-tint light mode, and content-aware adaptive elevation shadow.
+        fun r(
+            blur: Float,
+            refraction: Float,
+            shadow: Float,
+            tintDark: Float,
+            tintLight: Float,
+            rimMax: Float = RIM_MAX_DP,
+            share: Float = RIM_SHARE,
+            depth: Boolean = false,
+            hold: LiquidHold = LiquidHold.Off,
+        ) = LiquidRecipe(
+            SATURATION, PRESS, lift, blur, refraction, shadow, rimMax, share, depth,
+            if (dark) tintDark else tintLight, hold,
+        )
         return when (role) {
-            LiquidRole.Bar -> r(2f, 26f, .16f, .14f, .10f, rimMax = 26f, share = .42f, hold = WORDS_HOLD)
-            LiquidRole.Dock -> r(2f, 26f, .16f, .14f, .10f, rimMax = 26f, share = .42f)
-            LiquidRole.Composer -> r(1.5f, 26f, .18f, .16f, .12f, rimMax = 26f, share = .42f, hold = WORDS_HOLD)
-            LiquidRole.Sheet -> r(MODAL_BLUR_DP, 38f, .22f, .22f, .16f, rimMax = 26f, share = .42f, hold = SHEET_HOLD)
-            LiquidRole.Menu -> r(MODAL_BLUR_DP, 36f, .24f, .20f, .14f, rimMax = 26f, share = .42f, hold = MODAL_HOLD)
-            LiquidRole.Pill, LiquidRole.Status -> r(.5f, 14f, .14f, .14f, .10f, rimMax = 16f, share = .42f)
+            LiquidRole.Bar ->
+                r(
+                    BAR_BLUR_DP, BAR_REFRACTION_DP, BAR_SHADOW, BAR_TINT_DARK, BAR_TINT_LIGHT,
+                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = WORDS_HOLD,
+                )
+            LiquidRole.Dock ->
+                r(
+                    BAR_BLUR_DP, BAR_REFRACTION_DP, BAR_SHADOW, BAR_TINT_DARK, BAR_TINT_LIGHT,
+                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE,
+                )
+            LiquidRole.Composer ->
+                r(
+                    COMPOSER_BLUR_DP, BAR_REFRACTION_DP, COMPOSER_SHADOW, COMPOSER_TINT_DARK, COMPOSER_TINT_LIGHT,
+                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = WORDS_HOLD,
+                )
+            LiquidRole.Sheet ->
+                r(
+                    MODAL_BLUR_DP, SHEET_REFRACTION_DP, SHEET_SHADOW, SHEET_TINT_DARK, SHEET_TINT_LIGHT,
+                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = SHEET_HOLD,
+                )
+            LiquidRole.Menu ->
+                r(
+                    MODAL_BLUR_DP, MENU_REFRACTION_DP, MENU_SHADOW, MENU_TINT_DARK, MENU_TINT_LIGHT,
+                    rimMax = BAR_RIM_MAX_DP, share = WIDE_RIM_SHARE, hold = MODAL_HOLD,
+                )
+            LiquidRole.Pill, LiquidRole.Status ->
+                r(
+                    PILL_BLUR_DP, PILL_REFRACTION_DP, PILL_SHADOW, BAR_TINT_DARK, BAR_TINT_LIGHT,
+                    rimMax = PILL_RIM_MAX_DP, share = WIDE_RIM_SHARE,
+                )
             // Pure-glass + FAB (owner preference respected): jewel-like dome lensing, crisp specular, subtle shadow.
-            LiquidRole.Action -> r(.5f, 24f, .22f, .14f, .10f, rimMax = 36f, share = .5f, depth = true)
+            LiquidRole.Action ->
+                r(
+                    PILL_BLUR_DP, ACTION_REFRACTION_DP, ACTION_SHADOW, BAR_TINT_DARK, BAR_TINT_LIGHT,
+                    rimMax = ACTION_RIM_MAX_DP, share = ACTION_RIM_SHARE, depth = true,
+                )
         }
     }
 
@@ -483,7 +551,7 @@ public object LiquidEdge {
     private const val LIT: Float = .03f
 
 
-    /** The share of a clear in-flow pane's sheen a liquid face takes: subtle glossy top catch that preserves WCAG text contrast. */
+    /** Share of a clear pane's sheen a liquid face takes: subtle glossy top catch preserving WCAG contrast. */
     private const val SHEEN_SHARE: Float = .375f
 
     /** A liquid face's top sheen (owner 2026-11-08, "more glossy"): the theme's near-white, fading over the top 30 %. */

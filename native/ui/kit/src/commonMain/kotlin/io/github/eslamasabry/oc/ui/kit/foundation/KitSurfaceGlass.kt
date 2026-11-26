@@ -974,7 +974,12 @@ internal fun kitRimLightGround(): KitRimLight? {
         KitRimLight(luma, look.backdropLightGain, look.backdropLightMax, look.backdropLightBandDp)
     } else {
         // Light mode (B-612): luminous white specular catch along edges over bright/colorful passing backdrops.
-        KitRimLight(groundLuma = (luma * 0.55f).coerceIn(0f, 0.7f), gain = look.backdropLightGain * 0.45f, max = minOf(0.55f, look.backdropLightMax), bandDp = look.backdropLightBandDp)
+        KitRimLight(
+            groundLuma = (luma * 0.55f).coerceIn(0f, 0.7f),
+            gain = look.backdropLightGain * 0.45f,
+            max = minOf(0.55f, look.backdropLightMax),
+            bandDp = look.backdropLightBandDp,
+        )
     }
 }
 

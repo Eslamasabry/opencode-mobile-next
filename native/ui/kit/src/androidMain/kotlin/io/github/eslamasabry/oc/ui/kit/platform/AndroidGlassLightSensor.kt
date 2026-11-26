@@ -23,6 +23,7 @@ import io.github.eslamasabry.oc.ui.kit.effects.GlassLightMath
  */
 internal object AndroidGlassLightSensor {
     private const val MAX_REPORT_LATENCY_US: Int = 50_000
+    private const val GRAVITY_AXES: Int = 3
 
     @Composable
     fun Observe(context: Context, active: Boolean, onAngleDeg: (Float) -> Unit) {
@@ -45,7 +46,7 @@ internal object AndroidGlassLightSensor {
                 object : SensorEventListener {
                     override fun onSensorChanged(event: SensorEvent) {
                         val v = event.values
-                        if (v.size < 3) return
+                        if (v.size < GRAVITY_AXES) return
                         val raw = GlassLightMath.tiltAngleDeg(v[0], v[1], v[2])
                         smoothed += (raw - smoothed) * GlassLightMath.TILT_EMA
                         val next = GlassLightMath.applyDeadband(emitted, smoothed)

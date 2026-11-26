@@ -54,7 +54,7 @@ public data class FrostConditions(
     val highContrast: Boolean = false,
     val styleAllows: Boolean = true,
     val lensSupported: Boolean = false,
-    /** OS cross-window blur enabled (`WindowManager.isCrossWindowBlurEnabled`, B-614). False steps glass down cleanly. */
+    /** OS cross-window blur (`WindowManager.isCrossWindowBlurEnabled`, B-614). False steps glass down cleanly. */
     val blurEnabled: Boolean = true,
     /** Accessibility Reduce Transparency active (B-614): thickens/opaques glass cleanly like High Contrast. */
     val reduceTransparency: Boolean = false,

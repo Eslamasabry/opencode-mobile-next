@@ -80,12 +80,13 @@ class AppleLiquidGlassM2Test {
             tier: KitGlassTier = KitGlassTier.AppleLiquid,
             stillFrame: Boolean = false,
         ): Boolean {
-            val platform = LightObservingPlatform(FakeKitPlatform(liquidGlass = tier == KitGlassTier.AppleLiquid || tier == KitGlassTier.StandardLiquid), tier)
+            val hasLens = tier == KitGlassTier.AppleLiquid || tier == KitGlassTier.StandardLiquid
+            val platform = LightObservingPlatform(FakeKitPlatform(liquidGlass = hasLens), tier)
             val vis = KitVisibility(visible = visible)
             runComposeUiTest {
                 setContent {
                     CompositionLocalProvider(LocalKitVisibility provides vis) {
-                        KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = stillFrame) {}
+                        KitTheme(appearance, platform, localeTag = "en", stillFrame = stillFrame) {}
                     }
                 }
                 waitForIdle()
@@ -95,8 +96,10 @@ class AppleLiquidGlassM2Test {
 
         assertTrue(checkActive(), "active on Glass + AppleLiquid + visible + full motion")
         assertFalse(checkActive(visible = false), "0% hidden CPU: sensor must be inactive when hidden")
-        assertFalse(checkActive(appearance = KitAppearance(style = Style.Glass, motion = MotionLevel.Off)), "Reduced Motion disables tilt sensor")
-        assertFalse(checkActive(appearance = KitAppearance(style = Style.Solid)), "non-Glass style never activates tilt sensor")
+        val reducedApp = KitAppearance(style = Style.Glass, motion = MotionLevel.Off)
+        assertFalse(checkActive(appearance = reducedApp), "Reduced Motion disables tilt sensor")
+        val solidApp = KitAppearance(style = Style.Solid)
+        assertFalse(checkActive(appearance = solidApp), "non-Glass style never activates tilt sensor")
         assertFalse(checkActive(tier = KitGlassTier.StandardLiquid), "non-API-35 tier does not register tilt sensor")
         assertFalse(checkActive(stillFrame = true), "stillFrame test mode keeps deterministic 45-degree speculars")
     }
@@ -106,7 +109,8 @@ class AppleLiquidGlassM2Test {
         assertTrue(LiquidTouchRules.SWELL > 0.05f, "gelatinous swell exceeds flat 5% scale")
         assertTrue(LiquidTouchRules.FLEX_AXIS_BIAS > 0f, "press flex has directional axis bias")
         assertTrue(LiquidTouchRules.GEL_DAMPING in 0.45f..0.75f, "spring damping gives tactile gelatinous rebound")
-        assertTrue(LiquidTouchRules.BLOOM_DARK >= 0.20f && LiquidTouchRules.BLOOM_LIGHT >= 0.35f, "inner press illumination is visibly luminous")
+        val bloomOk = LiquidTouchRules.BLOOM_DARK >= 0.20f && LiquidTouchRules.BLOOM_LIGHT >= 0.35f
+        assertTrue(bloomOk, "inner press illumination is visibly luminous")
         assertTrue(LiquidTouchRules.EDGE_LIGHT >= 0.35f, "light-mode pressed specular edge stays bright white")
     }
 }

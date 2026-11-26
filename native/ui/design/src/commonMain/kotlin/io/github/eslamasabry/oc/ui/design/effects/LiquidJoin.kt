@@ -294,10 +294,9 @@ public object LiquidJoin {
     }
 
     /**
-     * The menu panel's box at rest next to its [body] (shape rules 3): its edge overlaps the body's edge by
-     * [overlapPx] (below when [up] is false for a top bar, above when [up] is true for the bottom composer), and a
-     * column flush with one end of the body puts the panel's outer edge on that end; otherwise the panel keeps its
-     * [placed] left edge (kept inside the column's reach). Returns the panel's new left and top.
+     * The menu panel's box at rest below its [body] (shape rules 3): its top overlaps the body's bottom by
+     * [overlapPx], and a column flush with one end of the body puts the panel's outer edge on that end; otherwise
+     * the panel keeps its [placed] left edge (kept inside the column's reach). Returns the panel's new left and top.
      */
     public fun menuRest(
         body: JoinBox,
@@ -305,18 +304,34 @@ public object LiquidJoin {
         columnLeft: Float,
         columnRight: Float,
         overlapPx: Float,
-        up: Boolean = false,
     ): Pair<Float, Float> {
-        val width = placed.hx * 2f
+        val left = menuRestLeft(body, placed, columnLeft, columnRight)
+        return left to (body.bottom - overlapPx)
+    }
+
+    /**
+     * The menu panel's box at rest ABOVE its [body] (bottom composer menu morphing upward, B-616): its bottom
+     * overlaps the body's top edge by [overlapPx] while keeping horizontal alignment rules identical to [menuRest].
+     */
+    public fun menuRestAbove(
+        body: JoinBox,
+        placed: JoinBox,
+        columnLeft: Float,
+        columnRight: Float,
+        overlapPx: Float,
+    ): Pair<Float, Float> {
+        val left = menuRestLeft(body, placed, columnLeft, columnRight)
         val height = placed.hy * 2f
-        val left =
-            when {
-                columnRight >= body.right - 0.5f -> body.right - width
-                columnLeft <= body.left + 0.5f -> body.left
-                else -> placed.left.coerceIn(columnRight - width, columnLeft)
-            }
-        val top = if (up) body.top - height + overlapPx else body.bottom - overlapPx
-        return left to top
+        return left to (body.top - height + overlapPx)
+    }
+
+    private fun menuRestLeft(body: JoinBox, placed: JoinBox, columnLeft: Float, columnRight: Float): Float {
+        val width = placed.hx * 2f
+        return when {
+            columnRight >= body.right - 0.5f -> body.right - width
+            columnLeft <= body.left + 0.5f -> body.left
+            else -> placed.left.coerceIn(columnRight - width, columnLeft)
+        }
     }
 
     /** A control within this share of the body's width from one of its ends counts as at that end. */

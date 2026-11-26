@@ -660,7 +660,9 @@ private fun MenuContent(
                 kotlinx.coroutines.delay(JOIN_WAIT_MS)
                 waited.value = true
             }
-            if (joinable && drop != null && home != null) KitMenuJoinMotion(drop, home, last.at, placed, leaving, up = opensAbove.value)
+            if (joinable && drop != null && home != null) {
+                KitMenuJoinMotion(drop, home, last.at, leaving, up = opensAbove.value)
+            }
             KitMenuPanel(
                 modifier =
                     Modifier.kitLeaving(leaving)
@@ -720,7 +722,6 @@ private fun KitMenuJoinMotion(
     drop: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinDrop,
     home: io.github.eslamasabry.oc.ui.kit.effects.KitLiquidJoinBody,
     at: IntRect,
-    placed: androidx.compose.runtime.State<Rect>,
     leaving: Boolean,
     up: Boolean = false,
 ) {
@@ -742,7 +743,9 @@ private fun KitMenuJoinMotion(
     drop.reach = { reachPx * (1f + j.MENU_REACH_SWELL * (1f - calm.value.coerceIn(0f, 1f))) }
     drop.shape = { rest ->
         val (l, r) = menuColumnOf(home, at, columnPx)
-        val box = j.dropBox(rest.joinBox(), l.coerceIn(rest.left, rest.right - 1f), r.coerceIn(rest.left + 1f, rest.right), length.value, fill.value, up = up)
+        val clampedL = l.coerceIn(rest.left, rest.right - 1f)
+        val clampedR = r.coerceIn(rest.left + 1f, rest.right)
+        val box = j.dropBox(rest.joinBox(), clampedL, clampedR, length.value, fill.value, up = up)
         Rect(box.left, box.top, box.right, box.bottom)
     }
     androidx.compose.runtime.LaunchedEffect(leaving) {
@@ -786,7 +789,10 @@ private fun menuJoinOffset(
     if (placed.width <= 0f || body.width <= 0f) return IntOffset.Zero
     val j = io.github.eslamasabry.oc.ui.design.effects.LiquidJoin
     val (l, r) = menuColumnOf(home, at, with(density) { j.COLUMN_DP.dp.toPx() })
-    val (left, top) = j.menuRest(body.joinBox(), placed.joinBox(), l, r, with(density) { j.MENU_OVERLAP_DP.dp.toPx() }, up = up)
+    val overlapPx = with(density) { j.MENU_OVERLAP_DP.dp.toPx() }
+    val (left, top) =
+        if (up) j.menuRestAbove(body.joinBox(), placed.joinBox(), l, r, overlapPx)
+        else j.menuRest(body.joinBox(), placed.joinBox(), l, r, overlapPx)
     return IntOffset(kotlin.math.round(left - placed.left).toInt(), kotlin.math.round(top - placed.top).toInt())
 }
 

@@ -53,8 +53,8 @@ class GlassTuningKitTest {
             }
             waitForIdle()
         }
-        // The flip is a per-pane object; the look is everything else.
-        return platform.liquidSpecs.map { it.copy(flip = null) }.distinct()
+        // Flip and liveLight are per-pane/per-theme objects; the look is everything else.
+        return platform.liquidSpecs.map { it.copy(flip = null, liveLight = null) }.distinct()
     }
 
     @Composable

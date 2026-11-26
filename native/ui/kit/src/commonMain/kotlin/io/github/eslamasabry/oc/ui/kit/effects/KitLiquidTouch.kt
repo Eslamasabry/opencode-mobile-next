@@ -63,7 +63,7 @@ internal object LiquidTouchRules {
     const val GEL_STIFFNESS: Float = 520f
     const val GEL_DAMPING: Float = 0.58f
 
-    /** Inner illumination glow under a finger on any liquid glass control (B-616): blooms and spills across joined panes. */
+    /** Inner press glow on any liquid glass control (B-616): blooms and spills across joined panes. */
     const val BLOOM_DP: Float = 84f
     const val BLOOM_DARK: Float = .24f
     const val BLOOM_LIGHT: Float = .42f
@@ -92,9 +92,8 @@ internal fun rememberKitLiquidPress(source: InteractionSource?, on: Boolean): Ki
     val motion = KitMotion.state
     val specs = remember(motion) { KitMotionSpecs(motion) }
     val gelSpring =
-        remember(motion) {
-            if (motion.reduced) specs.release()
-            else androidx.compose.animation.core.spring<Float>(dampingRatio = LiquidTouchRules.GEL_DAMPING, stiffness = LiquidTouchRules.GEL_STIFFNESS)
+        remember(motion, specs) {
+            specs.liquid<Float>(LiquidTouchRules.GEL_DAMPING, LiquidTouchRules.GEL_STIFFNESS)
         }
     LaunchedEffect(source, specs, gelSpring) {
         var job: Job? = null
@@ -168,8 +167,13 @@ internal fun Modifier.kitLiquidPressLight(press: KitLiquidPress?, shape: Shape, 
             val strength = (if (dark) LiquidTouchRules.BLOOM_DARK else LiquidTouchRules.BLOOM_LIGHT) * a
             val outline = shape.createOutline(size, layoutDirection, this)
             clipPath(Path().apply { addOutline(outline) }) {
+                val glow = Brush.radialGradient(
+                    listOf(Color.White.copy(alpha = strength), Color.Transparent),
+                    center = centre,
+                    radius = radius,
+                )
                 drawCircle(
-                    Brush.radialGradient(listOf(Color.White.copy(alpha = strength), Color.Transparent), center = centre, radius = radius),
+                    glow,
                     radius = radius,
                     center = centre,
                     blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver,
@@ -271,8 +275,13 @@ public fun Modifier.kitLiquidTouchLight(
             val strength = (if (dark) LiquidTouchRules.BLOOM_DARK else LiquidTouchRules.BLOOM_LIGHT) * a
             val outline = shape.createOutline(size, layoutDirection, this)
             clipPath(Path().apply { addOutline(outline) }) {
+                val glow = Brush.radialGradient(
+                    listOf(Color.White.copy(alpha = strength), Color.Transparent),
+                    center = centre,
+                    radius = radius,
+                )
                 drawCircle(
-                    Brush.radialGradient(listOf(Color.White.copy(alpha = strength), Color.Transparent), center = centre, radius = radius),
+                    glow,
                     radius = radius,
                     center = centre,
                     blendMode = if (dark) BlendMode.Plus else BlendMode.SrcOver,

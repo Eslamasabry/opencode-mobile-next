@@ -99,7 +99,7 @@ public object GlassLooks {
      * backdrops, and the gloss-kept count never differs, so Clear is cut and three looks ship. The test fails if a
      * retune opens the gap, so this flag is never stale.
      */
-    /** B-614: Clear now carries a real optical tint gap (>= 0.08) to Glossy in both themes, offering Clear / Glossy / Frosted. */
+    /** B-614: Clear carries a real optical tint gap (>= 0.08) to Glossy in both themes (Clear/Glossy/Frosted). */
     public const val clearEarnsItsPlace: Boolean = true
 
     public const val CLEAR_TINT_GAP: Float = .08f

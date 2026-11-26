@@ -37,10 +37,14 @@ class GlassTuningTest {
             assertEquals(if (dark) GlassLook.Default.liquidRimDark else GlassTuning.LIGHT_RIM_ALPHA, k.rimBrightness)
             assertEquals(45f, k.lightDeg)
             assertEquals(GlassTuning.RIM_WIDTH_DP, k.rimWidthDp)
-            listOf(k.dispersion, k.innerShadow, k.tintLightness).forEach { assertEquals(0f, it, "$kind off by default") }
+            listOf(k.dispersion, k.innerShadow, k.tintLightness).forEach {
+                assertEquals(0f, it, "$kind off by default")
+            }
             assertEquals(GlassTuning.SHIPPED_BEND_SHAPE, k.bendShape, "$kind dome bend")
-            assertEquals(if (dark) GlassTuning.SHIPPED_SPECULAR_DARK else GlassTuning.SHIPPED_SPECULAR_LIGHT, k.specular, "$kind specular")
-            assertEquals(if (dark) GlassTuning.SHIPPED_SHEEN_DARK else GlassTuning.SHIPPED_SHEEN_LIGHT, k.sheen, "$kind sheen")
+            val wantSpec = if (dark) GlassTuning.SHIPPED_SPECULAR_DARK else GlassTuning.SHIPPED_SPECULAR_LIGHT
+            val wantSheen = if (dark) GlassTuning.SHIPPED_SHEEN_DARK else GlassTuning.SHIPPED_SHEEN_LIGHT
+            assertEquals(wantSpec, k.specular, "$kind specular")
+            assertEquals(wantSheen, k.sheen, "$kind sheen")
             // Menus, sheets and dialogs hold the fine detail behind their words (glass liquid 2026-11-14); nobody else.
             val held = kind == GlassPaneKind.Menu || kind == GlassPaneKind.Sheet || kind == GlassPaneKind.Dialog
             // Glass liquid round two: a sheet (and a dialog, drawn as one) may hold harder than a menu.
@@ -50,7 +54,11 @@ class GlassTuningTest {
             assertEquals(if (held) h.localSlope else 1f, k.localSlope, "$kind local slope")
             assertEquals(if (held) h.inkKeep else 1f, k.inkKeep, "$kind ink-like strokes kept")
             assertEquals(if (held) h.inkRim else 1f, k.inkRim, "$kind ink-like strokes held in the rim")
-            assertEquals(GlassTuning.WORDS_CLEAR_FLOATING, k.wordsClear, "$kind: floating chrome lets content enter the lens rim")
+            assertEquals(
+                GlassTuning.WORDS_CLEAR_FLOATING,
+                k.wordsClear,
+                "$kind: floating chrome lets content enter lens rim",
+            )
             assertEquals(if (kind == GlassPaneKind.Chip) LiquidJoin.REACH_PILL_DP else LiquidJoin.REACH_MENU_DP, k.joinReachDp)
         }
         // Apple Liquid Glass scale-dependent weight (B-609): clear 2 dp bar, deeper 6 dp modal.

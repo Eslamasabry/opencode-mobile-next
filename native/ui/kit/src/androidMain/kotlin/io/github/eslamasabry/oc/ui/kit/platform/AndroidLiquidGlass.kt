@@ -91,7 +91,7 @@ internal object AndroidLiquidGlass {
                 }
             },
             highlight = {
-                // Live tilt & scroll-reactive specular rim (B-610): reads liveLightDir() in draw phase (0 recomposition).
+                // Live tilt & scroll specular rim (B-610): reads liveLightDir() in draw phase.
                 val dir = spec.liveLightDir()
                 Highlight(
                     width = spec.rimDp.dp,

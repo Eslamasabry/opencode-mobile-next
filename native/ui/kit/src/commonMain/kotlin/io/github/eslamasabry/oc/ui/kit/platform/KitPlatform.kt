@@ -24,7 +24,7 @@ public enum class KitPlatformFamily {
 
 /**
  * Capability-gated Glass rendering tier (never raw API levels in UI or features).
- * - [AppleLiquid]: Android 15+ (API 35+) — full dome AGSL refraction, live tilt/scroll speculars, fluid merges, gelatinous touch.
+ * - [AppleLiquid]: Android 15+ (API 35+) — dome AGSL lensing, live speculars, fluids, gelatinous touch.
  * - [StandardLiquid]: Android 13–14 (API 33–34) — AGSL edge refraction + specular + binary smooth-union joins.
  * - [Frost]: Android 12 (API 31–32) — RenderEffect blur + colour vibrancy + white specular rim + adaptive shadow.
  * - [Translucent]: Android <= 30, desktop, or system blur disabled — clean translucent surface + specular + shadow.
@@ -178,13 +178,9 @@ public interface KitPlatform {
     public val glassTier: KitGlassTier
         get() = if (liquidGlass) KitGlassTier.AppleLiquid else KitGlassTier.Translucent
 
-    /** Full Apple Liquid Glass capability (Android 15+ / API 35+: live tilt speculars, multi-body fluids, gelatinous flex). */
-    public val appleLiquidGlass: Boolean
-        get() = glassTier == KitGlassTier.AppleLiquid
-
     /**
      * Observes device gravity tilt for live Apple Liquid Glass specular highlights while [active] is true (B-610).
-     * Must immediately unregister sensors when [active] is false (hidden, Reduced Motion, or non-Glass) for 0% idle CPU.
+     * Must immediately unregister sensors when [active] is false (hidden, Reduced Motion, non-Glass) for 0% idle CPU.
      */
     @Composable
     public fun ObserveGlassLight(active: Boolean, onAngleDeg: (Float) -> Unit): Unit = Unit
@@ -270,6 +266,10 @@ public object KitSystemBars {
 public val LocalKitPlatform: ProvidableCompositionLocal<KitPlatform> = staticCompositionLocalOf {
     error("KitPlatform is provided once at the app root")
 }
+
+/** Full Apple Liquid Glass tier (Android 15+ / API 35+: live speculars, fluids, flex). */
+public val KitPlatform.appleLiquidGlass: Boolean
+    get() = glassTier == KitGlassTier.AppleLiquid
 
 /** Applies the active theme's system-bar look to a popup window; no-op outside Android. */
 @Composable

@@ -96,7 +96,9 @@ class GlassLabTest {
         lab.onKnob(GlassKnob.LensStrength, 44f, dark = false)
         val t = lab.state.value.tuning
         assertEquals(44f, t.knobs(GlassPaneKind.Bar, false).lensStrengthDp)
-        assertEquals(58f, t.knobs(GlassPaneKind.Sheet, false).lensStrengthDp)
+        val delta = 44f - GlassTuning.shipped(GlassPaneKind.Bar, false).lensStrengthDp
+        val expectedSheet = GlassTuning.shipped(GlassPaneKind.Sheet, false).lensStrengthDp + delta
+        assertEquals(expectedSheet, t.knobs(GlassPaneKind.Sheet, false).lensStrengthDp)
         assertEquals(22f, t.knobs(GlassPaneKind.Chip, false).lensStrengthDp)
     }
 }

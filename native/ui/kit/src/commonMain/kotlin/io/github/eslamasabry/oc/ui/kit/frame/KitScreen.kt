@@ -566,17 +566,28 @@ public fun KitScreen(
                 ) {
                     Box(
                         Modifier.fillMaxSize()
-                            .then(io.github.eslamasabry.oc.ui.kit.effects.kitGlassScrollLightModifier(active = kitLiquidGlassOn() && !KitMotion.state.reduced))
-                            // The bar's copy of the recording is made once the body has drawn (the status edge, drawn next,
-                            // reads it). B-608: on floating chrome, start the soft fade AT the bar's bottom edge over the
-                            // bar's lens rim so scrolling content visibly enters and bends in the rim instead of vanishing early.
+                            .then(
+                                io.github.eslamasabry.oc.ui.kit.effects.kitGlassScrollLightModifier(
+                                    active = kitLiquidGlassOn() && !KitMotion.state.reduced,
+                                )
+                            )
+                            // The bar's copy of the recording is made once the body has drawn. B-608: on floating
+                            // chrome, start the soft fade AT the bar's bottom edge over its lens rim so scrolling
+                            // content visibly enters and bends in the rim instead of vanishing early.
                             .then(
                                 if (topFade == null) Modifier
                                 else if (floatChrome) {
-                                    val barRimPx = with(density) { io.github.eslamasabry.oc.ui.design.effects.LiquidEdge.recipe(LiquidRole.Bar, dark = true).rimMaxDp.dp.toPx().coerceAtLeast(1f) }
-                                    Modifier.kitWordsFadeRecorder(topFade, { topBottom }, { barRimPx }, after = true, clear = { barClear })
+                                    val barRimDp = io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
+                                        .recipe(LiquidRole.Bar, dark = true).rimMaxDp
+                                    val barRimPx = with(density) { barRimDp.dp.toPx().coerceAtLeast(1f) }
+                                    Modifier.kitWordsFadeRecorder(
+                                        topFade, { topBottom }, { barRimPx }, after = true, clear = { barClear },
+                                    )
                                 } else {
-                                    Modifier.kitWordsFadeRecorder(topFade, { topBottom + barDissolve() }, barDissolve, after = true, clear = { barClear })
+                                    Modifier.kitWordsFadeRecorder(
+                                        topFade, { topBottom + barDissolve() }, barDissolve,
+                                        after = true, clear = { barClear },
+                                    )
                                 }
                             )
                             .then(
@@ -702,10 +713,19 @@ public fun KitScreen(
                             .then(
                                 if (wordsFade == null) Modifier
                                 else if (floatChrome) {
-                                    val boxRimPx = with(density) { io.github.eslamasabry.oc.ui.design.effects.LiquidEdge.recipe(LiquidRole.Composer, dark = true).rimMaxDp.dp.toPx().coerceAtLeast(1f) }
-                                    Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.blockTop }, { boxRimPx }, clear = { boxClear })
+                                    val boxRimDp = io.github.eslamasabry.oc.ui.design.effects.LiquidEdge
+                                        .recipe(LiquidRole.Composer, dark = true).rimMaxDp
+                                    val boxRimPx = with(density) { boxRimDp.dp.toPx().coerceAtLeast(1f) }
+                                    Modifier.kitWordsFadeRecorder(
+                                        wordsFade, { bottomState.blockTop }, { boxRimPx }, clear = { boxClear },
+                                    )
                                 } else {
-                                    Modifier.kitWordsFadeRecorder(wordsFade, { bottomState.blockTop - bottomExtraTarget - fadeBottomPx }, { fadeBottomPx }, clear = { boxClear })
+                                    Modifier.kitWordsFadeRecorder(
+                                        wordsFade,
+                                        { bottomState.blockTop - bottomExtraTarget - fadeBottomPx },
+                                        { fadeBottomPx },
+                                        clear = { boxClear },
+                                    )
                                 }
                             )
                             .then(
@@ -759,17 +779,14 @@ public fun KitScreen(
                 }
             val runs = (frost == null && stackTop != null && pageHeader != null && lens) || floats
             // What the bar's glass (and the status bar's edge) sees of a body that runs under it: the kit's recording.
-            val floatsCapsule = floats && floatingBar?.scrollsElsewhere == false
-            val underFade = if (runs && (!floats || floatsCapsule)) rememberKitWordsFade(under, KitWordsClear.Above) else null
+            val underFade = if (runs && !floats) rememberKitWordsFade(under, KitWordsClear.Above) else null
             val barFace =
                 when {
                     stackTop == null -> null
-                    // Home (scrollsElsewhere == true, owner 2026-11-16 "no solid plates over the background"): keeps
-                    // the page background unbroken behind the big Conversations heading and filter chips.
-                    floats && !floatsCapsule -> null
+                    // Owner 2026-11-16 ("no solid plates over the background"): KitFloatingBar floats over the
+                    // unbroken page background with no pane or plate of its own.
+                    floats -> null
                     frost != null -> kitLiquidFace(LiquidRole.Bar, frost, LiquidBarShape)
-                    // Settings / Appearance / New Conversation (floatsCapsule) & pages running under the bar (B-616):
-                    // coherent floating Apple Liquid Glass capsule with curved lensing and live specular highlight.
                     runs -> kitLiquidFace(LiquidRole.Bar, underFade?.fadedSource ?: under, LiquidBarShape)
                     else -> null
                 }
@@ -806,13 +823,7 @@ public fun KitScreen(
             // Where the chrome ends inside the scrolling box: a body that runs under the bar is gone above the floating
             // block's foot (it has no pane, owner 2026-11-16) or the pinned glass bar's; every other body starts below its
             // chrome.
-            val topClear: () -> Float = {
-                when {
-                    floatsCapsule -> statusRun.toFloat()
-                    runs -> runPx.toFloat()
-                    else -> 0f
-                }
-            }
+            val topClear: () -> Float = { if (runs) runPx.toFloat() else 0f }
             val topDissolve: () -> Float = { dissolvePx * topUnder() }
             // The bar's copy of the recording: at least a pixel, as its copy clears nothing without a rim.
             val barDissolve: () -> Float = { topDissolve().coerceAtLeast(1f) }
@@ -822,7 +833,6 @@ public fun KitScreen(
                     .testTag("kit-screen")
             ) {
                 if (stackTop != null) {
-                    val floatBarRimPx = with(density) { io.github.eslamasabry.oc.ui.design.effects.LiquidEdge.recipe(LiquidRole.Bar, dark = true).rimMaxDp.dp.toPx().coerceAtLeast(1f) }
                     Box(
                         Modifier.windowInsetsPadding(
                             WindowInsets.safeDrawing.only(
@@ -830,18 +840,7 @@ public fun KitScreen(
                             )
                         ).then(
                             when {
-                                // B-616: Settings / Appearance / New Conversation float an Apple Liquid Glass capsule
-                                // over live scrolling content (not a rimless fog strip, not a flat opaque plate).
-                                floatsCapsule && barFace != null -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
-                                    .then(kitLiquidWordsHost(LiquidRole.Bar, underFade?.fadedSource ?: under))
-                                    .then(
-                                        if (underFade == null) Modifier
-                                        else Modifier.kitTopPaneReport(floatPane, LIQUID_BAR_INSET_X, LIQUID_BAR_INSET_Y)
-                                            .kitWordsFadeRecorder(underFade, { floatPane.bottom }, { floatBarRimPx }, clear = { barClear })
-                                    )
-                                    .kitTouchSink()
-                                // The floating bar on Home (scrollsElsewhere == true): no pane or plate behind the
-                                // heading and filter chips (owner 2026-11-16).
+                                // The floating bar (owner 2026-11-16): no pane or plate over the background.
                                 floats -> Modifier.zIndex(1f).onSizeChanged { barPx = it.height }
                                     .then(if (floatingBar?.scrollsElsewhere == true) Modifier.kitMaxWidth(cap) else Modifier)
                                     .kitTouchSink()
@@ -860,7 +859,6 @@ public fun KitScreen(
                     ) {
                         if (floats) {
                             Box(Modifier.fillMaxWidth().testTag(FLOATING_CHROME_TAG)) {
-                                if (floatsCapsule && barFace != null) KitLiquidBarPane(barFace)
                                 Column(Modifier.fillMaxWidth()) {
                                     stackTop()
                                     // The second row keeps the room under it the title has above it, and its sideways

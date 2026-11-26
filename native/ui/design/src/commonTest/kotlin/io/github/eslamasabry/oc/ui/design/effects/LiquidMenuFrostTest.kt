@@ -18,7 +18,7 @@ class LiquidMenuFrostTest {
             val sheet = LiquidEdge.recipe(LiquidRole.Sheet, dark)
             val bar = LiquidEdge.recipe(LiquidRole.Bar, dark)
             assertEquals(LiquidEdge.MODAL_BLUR_DP, menu.blurDp, "menu blur dark=$dark")
-            assertTrue(menu.blurDp > bar.blurDp, "scale-dependent weight: modals carry deeper blur than slim bars (dark=$dark)")
+            assertTrue(menu.blurDp > bar.blurDp, "modals carry deeper blur than slim bars (dark=$dark)")
             assertEquals(sheet.blurDp, menu.blurDp)
             assertEquals(36f, menu.refractionDp, "menu bend dark=$dark")
             assertEquals(26f, menu.rimMaxDp, "menu rim dark=$dark")

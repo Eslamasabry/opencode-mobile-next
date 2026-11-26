@@ -101,7 +101,8 @@ public class KitGlassLight {
     public fun onScrollDelta(deltaYPx: Float, density: Float) {
         val impulse = GlassLightMath.scrollImpulseDeg(deltaYPx, density)
         if (impulse == 0f) return
-        val next = (scrollOffsetDeg * 0.72f + impulse).coerceIn(-GlassLightMath.MAX_SCROLL_SWEEP_DEG, GlassLightMath.MAX_SCROLL_SWEEP_DEG)
+        val maxSweep = GlassLightMath.MAX_SCROLL_SWEEP_DEG
+        val next = (scrollOffsetDeg * 0.72f + impulse).coerceIn(-maxSweep, maxSweep)
         if (abs(next - scrollOffsetDeg) >= 0.25f) {
             scrollOffsetDeg = next
             scrollPulse++

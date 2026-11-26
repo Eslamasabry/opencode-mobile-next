@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
  * layer) is not seen here.
  */
 class PaneRimFloorTest {
-    /** The share of a pane's peak below which a stretch of rim fails: the floor (RimLight.FLOOR, .15) less anti-aliasing (B-610). */
+    /** Share of a pane's peak below which a rim fails: RimLight.FLOOR (.15) less anti-aliasing (B-610). */
     private val share = io.github.eslamasabry.oc.ui.design.effects.RimLight.FLOOR - .04f
 
     /** Below this (0-255 colour distance) a stretch has no rim at all. */

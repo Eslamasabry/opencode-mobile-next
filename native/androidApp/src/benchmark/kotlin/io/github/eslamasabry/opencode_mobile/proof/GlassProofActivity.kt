@@ -106,6 +106,13 @@ class GlassProofActivity : ComponentActivity() {
             when (look) {
                 "solid" -> KitAppearance()
                 "glass" -> KitAppearance(style = Style.Glass)
+                "glass-light" ->
+                    KitAppearance(
+                        mode = io.github.eslamasabry.oc.ui.design.effects.AppearanceMode.Light,
+                        style = Style.Glass,
+                        liveBackground = true,
+                        liveStyle = "aurora",
+                    )
                 "glass-drift" -> KitAppearance(style = Style.Glass, liveBackground = true, liveStyle = "auroraImage")
                 else -> KitAppearance(style = Style.Glass, liveBackground = true, liveStyle = "aurora")
             }
@@ -167,7 +174,7 @@ class GlassProofActivity : ComponentActivity() {
             overlayChrome = true,
             frost = if (scene != "list") source else null,
             topBar = { ProofTopBar(scene, menu) { menu = false } },
-            bottom = if (scene != "list") ({ ProofBottom(scene) }) else null,
+            bottom = if (scene != "list") ({ ProofBottom(scene, menu) { menu = false } }) else null,
             edges = KitScreenEdges.Bleed,
         ) {
             Box(Modifier.fillMaxSize()) {
@@ -201,7 +208,7 @@ class GlassProofActivity : ComponentActivity() {
 
     /** The scripted run for [scene]: the menu opening and closing, or the list scrolled at two speeds. */
     private suspend fun playScript(scene: String, list: LazyListState, setMenu: (Boolean) -> Unit) {
-        val menuScene = scene == "menu" || scene == "join-menu"
+        val menuScene = scene == "menu" || scene == "join-menu" || scene == "join-composer-menu"
         if (menuScene && hold) {
             setMenu(true)
             delay(1_500)
@@ -233,17 +240,27 @@ class GlassProofActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun ProofBottom(scene: String) {
-        // join-pill: the message box is one slab of glass the jump pill joins.
-        if (scene == "join-pill") KitReportBottomSlab(true)
+    private fun ProofBottom(scene: String, menu: Boolean, onDismissMenu: () -> Unit) {
+        // join-pill / join-composer-menu: the message box is one slab of glass joined to its drop.
+        val joinedBottom = scene == "join-pill" || scene == "join-composer-menu"
+        if (joinedBottom) KitReportBottomSlab(true)
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Row { KitChip("Ask first", icon = KitIcons.add); KitChip("build · Model") }
             val shape = RoundedCornerShape(28.dp)
-            val body = if (scene == "join-pill") rememberKitLiquidJoinBody("bottom") else null
+            val body = if (joinedBottom) rememberKitLiquidJoinBody("bottom") else null
             val face = kitLiquidFace(LiquidRole.Composer, LocalKitLiquidChrome.current, shape, join = body)
             Box(Modifier.fillMaxWidth().height(64.dp).kitLiquidJoinRest(body, shape).then(face ?: Modifier)) {
                 val inset = Modifier.align(Alignment.CenterStart).padding(start = 24.dp)
                 KitText("Ask OpenCode…", KitTextRole.Supporting, inset)
+                if (scene == "join-composer-menu") {
+                    val items = listOf("Attach file", "Pick model", "Switch agent", "Voice input")
+                    KitMenu(
+                        expanded = menu,
+                        items = items.map { KitMenuItem(it, {}) },
+                        onDismissRequest = onDismissMenu,
+                        modifier = Modifier.align(Alignment.CenterEnd).padding(end = 12.dp),
+                    ) { KitText("Tools", KitTextRole.Supporting, Modifier.padding(12.dp)) }
+                }
             }
         }
     }

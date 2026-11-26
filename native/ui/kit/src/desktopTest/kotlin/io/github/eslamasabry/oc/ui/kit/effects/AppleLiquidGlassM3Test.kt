@@ -47,7 +47,7 @@ class AppleLiquidGlassM3Test {
         val placed = JoinBox.of(20f, 500f, 220f, 680f, 20f)
         val (colL, colR) = LiquidJoin.menuColumn(composer, 24f, 72f, 56f)
         val overlap = 4f
-        val (left, top) = LiquidJoin.menuRest(composer, placed, colL, colR, overlap, up = true)
+        val (left, top) = LiquidJoin.menuRestAbove(composer, placed, colL, colR, overlap)
         assertEquals(composer.left, left, 0.5f, "left-end trigger aligns flush with composer start")
         assertEquals(composer.top - 180f + overlap, top, 0.5f, "upward menu overlaps composer top edge by overlap")
 
@@ -83,11 +83,13 @@ class AppleLiquidGlassM3Test {
                     CompositionLocalProvider(LocalKitLiquidJoin provides join) {
                         Box(Modifier.size(360.dp, 640.dp)) {
                             Box(Modifier.fillMaxSize().kitFrostSource(frost))
+                            val composerFace =
+                                kitLiquidFace(LiquidRole.Composer, frost, RoundedCornerShape(24.dp)) ?: Modifier
                             Box(
                                 Modifier.align(Alignment.BottomCenter)
                                     .fillMaxWidth()
                                     .height(56.dp)
-                                    .then(kitLiquidFace(LiquidRole.Composer, frost, RoundedCornerShape(24.dp)) ?: Modifier)
+                                    .then(composerFace)
                             )
                             KitJumpButton(
                                 label = "Jump to latest",
@@ -101,14 +103,18 @@ class AppleLiquidGlassM3Test {
                 }
             }
             waitForIdle()
-            val pillSpec = platform.liquidSpecs.firstOrNull { it.recipe.blurDp == 0.5f && it.recipe.refractionDp == 14f }
+            val pillSpec = platform.liquidSpecs.firstOrNull {
+                it.recipe.blurDp == 0.5f && it.recipe.refractionDp == 14f
+            }
             assertNotNull(pillSpec, "round KitJumpButton must request LiquidRole.Pill liquid glass")
         }
 
     @Test
     fun `B-616 LiquidJoinShader with meniscus specular highlight compiles and renders in Skia SkSL`() {
-        val effect = assertNotNull(DesktopLiveShader.compile(LiquidJoinShader.source(effect = true)), "effect shader compiles")
-        val brush = assertNotNull(DesktopLiveShader.compile(LiquidJoinShader.source(effect = false)), "brush shader compiles")
+        val effectSrc = LiquidJoinShader.source(effect = true)
+        val brushSrc = LiquidJoinShader.source(effect = false)
+        val effect = assertNotNull(DesktopLiveShader.compile(effectSrc), "effect shader compiles")
+        val brush = assertNotNull(DesktopLiveShader.compile(brushSrc), "brush shader compiles")
         val body = Rect(20f, 200f, 340f, 264f)
         val drop = Rect(150f, 152f, 202f, 204f)
         val geom = JoinGeometry.of(body, 26f, drop, 22f, body, dropIsMine = false, reachesCentre = false)

@@ -198,12 +198,14 @@ class KitGlassLookPickerTest {
             }
         }
         mainClock.advanceTimeBy(300)
-        assertEquals(2, GlassLooks.offered.size, "Clear and Smoked are cut: two looks ship")
+        assertEquals(3, GlassLooks.offered.size, "Clear, Glossy and Frosted ship; Smoked is cut")
+        val clear = onNodeWithTag("kit-glass-look-clear", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val glossy = onNodeWithTag("kit-glass-look-glossy", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         val frosted = onNodeWithTag("kit-glass-look-frosted", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertEquals(0, onAllNodesWithTag("kit-glass-look-smoked", useUnmergedTree = true).fetchSemanticsNodes().size, "Smoked is not offered")
-        assertEquals(glossy.top, frosted.top, .5f, "Glossy and Frosted share the row")
-        assertEquals(glossy.width, frosted.width, .5f)
+        assertEquals(clear.top, glossy.top, .5f, "Clear and Glossy share the first row")
+        assertEquals(clear.width, glossy.width, .5f)
+        assertTrue(frosted.top > glossy.top, "Frosted sits cleanly on the second row")
         assertEquals(1, onAllNodesWithTag("kit-glass-look-check", useUnmergedTree = true).fetchSemanticsNodes().size, "one check, on the chosen look")
     }
 

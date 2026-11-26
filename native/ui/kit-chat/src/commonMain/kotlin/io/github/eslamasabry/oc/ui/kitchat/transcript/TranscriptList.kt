@@ -375,9 +375,15 @@ private fun KitJumpToLatest(
             }
     // The kit's own jump pill (small, chevron and words), or a floating chat's round arrow, shown while away from the
     // newest end.
-    if (round)
-        io.github.eslamasabry.oc.ui.kit.frame.KitJumpButton(label, jump, state.awayFromLatest, modifier.testTag("jump-to-latest"), backdrop = backdrop)
-    else
+    if (round) {
+        io.github.eslamasabry.oc.ui.kit.frame.KitJumpButton(
+            label,
+            jump,
+            state.awayFromLatest,
+            modifier.testTag("jump-to-latest"),
+            backdrop = backdrop,
+        )
+    } else {
         KitJumpPill(
             label = label,
             visible = state.awayFromLatest,
@@ -385,6 +391,7 @@ private fun KitJumpToLatest(
             backdrop = backdrop,
             onClick = jump,
         )
+    }
 }
 
 /** [a] plus [b], each side read only when asked (at measure), never while composing. */

@@ -527,7 +527,10 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
     val look = kitGlassLook()
     val glassLight = LocalKitGlassLight.current
     val spec =
-        remember(roles, role, rtl, appearance.pack, appearance.accent, flip, chosen, keepRim, swell, picture, look, platform.liquidResolution, glassLight) {
+        remember(
+            roles, role, rtl, appearance.pack, appearance.accent, flip, chosen,
+            keepRim, swell, picture, look, platform.liquidResolution, glassLight,
+        ) {
             // The face carries its words itself (no plate): its tint is thickened for the theme's ink over the content
             // that ink lies over; over content of the other brightness the words flip to the other theme's ink and the
             // face to the other theme's face, which carries that ink there.
@@ -553,12 +556,15 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
             val recipe = if (swell && role == LiquidRole.Menu) LiquidEdge.swellRecipe(faceDark, look) else LiquidEdge.recipe(role, faceDark, look)
             val rim = LiquidRim.Light
             val small = role == LiquidRole.Pill || role == LiquidRole.Status || role == LiquidRole.Action
+            val defLook = io.github.eslamasabry.oc.ui.design.style.GlassLook.Default
+            val gt = io.github.eslamasabry.oc.ui.design.effects.GlassTuning
             val specularScale =
-                if (faceDark) (look.spec.liquidSpecularDark / io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularDark).coerceIn(0f, 1.5f)
-                else (look.spec.liquidSpecularLight / io.github.eslamasabry.oc.ui.design.style.GlassLook.Default.liquidSpecularLight).coerceIn(0f, 1.5f)
-            val specularAlpha =
-                ((if (faceDark) io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_SPECULAR_DARK
-                else io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_SPECULAR_LIGHT) * specularScale).coerceIn(0f, 1f)
+                if (faceDark) (look.spec.liquidSpecularDark / defLook.liquidSpecularDark).coerceIn(0f, 1.5f)
+                else (look.spec.liquidSpecularLight / defLook.liquidSpecularLight).coerceIn(0f, 1.5f)
+            val baseSpec = if (faceDark) gt.SHIPPED_SPECULAR_DARK else gt.SHIPPED_SPECULAR_LIGHT
+            val specularAlpha = (baseSpec * specularScale).coerceIn(0f, 1f)
+            val rimAlpha = if (faceDark) look.spec.liquidRimDark else gt.LIGHT_RIM_ALPHA
+            val specReach = if (small) gt.SMALL_SPECULAR_REACH_DP else gt.SPECULAR_REACH_DP
             KitLiquidPaneSpec(
                 recipe = recipe,
                 fill = fill,
@@ -566,7 +572,7 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
                 rtl = rtl,
                 // Apple Liquid Glass (B-612): crisp white specular rim in BOTH dark and light modes; soft elevation
                 // shadow separates light-mode glass cleanly without a dull black wireframe border.
-                rim = rim.copy(alpha = if (faceDark) look.spec.liquidRimDark else io.github.eslamasabry.oc.ui.design.effects.GlassTuning.LIGHT_RIM_ALPHA),
+                rim = rim.copy(alpha = rimAlpha),
                 rimAdds = faceDark,
                 rimDp = RIM_LIGHT_DP,
                 shadow = Color.Black.copy(alpha = recipe.shadowAlpha),
@@ -575,14 +581,16 @@ internal fun kitLiquidPaneSpec(role: LiquidRole, flip: LiquidFlip, chosen: Boole
                 // Restore crisp specular glint along lit glass curve (B-609, B-612).
                 specular = rim.copy(alpha = specularAlpha),
                 flipFill = if (smoke != null) fill else otherFace.fill?.let { lean(Color(it.v), !roles.dark) } ?: fill,
-                flipFillStart = if (smoke != null) face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill else (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
+                flipFillStart =
+                    if (smoke != null) face.fillStart?.let { lean(Color(it.v), faceDark) } ?: fill
+                    else (otherFace.fillStart ?: otherFace.fill)?.let { lean(Color(it.v), !roles.dark) } ?: fill,
                 flipSheen = Color(otherFace.sheen.v),
                 flip = flip,
                 keepRim = keepRim,
                 glintShare = look.spec.glintShare,
                 resolution = liquidResolutionOf(recipe, platform.liquidResolution),
-                bendShape = io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SHIPPED_BEND_SHAPE,
-                specularReachDp = if (small) io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SMALL_SPECULAR_REACH_DP else io.github.eslamasabry.oc.ui.design.effects.GlassTuning.SPECULAR_REACH_DP,
+                bendShape = gt.SHIPPED_BEND_SHAPE,
+                specularReachDp = specReach,
                 liveLight = glassLight,
             )
         }

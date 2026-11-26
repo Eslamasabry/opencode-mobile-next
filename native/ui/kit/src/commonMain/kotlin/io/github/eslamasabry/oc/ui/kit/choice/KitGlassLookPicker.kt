@@ -498,7 +498,7 @@ public fun KitGlassLookPreview(
         )
         CompositionLocalProvider(LocalKitGlassLookOverride provides preset) {
             Column(
-                Modifier.fillMaxSize().kitLiquidPlateHost(words).padding(Space.S4.dp).clearAndSetSemantics {},
+                Modifier.fillMaxWidth().kitLiquidPlateHost(words).padding(Space.S4.dp).clearAndSetSemantics {},
                 verticalArrangement = Arrangement.Top,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

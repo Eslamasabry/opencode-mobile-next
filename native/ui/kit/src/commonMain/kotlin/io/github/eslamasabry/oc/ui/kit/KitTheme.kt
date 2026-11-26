@@ -42,6 +42,7 @@ import io.github.eslamasabry.oc.ui.kit.motion.KitMotionState
 import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import io.github.eslamasabry.oc.ui.kit.platform.KitSystemSignals
 import io.github.eslamasabry.oc.ui.kit.platform.LocalKitPlatform
+import io.github.eslamasabry.oc.ui.kit.platform.appleLiquidGlass
 import io.github.eslamasabry.oc.ui.kit.theme.KitTypography
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppDensity
@@ -169,16 +170,8 @@ public fun KitTheme(
     androidx.compose.runtime.SideEffect { io.github.eslamasabry.oc.ui.kit.foundation.KitLayerCycles.strict = platform.isDebug }
     // One live background for every page under this root (smoothness round 2): one clock, one picture per page size.
     val live = io.github.eslamasabry.oc.ui.kit.live.rememberKitLiveShare()
-    // Live tilt & scroll specular light (B-610): strictly gated on Glass + AppleLiquid (API 35+) + visible + motion on.
-    val glassLight = remember { io.github.eslamasabry.oc.ui.kit.effects.KitGlassLight() }
-    val lightActive =
-        styleState.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass &&
-            !motion.reduced &&
-            !stillFrame &&
-            platform.appleLiquidGlass &&
-            io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility.current.shown
-    if (!lightActive) androidx.compose.runtime.SideEffect { glassLight.reset() }
-    platform.ObserveGlassLight(active = lightActive) { deg -> glassLight.onTiltDeg(deg) }
+    // Live tilt & scroll specular light (B-610): strictly gated on Glass + AppleLiquid (API 35+) + visible + motion.
+    val glassLight = rememberKitGlassLight(styleState.style, motion.reduced, stillFrame, platform)
     CompositionLocalProvider(
         io.github.eslamasabry.oc.ui.kit.live.LocalKitLiveShare provides live,
         io.github.eslamasabry.oc.ui.kit.effects.LocalKitGlassLight provides glassLight,
@@ -289,3 +282,22 @@ internal fun languageOf(tag: String): String =
 internal fun isRtl(tag: String): Boolean = languageOf(tag) in rtlLanguages
 
 internal fun isArabic(tag: String): Boolean = languageOf(tag) == "ar"
+
+@Composable
+private fun rememberKitGlassLight(
+    style: io.github.eslamasabry.oc.ui.design.style.Style,
+    reduced: Boolean,
+    stillFrame: Boolean,
+    platform: KitPlatform,
+): io.github.eslamasabry.oc.ui.kit.effects.KitGlassLight {
+    val glassLight = remember { io.github.eslamasabry.oc.ui.kit.effects.KitGlassLight() }
+    val active =
+        style == io.github.eslamasabry.oc.ui.design.style.Style.Glass &&
+            !reduced &&
+            !stillFrame &&
+            platform.appleLiquidGlass &&
+            io.github.eslamasabry.oc.ui.kit.platform.LocalKitVisibility.current.shown
+    if (!active) androidx.compose.runtime.SideEffect { glassLight.reset() }
+    platform.ObserveGlassLight(active = active) { deg -> glassLight.onTiltDeg(deg) }
+    return glassLight
+}

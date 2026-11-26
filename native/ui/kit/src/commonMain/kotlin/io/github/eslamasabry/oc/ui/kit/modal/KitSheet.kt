@@ -627,13 +627,19 @@ private fun SheetLayer(state: KitSheetHostState) {
                                 entry.height == KitSheetHeight.Half -> Modifier.height(half)
                                 else -> Modifier.height(maxSheet)
                             }
-                        // B-613: partial-height Glass sheets float inset with concentric rounded corners so the live
-                        // background peeks around all edges (Apple iOS 26 sheet geometry). Full sheets stay edge-anchored.
-                        val glassInset = io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle.current.style == io.github.eslamasabry.oc.ui.design.style.Style.Glass && entry.height != KitSheetHeight.Full
+                        // B-613: partial-height Liquid Glass sheets float inset with concentric rounded corners
+                        // so the live background peeks around all edges (Apple iOS 26 sheet geometry). Full sheets
+                        // and non-lens fallback sheets stay edge-anchored.
+                        val glassInset =
+                            io.github.eslamasabry.oc.ui.kit.effects.kitLiquidGlassOn() &&
+                                entry.height != KitSheetHeight.Full
                         val sheetShape = if (glassInset) KitShapeId.Dialog else KitShapeId.Sheet
+                        val insetMod =
+                            if (glassInset) Modifier.padding(horizontal = Space.S2.dp, vertical = Space.S2.dp)
+                            else Modifier
                         SheetPanel(
                             entry,
-                            Modifier.then(if (glassInset) Modifier.padding(horizontal = Space.S2.dp, vertical = Space.S2.dp) else Modifier)
+                            Modifier.then(insetMod)
                                 .widthIn(max = SheetLayout.BOTTOM_MAX_DP.dp)
                                 .fillMaxWidth()
                                 .then(sized)
