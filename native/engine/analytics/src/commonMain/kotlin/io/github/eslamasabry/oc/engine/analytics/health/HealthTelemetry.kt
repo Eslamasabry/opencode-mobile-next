@@ -103,7 +103,17 @@ public fun appExitReasonWord(reason: Int): String = when (val word = exitReasonW
 }
 
 private const val EXIT_SELF = 1
+private const val REASON_CRASH = 4
+private const val REASON_CRASH_NATIVE = 5
+private const val REASON_ANR = 6
+private const val REASON_INITIALIZATION_FAILURE = 7
 private const val PACKAGE_UPDATED = 16
+
+private fun isFaultExitReason(reason: Int): Boolean =
+    reason == REASON_CRASH ||
+        reason == REASON_CRASH_NATIVE ||
+        reason == REASON_ANR ||
+        reason == REASON_INITIALIZATION_FAILURE
 
 /** The major.minor of a server version (`2.0.28` becomes `2.0`), or null when it does not start that way. */
 public fun majorMinorOf(version: String?): String? {
@@ -386,7 +396,11 @@ public class HealthTelemetry(
         })
     }
 
-    /** User-requested stops remain useful analytics, but are not app exceptions. Other abnormal exits stay non-fatal. */
+    /**
+     * Records a `process_exit` non-fatal only when the app died in the foreground or from our own fault
+     * (crash, native crash, ANR, or initialization failure); silent background OS reclaims and user-requested
+     * stops stay analytics-only.
+     */
     private suspend fun reportLastExit() {
         if (exitRead) return
         exitRead = true
@@ -394,7 +408,8 @@ public class HealthTelemetry(
         if (!telemetry.crashes.value || newest.atMs <= marks.lastExitAtMs()) return
         marks.setLastExitAtMs(newest.atMs)
         val word = exitReasonWord(newest.reason) ?: return
-        if (word != "user_requested") telemetry.recordFailure("process_exit", mapOf("exit_reason" to word))
+        val report = word != "user_requested" && (newest.foreground == true || isFaultExitReason(newest.reason))
+        if (report) telemetry.recordFailure("process_exit", mapOf("exit_reason" to word))
     }
 
     /**
