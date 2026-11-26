@@ -34,7 +34,7 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test
 
-private const val RENDER_PHASE = "before"
+private const val RENDER_PHASE = "after"
 
 /**
  * Slow-motion 360 dp frame sequence of rapid turn arrivals while following (B-530):
@@ -55,14 +55,16 @@ class SmoothFollowScrollRenders {
         override fun thought(firstLine: String): String = firstLine
     }
 
-    private val out: File =
-        (
-            System.getenv("SMOOTH_FOLLOW_OUT")?.let(::File)
-                ?: File(System.getProperty("user.home"), "render-out")
-                    .takeIf { it.isDirectory }
-                    ?.resolve("smooth-follow")
-                ?: File("build/smooth-follow-render")
-        ).also(File::mkdirs)
+    private val outputs: List<File> =
+        buildList {
+            add(File("build/smooth-follow-render").also(File::mkdirs))
+            System.getenv("SMOOTH_FOLLOW_OUT")?.let(::File)?.also(File::mkdirs)?.let(::add)
+            File(System.getProperty("user.home"), "render-out")
+                .takeIf { it.isDirectory }
+                ?.resolve("smooth-follow")
+                ?.also(File::mkdirs)
+                ?.let(::add)
+        }
 
     private fun turns(count: Int, revision: Long = count.toLong()): TranscriptState =
         stateOf(
@@ -109,11 +111,8 @@ class SmoothFollowScrollRenders {
             repeat(4) { mainClock.advanceTimeByFrame() }
 
             fun snap(tag: String) {
-                ImageIO.write(
-                    onRoot().captureToImage().toAwtImage(),
-                    "png",
-                    File(out, "$RENDER_PHASE-$tag.png"),
-                )
+                val img = onRoot().captureToImage().toAwtImage()
+                for (dir in outputs) ImageIO.write(img, "png", File(dir, "chat-$RENDER_PHASE-$tag.png"))
             }
 
             snap("f00-000ms-rest")

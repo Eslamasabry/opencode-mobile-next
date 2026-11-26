@@ -41,10 +41,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -73,11 +75,13 @@ import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcon
 import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
+import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
 import io.github.eslamasabry.oc.ui.kitchat.tool.railMeasures
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -92,15 +96,23 @@ import kotlinx.coroutines.launch
 public class TranscriptListState
 internal constructor(
     public val lazy: LazyListState,
-    followingState: MutableState<Boolean>,
+    private val followingState: MutableState<Boolean>,
     private val density: Density,
 ) {
+    private var followJob: Job? = null
+    private var followDirty: Boolean = false
+
     /**
      * P12-CHAT-FEEL: backed by the saveable state itself, so rotation and coming back restore the
      * reader's choice as it is now (a copy synced on recomposition went stale and pulled a reader
      * back to the bottom).
      */
-    public var following: Boolean by followingState
+    public var following: Boolean
+        get() = followingState.value
+        set(value) {
+            followingState.value = value
+            if (!value) cancelFollowScroll()
+        }
 
     /** Index 0 (the newest row) is at the bottom, within the 48 dp follow slack (plan 08 §5.1). */
     public val atLiveEdge: Boolean by derivedStateOf {
@@ -110,8 +122,10 @@ internal constructor(
 
     /** Plan 09 §7.3: away once index 0 left the bottom or it is scrolled more than 480 dp. */
     public val awayFromLatest: Boolean by derivedStateOf {
-        lazy.firstVisibleItemIndex > 0 ||
-            lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+        !following && (
+            lazy.firstVisibleItemIndex > 0 ||
+                lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
+            )
     }
 
     private var slotHeight = -1
@@ -132,14 +146,74 @@ internal constructor(
     public fun keepAtBottom() {
         val leave =
             Snapshot.withoutReadObservation {
-                !following || lazy.isScrollInProgress ||
+                !following || lazy.isScrollInProgress || followJob?.isActive == true ||
                     (lazy.firstVisibleItemIndex == 0 && lazy.firstVisibleItemScrollOffset == 0)
             }
         if (!leave) lazy.requestScrollToItem(0)
     }
 
+    /** Stops any in-flight smooth follow-scroll immediately (e.g. on user touch/drag). */
+    internal fun cancelFollowScroll() {
+        followDirty = false
+        followJob?.cancel()
+        followJob = null
+    }
+
+    /**
+     * Handles a new item arriving at the newest end while [following] is true:
+     * - Under reduced motion ([reduced]): settles at index 0 immediately without animation.
+     * - Otherwise: leaves the prior newest item anchored across the prepend (no 1-frame snap-up)
+     *   and smoothly glides the scroll offset back to index 0, coalescing rapid bursts.
+     */
+    internal fun onNewestKeyChanged(
+        hadPrevious: Boolean,
+        reduced: Boolean,
+        scope: CoroutineScope,
+        motion: () -> KitMotionLevel,
+    ) {
+        if (!following) return
+        if (reduced) {
+            cancelFollowScroll()
+            lazy.requestScrollToItem(0)
+        } else if (hadPrevious) {
+            requestSmoothFollow(scope, motion)
+        }
+    }
+
+    private fun requestSmoothFollow(scope: CoroutineScope, motion: () -> KitMotionLevel) {
+        followDirty = true
+        if (followJob?.isActive == true) return
+        followJob =
+            scope.launch {
+                try {
+                    drainFollowScroll(motion)
+                } finally {
+                    followDirty = false
+                    if (followJob === coroutineContext[Job]) followJob = null
+                }
+            }
+    }
+
+    private suspend fun drainFollowScroll(motion: () -> KitMotionLevel) {
+        while (following) {
+            if (!lazy.canScrollBackward) {
+                if (!followDirty) break
+                followDirty = false
+                withFrameNanos { }
+                if (!following || !lazy.canScrollBackward) continue
+            }
+            followDirty = false
+            if (motion() == KitMotionLevel.Off) {
+                lazy.scrollToItem(0)
+            } else {
+                lazy.animateScrollToItem(0)
+            }
+        }
+    }
+
     /** Follows the newest row and brings it into view on [scope], which outlives the docked row. */
     internal fun jumpToLatest(scope: CoroutineScope, motion: KitMotionLevel) {
+        cancelFollowScroll()
         following = true
         scope.launch {
             val viewport = lazy.layoutInfo.visibleItemsInfo.size.coerceAtLeast(1)
@@ -193,9 +267,10 @@ public data class KitTranscriptDockLive(
  * follow-bottom and the "Jump to latest" control. Callers add items with stable String keys and a
  * contentType (§7.2).
  *
- * Follow: growth of the bottom item keeps it glued for free; a NEW item at index 0 would land out
- * of view (the list anchors on the old first key), so while following the list asks for index 0 in
- * the same frame as the insert.
+ * Follow: growth of the bottom item keeps it glued for free; when a new item arrives at index 0
+ * while following, the list keeps the prior newest item anchored across the prepend and smoothly
+ * glides back to index 0 (coalescing rapid bursts and cancelling on drag), or settles at once under
+ * reduced motion. Reading history (not following) never moves.
  */
 @Composable
 @Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
@@ -219,18 +294,27 @@ public fun KitTranscriptList(
     onReachOldest: (() -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
+    // Owned by the list, not the docked row: tapping the row turns following on and unmounts it on the next frame,
+    // so a scope inside the row would cancel the glide after scrollToItem(2).
+    val scope = rememberCoroutineScope()
+    val latestMotion = rememberUpdatedState(motion)
+    val reducedMotion = motion == KitMotionLevel.Off || KitMotion.state.reduced
     val lastKey = remember { arrayOfNulls<String>(1) }
     SideEffect {
-        // Runs after this composition applies and before its layout: same frame as the insert (§7.3
-        // rule 2).
         if (newestKey != lastKey[0]) {
+            val hadPrevious = lastKey[0] != null
             lastKey[0] = newestKey
-            if (state.following && newestKey != null) state.lazy.requestScrollToItem(0)
+            if (newestKey != null) {
+                state.onNewestKeyChanged(hadPrevious, reducedMotion, scope) { latestMotion.value }
+            }
         }
     }
     LaunchedEffect(state) {
         state.lazy.interactionSource.interactions.collect {
-            if (it is DragInteraction.Start) state.following = false
+            if (it is DragInteraction.Start) {
+                state.following = false
+                state.cancelFollowScroll()
+            }
         }
     }
     // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14, k6: "Jump
@@ -241,7 +325,7 @@ public fun KitTranscriptList(
         snapshotFlow { state.atLiveEdge && !state.lazy.isScrollInProgress }
             .collect { if (it) state.following = true }
     }
-    val reachOldest = androidx.compose.runtime.rememberUpdatedState(onReachOldest)
+    val reachOldest = rememberUpdatedState(onReachOldest)
     LaunchedEffect(state) {
         snapshotFlow {
                 val info = state.lazy.layoutInfo
@@ -261,9 +345,6 @@ public fun KitTranscriptList(
     // row, its clear band), never while composing, so the list is not composed again on each of those frames.
     val insetPadding = remember(contentPadding, chrome) { SumPadding(contentPadding, chrome) }
     val pin = remember(state) { BottomPin(state) }
-    // Owned by the list, not the docked row: tapping the row turns following on and unmounts it on the next frame,
-    // so a scope inside the row would cancel the glide after scrollToItem(2).
-    val scope = rememberCoroutineScope()
     Box(modifier) {
         LazyColumn(
             state = state.lazy,
