@@ -2,9 +2,10 @@ package io.github.eslamasabry.oc.feature.chat.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.remember
@@ -190,8 +191,15 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     val keysState = remember { mutableStateOf(keys, referentialEqualityPolicy()) }
     keysState.value = keys
     val current by keysState
+    val restored = remember(list) { booleanArrayOf(false) }
+    SideEffect {
+        if (!restored[0] && resets == 0 && restorePlaceOnFirstFrame(list, holder, keys)) {
+            restored[0] = true
+        }
+    }
     LaunchedEffect(list, resets) {
         if (resets > 0) {
+            restored[0] = false
             holder.place = null
             holder.fromStore = false
             holder.following = true
@@ -199,16 +207,19 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
             list.scrollToNewest()
         }
         val saved = holder.place
-        if (saved != null && !(holder.fromStore && holder.following)) {
+        if (!restored[0] && saved != null && !(holder.fromStore && holder.following)) {
             // Wait for the rows (a conversation coming back may still be reading them).
             snapshotFlow { current }.first { it.isNotEmpty() }
-            ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
-                // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
-                list.following = holder.following && index == 0
-                if (list.anchor == TranscriptAnchor.Hybrid) {
-                    list.scrollToPlace(index, offset, saved.normal)
-                } else {
-                    list.lazy.scrollToItem(list.lazyIndex(index), offset)
+            if (!restored[0]) {
+                restored[0] = true
+                ScrollPlaceRules.target(saved, current)?.let { (index, offset) ->
+                    // Rows that arrived below put the place away from the newest edge: the reader stays where they were.
+                    list.following = holder.following && index == 0
+                    if (list.anchor == TranscriptAnchor.Hybrid) {
+                        list.scrollToPlace(index, offset, saved.normal)
+                    } else {
+                        list.lazy.scrollToItem(list.lazyIndex(index), offset)
+                    }
                 }
             }
         }
@@ -220,6 +231,23 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
                 if (conversation != null) ScrollPlaceStore.put(conversation, place, following)
             }
     }
+}
+
+private fun restorePlaceOnFirstFrame(
+    list: TranscriptListState,
+    holder: ScrollPlaceHolder,
+    keys: List<String>,
+): Boolean {
+    val saved = holder.place ?: return false
+    if (list.anchor == TranscriptAnchor.Hybrid || (holder.fromStore && holder.following) || keys.isEmpty()) {
+        return false
+    }
+    val target = ScrollPlaceRules.target(saved, keys) ?: return false
+    val follow = holder.following && target.first == 0
+    if (follow && target.second != 0) return false
+    list.following = follow
+    list.lazy.requestScrollToItem(list.lazyIndex(target.first), target.second)
+    return true
 }
 
 private fun TranscriptListState.placeIn(keys: List<String>): ScrollPlace? =

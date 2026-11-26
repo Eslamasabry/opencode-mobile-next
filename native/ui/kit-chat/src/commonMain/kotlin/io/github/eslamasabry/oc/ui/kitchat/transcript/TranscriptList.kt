@@ -164,9 +164,10 @@ internal constructor(
     /** Target layout order for Hybrid: normal while reading or holding a fold, and not mid-drag-out-of-reversed. */
     public val orderNormal: Boolean
         get() {
+            if (anchor != TranscriptAnchor.Hybrid) return false
             val wantNormal = !following || foldHeld
             val canFlip = !lazy.isScrollInProgress || laidOutNormal
-            return anchor == TranscriptAnchor.Hybrid && wantNormal && canFlip
+            return wantNormal && canFlip
         }
 
     /**
