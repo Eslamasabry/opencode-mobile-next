@@ -139,7 +139,7 @@ class Oc2GatewayOomBoundsTest {
                 advanceTimeBy(120_000)
                 runCurrent()
                 assertEquals(0, attempts, "HiddenIdle must not dial or reconnect SSE")
-                assertEquals(StreamStatus.Suspended, g.status.value)
+                assertEquals(StreamStatus.Suspended, g.events.status.value)
 
                 visibility.value = Visibility.Foreground
                 runCurrent()
@@ -151,7 +151,7 @@ class Oc2GatewayOomBoundsTest {
                 advanceTimeBy(120_000)
                 runCurrent()
                 assertEquals(beforeIdle, attempts, "returning to HiddenIdle must halt reconnects")
-                assertEquals(StreamStatus.Suspended, g.status.value)
+                assertEquals(StreamStatus.Suspended, g.events.status.value)
             } finally {
                 g.close()
             }

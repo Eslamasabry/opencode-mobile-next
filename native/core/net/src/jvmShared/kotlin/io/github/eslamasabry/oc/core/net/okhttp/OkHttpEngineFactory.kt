@@ -335,7 +335,8 @@ internal class LiveCalls private constructor() : Interceptor {
     }
 
     fun cancelAll() {
-        calls.toList().forEach { it.cancel() }
+        // Walk the concurrent set directly (never calls.toList(), whose size==1 fast path races).
+        for (call in calls) call.cancel()
     }
 
     private class ClosingResponseBody(
