@@ -206,11 +206,7 @@ class OfflineOutboxTest {
     }
 
     private fun List<PendingSend>.waitingBubble(): PendingSend? =
-        firstOrNull {
-            it.state != PendingState.Sending &&
-                it.state != PendingState.Failed &&
-                it.state != PendingState.Unconfirmed
-        }
+        firstOrNull { it.state == PendingState.WaitingForConnection }
 
     @Test
     fun `B-500 offline send queues waiting item with attachments instead of failing`() = runTest {
@@ -311,5 +307,64 @@ class OfflineOutboxTest {
                 "waiting item must exist before cancel",
             )
         assertEquals("Do not send this", waiting.text)
+
+        assertIs<Outcome.Ok<Unit>>(f.world.cancelWaitingSend(waiting.localId))
+        runCurrent()
+        assertTrue(f.world.pending.value.isEmpty(), "cancelled waiting item must disappear")
+
+        f.reconnect()
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertTrue(f.base.sentPrompts.isEmpty(), "cancelled item must never send on reconnect")
+    }
+
+    @Test
+    fun `B-500 server without offline queue capability still holds offline message and sends once`() =
+        runTest {
+            val f = Fixture(this, offlineQueueCapable = false)
+            f.openOnline()
+            f.goOffline()
+            f.world.draftChanged("Hold on non-queue backend")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("Hold on non-queue backend"))
+            runCurrent()
+            val waiting =
+                assertNotNull(
+                    f.world.pending.value.waitingBubble(),
+                    "waiting item must be held while offline",
+                )
+            assertEquals("Hold on non-queue backend", waiting.text)
+            assertTrue(f.base.sentPrompts.isEmpty())
+
+            f.reconnect()
+            advanceTimeBy(1_000)
+            runCurrent()
+            assertEquals(listOf("Hold on non-queue backend"), f.base.sentPrompts.map { it.second.text })
+            f.echoUser("u-nonqueue", "Hold on non-queue backend")
+            assertTrue(f.world.pending.value.isEmpty(), "bubble settles cleanly with no duplicate")
+        }
+
+    @Test
+    fun `B-500 presenter keeps waiting message visible offline and forwards cancel`() {
+        val world = FakeChatWorld()
+        val nav = RecordingNavigator()
+        world.load.value = io.github.eslamasabry.oc.feature.chat.world.ChatLoad.Failed(
+            Failure.Network(NetworkWhy.Offline),
+        )
+        world.link.value = io.github.eslamasabry.oc.feature.chat.world.ChatLink.Offline
+        world.pending.value =
+            kotlinx.collections.immutable.persistentListOf(
+                PendingSend(42L, "Held offline", PendingState.WaitingForConnection),
+            )
+        val presenter =
+            io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter(
+                world,
+                nav,
+                Immediate,
+            )
+        val ui = presenter.current()
+        assertEquals(io.github.eslamasabry.oc.feature.chat.presentation.ChatPhase.Live, ui.phase)
+        assertEquals(listOf(42L), ui.pending.map { it.localId })
+        presenter.cancelWaitingSend(42L)
+        assertEquals(listOf("cancelWaitingSend 42"), world.calls)
     }
 }

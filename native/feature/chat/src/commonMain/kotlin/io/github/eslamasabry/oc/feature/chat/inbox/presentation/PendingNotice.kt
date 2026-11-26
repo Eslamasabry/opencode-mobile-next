@@ -12,7 +12,12 @@ import io.github.eslamasabry.oc.feature.chat.world.PendingState
 public object PendingNotice {
     public fun unsaid(rows: List<ChatInboxRow>, bubbles: List<PendingSend>): List<ChatInboxRow> {
         val said =
-            bubbles.filter { it.state == PendingState.Unconfirmed }.mapTo(HashSet()) { it.text.trim() }
+            bubbles
+                .filter {
+                    it.state == PendingState.Unconfirmed ||
+                        it.state == PendingState.WaitingForConnection
+                }
+                .mapTo(HashSet()) { it.text.trim() }
         // A steer the server already holds is sent: it is in the transcript and the server joins it to the running
         // reply by itself, so it is not "waiting to send" (the line would stand next to the message it counts).
         return rows.filterNot {

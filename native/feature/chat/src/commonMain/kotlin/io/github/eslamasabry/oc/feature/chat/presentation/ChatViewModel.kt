@@ -383,6 +383,8 @@ public class ChatViewModel(
 
     override fun retrySend(localId: Long): Unit = presenter.retrySend(localId)
 
+    override fun cancelWaitingSend(localId: Long): Unit = presenter.cancelWaitingSend(localId)
+
     override fun dismissStatus(id: String): Unit = presenter.dismissStatus(id)
 
     override fun replyAskYes(): Unit = presenter.replyAskYes()

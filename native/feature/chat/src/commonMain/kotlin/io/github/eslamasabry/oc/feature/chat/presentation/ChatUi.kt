@@ -655,6 +655,9 @@ public interface ChatActions {
 
     public fun retrySend(localId: Long)
 
+    /** B-500: cancels a message waiting for connection so reconnect does not send it. */
+    public fun cancelWaitingSend(localId: Long) {}
+
     /**
      * Only a line whose dismissal changes nothing real (a finished action's failure) can be
      * dismissed.

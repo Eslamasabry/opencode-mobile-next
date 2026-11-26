@@ -1377,4 +1377,6 @@
     <string name="chatSendNoPlanMode">Questo agente non ha la modalità Plan, quindi non è stato inviato nulla. Disattiva Plan per inviare nella modalità propria dell'agente.</string>
     <string name="chatErrorModelNotFoundNamed">%1$s non è più disponibile su %2$s.</string>
     <string name="chatModelReplacedNotice">%1$s non è più disponibile. Uso %2$s.</string>
+    <string name="chatWaitingForConnection">In attesa di connessione — invio al ritorno online</string>
+    <string name="chatWaitingForConnectionCancel">Annulla</string>
 </resources>

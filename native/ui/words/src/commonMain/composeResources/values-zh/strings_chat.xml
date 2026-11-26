@@ -1253,4 +1253,6 @@
     <string name="kitToolUnanswered">在你回答前已停止</string>
     <string name="chatErrorModelNotFoundNamed">%1$s 在 %2$s 上已不可用。</string>
     <string name="chatModelReplacedNotice">%1$s 已不可用。正在使用 %2$s。</string>
+    <string name="chatWaitingForConnection">等待连接 — 恢复联网后自动发送</string>
+    <string name="chatWaitingForConnectionCancel">取消</string>
 </resources>

@@ -1315,4 +1315,6 @@
     <string name="composerPasteImageFromClipboardSupporting">Attach the copied picture</string>
     <string name="composerPasteImageEmpty">There is no picture on the clipboard.</string>
     <string name="chatRequestAnswerRequired">Answer the required questions first.</string>
+    <string name="chatWaitingForConnection">Waiting for connection — sends when back online</string>
+    <string name="chatWaitingForConnectionCancel">Cancel</string>
 </resources>

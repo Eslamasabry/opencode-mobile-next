@@ -2219,6 +2219,8 @@ chatUiWriteYourOpenCodePrompt	7b00480381
 chatUiYou	8a79a5f8c0
 chatUiYourOriginalComposerDraftAndAttachmentsWill	560fc0219e
 chatWaitingForAnswerAbove	841f880119
+chatWaitingForConnection	1c4b3bff3b
+chatWaitingForConnectionCancel	ef133eb749
 chatWatchBackToTask	362b57bd6f
 chatWatchBackToWorker	2ae49f37e6
 chatWatchEmptyBody	e7f81036b3

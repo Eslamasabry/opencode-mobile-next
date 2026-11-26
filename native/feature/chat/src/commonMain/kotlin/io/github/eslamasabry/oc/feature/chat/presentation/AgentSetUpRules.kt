@@ -104,7 +104,8 @@ internal object AgentSetUpRules {
             PendingState.Failed -> true
             PendingState.Unconfirmed ->
                 !bubble.reviewable && failure is Failure.ComputerDidNotAnswer && failure.details != null
-            PendingState.Sending -> false
+            PendingState.Sending,
+            PendingState.WaitingForConnection -> false
         }
     }
 }

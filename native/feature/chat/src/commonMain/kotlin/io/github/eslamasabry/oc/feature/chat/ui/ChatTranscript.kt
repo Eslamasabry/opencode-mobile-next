@@ -255,6 +255,9 @@ internal class ChatListWords(
     /** An agent whose own sign-in ran out: "{agent} needs you to sign in again" and its action, "Sign in again". */
     val signInAgain: (String) -> String = { "" },
     val signInAgainAction: String = "",
+    /** B-500: offline outbox waiting notice and Cancel button label. */
+    val waitingForConnection: String = "",
+    val cancelWaiting: String = "",
 )
 
 /**
@@ -470,6 +473,7 @@ internal fun ChatTranscriptList(
     onOpenMenu: ((String) -> Unit)?,
     onRetrySend: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    onCancelWaiting: ((Long) -> Unit)? = null,
     facts: TurnFactsUi = TurnFactsUi.Empty,
     onOpenSession: ((String) -> Unit)? = null,
     reply: ReplyActions? = null,
@@ -822,6 +826,7 @@ internal fun ChatTranscriptList(
                     p,
                     listWords,
                     onRetry = { onRetrySend(p.localId) },
+                    onCancel = onCancelWaiting?.let { cancel -> { cancel(p.localId) } },
                     check = receiptChecks[p.localId],
                     onCheck =
                         if (p.canCheckReceipt) onCheckReceipt?.let { check -> { check(p.localId) } }
@@ -1150,6 +1155,7 @@ private fun PendingBubble(
     p: PendingSend,
     words: ChatListWords,
     onRetry: () -> Unit,
+    onCancel: (() -> Unit)? = null,
     check: ReceiptCheckUi? = null,
     onCheck: (() -> Unit)? = null,
     onReview: (() -> Unit)? = null,
@@ -1168,8 +1174,9 @@ private fun PendingBubble(
             photos = sent.photos,
             attachments = sent.attachments,
         )
-        val setUp = p.setUp?.takeIf { onSetUp != null && p.state != PendingState.Sending }
-        val signInNeed = p.signIn?.takeIf { p.state != PendingState.Sending && words.signInAgainAction.isNotEmpty() }
+        val inTransit = p.state == PendingState.Sending || p.state == PendingState.WaitingForConnection
+        val setUp = p.setUp?.takeIf { onSetUp != null && !inTransit }
+        val signInNeed = p.signIn?.takeIf { !inTransit && words.signInAgainAction.isNotEmpty() }
         // Set up at first use: the agent was never set up, so the one way on is its set-up (the words stay above).
         if (setUp != null) {
             KitSendFailed(
@@ -1197,6 +1204,8 @@ private fun PendingBubble(
         } else when (p.state) {
             // One status slot (F28): "Sending" and the live words ("Thinking…") take this same line in turn.
             PendingState.Sending -> PendingStatusLine(words.sending)
+            // B-500: held while offline; shows plain waiting status with a Cancel action.
+            PendingState.WaitingForConnection -> WaitingForConnectionLine(p.localId, words, onCancel)
             // Review opens the waiting-sends page, which lists only sends with a record: without one it would
             // open empty (Paseo fault 2), so the bubble offers Send again itself.
             PendingState.Unconfirmed ->
@@ -1229,6 +1238,31 @@ private fun PendingBubble(
 /** A failed send's one way on, its label and its test handle. */
 @Immutable
 private class FailedSendAction(val label: String, val onAction: () -> Unit, val tag: String)
+
+/** B-500: plain waiting notice under a message held offline, with a Cancel action. */
+@Composable
+private fun WaitingForConnectionLine(
+    localId: Long,
+    words: ChatListWords,
+    onCancel: (() -> Unit)?,
+) {
+    Column(Modifier.padding(horizontal = Space.S4.dp).testTag("chat-waiting-$localId")) {
+        KitNotice(
+            message = words.waitingForConnection,
+            tone = StatusTone.Neutral,
+            actions =
+                listOfNotNull(
+                    onCancel?.takeIf { words.cancelWaiting.isNotEmpty() }?.let {
+                        KitLineAction(
+                            words.cancelWaiting,
+                            it,
+                            testTag = "chat-waiting-cancel-$localId",
+                        )
+                    },
+                ),
+        )
+    }
+}
 
 /**
  * Refused while an undo waits: Try again is refused the same way until the undo is reviewed, so the row's one way on

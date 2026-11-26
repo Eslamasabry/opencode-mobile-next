@@ -144,6 +144,11 @@ open class FakeChatWorld(override val ref: ConversationRef = Ref) : ChatWorld {
         return Outcome.Ok(Unit)
     }
 
+    override suspend fun cancelWaitingSend(localId: Long): Outcome<Unit> {
+        calls += "cancelWaitingSend $localId"
+        return Outcome.Ok(Unit)
+    }
+
     override suspend fun stop(): Outcome<Unit> {
         calls += "stop"
         return stopResult

@@ -1252,4 +1252,6 @@
     <string name="kitToolUnanswered">Berhenti sebelum Anda menjawab</string>
     <string name="chatErrorModelNotFoundNamed">%1$s tidak tersedia lagi di %2$s.</string>
     <string name="chatModelReplacedNotice">%1$s tidak tersedia lagi. Memakai %2$s.</string>
+    <string name="chatWaitingForConnection">Menunggu koneksi — dikirim saat kembali online</string>
+    <string name="chatWaitingForConnectionCancel">Batal</string>
 </resources>

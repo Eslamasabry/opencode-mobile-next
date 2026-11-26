@@ -1251,4 +1251,6 @@
     <string name="kitToolUnanswered">回答前に停止しました</string>
     <string name="chatErrorModelNotFoundNamed">%1$sは%2$sでは利用できなくなりました。</string>
     <string name="chatModelReplacedNotice">%1$sは利用できなくなりました。%2$sを使用します。</string>
+    <string name="chatWaitingForConnection">接続を待っています — オンラインに戻ると送信されます</string>
+    <string name="chatWaitingForConnectionCancel">キャンセル</string>
 </resources>

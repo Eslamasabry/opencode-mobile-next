@@ -47,7 +47,10 @@ import io.github.eslamasabry.oc.engine.delivery.LocalSendId
 import io.github.eslamasabry.oc.engine.delivery.SendOutcome
 import io.github.eslamasabry.oc.engine.delivery.SendPhase
 import io.github.eslamasabry.oc.engine.delivery.StopAnswer
+import io.github.eslamasabry.oc.engine.delivery.TypedKind
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueState
+import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
+import io.github.eslamasabry.oc.feature.chat.presentation.OfflineOutbox
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
 import io.github.eslamasabry.oc.engine.transcript.TranscriptHandle
 import io.github.eslamasabry.oc.engine.transcript.state.GatewayEvent
@@ -142,6 +145,7 @@ public class GraphChatWorlds @Suppress("LongParameterList") constructor(
         storages.singleOrNull()?.let {
             io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore(it.store, it.lanes)
         }
+    private val outbox = storages.singleOrNull()?.let { OfflineOutbox(it, clock) }
 
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
@@ -184,6 +188,7 @@ public class GraphChatWorlds @Suppress("LongParameterList") constructor(
                     shownOutcomes,
                     glance = glances.singleOrNull(),
                     connectionOpener = connectionOpeners.singleOrNull(),
+                    offlineOutbox = outbox,
                 ) to 0)
         open[ref] = world to holders + 1
         if (holders == 0) world.attach()
@@ -233,6 +238,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     /** What the conversation list shows of this conversation: the page's title from its first frame. */
     private val glance: ChatGlance? = null,
     private val connectionOpener: ChatConnectionOpener? = null,
+    private val offlineOutbox: OfflineOutbox? = null,
 ) : ChatWorld, TurnFeedSource, VoiceConversationSession {
     // CHAT-TRANSCRIPT: full messages, run and retry facts for the turn facts (steps, results,
     // context).
@@ -584,6 +590,11 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     private var nextLocalId = 1L
     private val deliveryIds = HashMap<Long, LocalSendId>()
     private val recoveryIds = HashMap<String, Long>()
+    private val outboxIds = LinkedHashMap<String, Long>()
+    private val cancellingOutbox = HashSet<String>()
+    private val flushingOutbox = HashSet<Long>()
+    private var lastOutboxFlushRevision = 0
+    private var flushingManualOutbox = false
     private val mutableRequests = MutableStateFlow<ChatRequestsModel?>(null)
     override val requests: StateFlow<ChatRequestsModel?> = mutableRequests
     private val mutableChildNeeds = MutableStateFlow<Set<String>>(emptySet())
@@ -721,6 +732,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         else
             mutablePending.value.filter {
                 it.state != PendingState.Failed &&
+                    it.state != PendingState.WaitingForConnection &&
                     it.text.trim() == current.text.trim() &&
                     sentFiles(it.localId) == current.attachments
             }
@@ -825,6 +837,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         connectionOpener?.hold(ref.profileId, true)
         endWait()
         showKept()
+        restoreOfflineOutbox(null)
         draftStore?.open(ref)?.let { reopened ->
             // Empty closed sessions can retire while this world remains for pending chat work.
             if (reopened !== draftSession) {
@@ -1125,6 +1138,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         val scope = graph.scope
         val services = graph as ChatGraphAccessors
         val delivery = services.chatDelivery
+        lastOutboxFlushRevision = 0
+        restoreOfflineOutbox(delivery)
+        delivery.queue?.state?.value?.let(::syncOfflineOutbox)
         syncDelivery(delivery)
         // N-40: the chat's own asks are read by session, so a folder other than the pinned one
         // keeps its card, and an ask emitted before this subscription is still shown.
@@ -1262,7 +1278,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                     }
                 },
                 scope.launch(registry.mainContext) {
-                    delivery.queue?.state?.collect { queue -> retireSettledMarkers(queue) }
+                    delivery.queue?.state?.collect { queue ->
+                        syncOfflineOutbox(queue)
+                        retireSettledMarkers(queue)
+                    }
                 },
                 scope.launch(registry.mainContext) {
                     delivery.stoppedByPerson.collect { refs -> feedKeeper.stoppedByPerson(ref in refs) }
@@ -1410,6 +1429,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                         mutableRetryAt.value = retryAtOf(it)
                         feedKeeper.link(mutableLink.value)
                         publishVoiceConversation()
+                        triggerOutboxFlush(graph, gateway, delivery)
                     }
                 },
                 scope.launch(registry.mainContext) {
@@ -1423,7 +1443,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                     }
                 },
                 scope.launch(registry.mainContext) {
-                    gateway.capabilities.collect { mutableCaps.value = it }
+                    gateway.capabilities.collect {
+                        mutableCaps.value = it
+                        triggerOutboxFlush(graph, gateway, delivery)
+                    }
                 },
                 // B13/B4 (QA wave 1): the chip names the conversation's real model from the start
                 // (not "Server
@@ -2503,7 +2526,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             return Outcome.Failed(failure)
         }
         val id = nextLocalId++
-        if (mutableLoad.value !is ChatLoad.Live)
+        val offline = isOfflineForOutbox()
+        if (!offline && mutableLoad.value !is ChatLoad.Live)
+            return Outcome.Failed(Failure.Busy(BusyKind.Starting))
+        if (offline && !OfflineOutbox.isOfflineSendAllowed(mutableLoad.value))
             return Outcome.Failed(Failure.Busy(BusyKind.Starting))
         val draft = mutableDraft.value
         if (!draft.ready) return Outcome.Failed(Failure.Busy(BusyKind.Starting))
@@ -2543,6 +2569,13 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 )
                 .moment ?: io.github.eslamasabry.oc.engine.composer.phrases.PhraseMoment.Idle
         val snapshot = SentSnapshot(files.toImmutableList(), selection)
+        if (offline) {
+            return try {
+                holdInOfflineOutbox(id, text, snapshot)
+            } finally {
+                if (submission != null) submissionOwner?.releaseSubmission(submission)
+            }
+        }
         sentSnapshots[id] = snapshot
         val expected = currentAttached()
         baselines[id] = expected?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
@@ -2559,6 +2592,278 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         } finally {
             if (submission != null) submissionOwner?.releaseSubmission(submission)
         }
+    }
+
+    private fun isOfflineForOutbox(): Boolean {
+        val a = currentAttached() ?: return true
+        return a.gateway.events.status.value != StreamStatus.Connected ||
+            mutableLink.value != ChatLink.Live
+    }
+
+    private fun currentAttachedDelivery(): ConnectionDelivery? =
+        (currentAttached()?.graph as? ChatGraphAccessors)?.chatDelivery
+
+    private suspend fun holdInOfflineOutbox(
+        localId: Long,
+        text: String,
+        snapshot: SentSnapshot,
+    ): Outcome<Unit> {
+        if (snapshot.files.isEmpty() && TypedKind.of(text.trim()) !is TypedKind.Prompt) {
+            draftSubmissions.remove(localId)
+            return Outcome.Failed(OFFLINE)
+        }
+        val outbox = offlineOutbox
+        if (outbox == null) {
+            draftSubmissions.remove(localId)
+            return Outcome.Failed(OFFLINE)
+        }
+        val files = Mentions.resolveFileMentions(text, snapshot.files).toImmutableList()
+        val mentions = Mentions.agentMentions(text, subagentNames).toImmutableList()
+        val queued =
+            outbox.enqueue(
+                ref = ref,
+                text = text,
+                attachments = files,
+                mentions = mentions,
+                model = snapshot.model,
+                agent = models.value.agent,
+                queue = currentAttachedDelivery()?.queue,
+            )
+        val entry =
+            when (queued) {
+                is Outcome.Failed -> {
+                    draftSubmissions.remove(localId)
+                    return queued
+                }
+                is Outcome.Ok -> queued.value
+            }
+        outboxIds[entry.id] = localId
+        sentSnapshots[localId] = SentSnapshot(files, snapshot.model)
+        baselines[localId] =
+            currentAttached()?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
+        mutablePending.update {
+            (it +
+                    PendingSend(
+                        localId,
+                        text,
+                        PendingState.WaitingForConnection,
+                        files = files.map(::pendingFile),
+                    ))
+                .toImmutableList()
+        }
+        retireFailedTwins(localId)
+        acknowledgedDraft(localId)
+        refreshDraftProtection()
+        return Outcome.Ok(Unit)
+    }
+
+    override suspend fun cancelWaitingSend(localId: Long): Outcome<Unit> {
+        val entryId =
+            outboxIds.entries.firstOrNull { it.value == localId }?.key ?: return Outcome.Ok(Unit)
+        val outbox = offlineOutbox ?: return Outcome.Ok(Unit)
+        if (!cancellingOutbox.add(entryId)) return Outcome.Ok(Unit)
+        val result =
+            try {
+                outbox.cancel(entryId, currentAttachedDelivery()?.queue)
+            } finally {
+                cancellingOutbox -= entryId
+            }
+        return when (result) {
+            is Outcome.Failed -> result
+            is Outcome.Ok -> {
+                if (result.value) {
+                    outboxIds.remove(entryId)
+                    dropOutboxBubbles(listOf(localId))
+                }
+                Outcome.Ok(Unit)
+            }
+        }
+    }
+
+    private fun restoreOfflineOutbox(delivery: ConnectionDelivery?) {
+        val waiting =
+            delivery?.queue?.entries()?.filter { it.ref == ref && !it.dispatched }
+                ?: offlineOutbox?.readWaiting(ref).orEmpty()
+        for (entry in waiting) adoptWaitingEntry(entry)
+    }
+
+    private fun adoptWaitingEntry(entry: QueuedPrompt) {
+        if (entry.id in outboxIds || entry.id in recoveryIds || entry.id in cancellingOutbox) return
+        val localId = nextLocalId++
+        outboxIds[entry.id] = localId
+        sentSnapshots[localId] =
+            SentSnapshot(
+                entry.attachments,
+                entry.model?.let { ModelSelection(it, entry.variant) },
+            )
+        baselines[localId] =
+            currentAttached()?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
+        mutablePending.update {
+            (it +
+                    PendingSend(
+                        localId,
+                        entry.text,
+                        PendingState.WaitingForConnection,
+                        files = entry.attachments.map(::pendingFile),
+                    ))
+                .toImmutableList()
+        }
+    }
+
+    private fun syncOfflineOutbox(queue: QueueState) {
+        if (!queue.readable) return
+        val flushed = queue.flushRevision > lastOutboxFlushRevision
+        lastOutboxFlushRevision = queue.flushRevision
+        if (outboxIds.isEmpty()) return
+        val supportsReceipts =
+            currentAttached()?.gateway?.capabilities?.value?.commandReceipts == true
+        val entriesById = queue.entries.associateBy { it.id }
+        val dropped = ArrayList<Long>()
+        var settledAny = false
+        for ((entryId, localId) in outboxIds.toList()) {
+            if (entryId in cancellingOutbox) continue
+            val outcome = syncOutboxEntry(entryId, localId, entriesById[entryId], queue, flushed, supportsReceipts)
+            if (outcome == OutboxSyncOutcome.Dropped) dropped += localId
+            if (outcome == OutboxSyncOutcome.Settled) settledAny = true
+        }
+        if (dropped.isNotEmpty()) dropOutboxBubbles(dropped)
+        if (settledAny) settleBubbles(mutableTranscript.value)
+    }
+
+    private enum class OutboxSyncOutcome {
+        Unchanged,
+        Dropped,
+        Settled,
+    }
+
+    private fun syncOutboxEntry(
+        entryId: String,
+        localId: Long,
+        entry: QueuedPrompt?,
+        queue: QueueState,
+        flushed: Boolean,
+        supportsReceipts: Boolean,
+    ): OutboxSyncOutcome {
+        if (entry != null) {
+            return syncPresentOutboxEntry(entryId, localId, entry, queue, supportsReceipts)
+        }
+        outboxIds.remove(entryId)
+        val wasFlushed =
+            flushed ||
+                flushingOutbox.remove(localId) ||
+                queue.sending.isNotEmpty() ||
+                localId in admitted
+        if (!wasFlushed) return OutboxSyncOutcome.Dropped
+        admitted += localId
+        setPending(localId) { it.copy(state = PendingState.Sending) }
+        return OutboxSyncOutcome.Settled
+    }
+
+    private fun syncPresentOutboxEntry(
+        entryId: String,
+        localId: Long,
+        entry: QueuedPrompt,
+        queue: QueueState,
+        supportsReceipts: Boolean,
+    ): OutboxSyncOutcome {
+        if (entryId in queue.sending) {
+            flushingOutbox += localId
+            setPending(localId) { it.copy(state = PendingState.Sending) }
+        } else if (entry.dispatched) {
+            outboxIds.remove(entryId)
+            flushingOutbox -= localId
+            recoveryIds[entryId] = localId
+            setPending(localId) {
+                it.copy(
+                    state = PendingState.Unconfirmed,
+                    canCheckReceipt = supportsReceipts,
+                    reviewable = true,
+                )
+            }
+        }
+        return OutboxSyncOutcome.Unchanged
+    }
+
+    private fun dropOutboxBubbles(localIds: List<Long>) {
+        val dropSet = localIds.toHashSet()
+        mutablePending.update { list -> list.filterNot { it.localId in dropSet }.toImmutableList() }
+        for (localId in dropSet) {
+            flushingOutbox -= localId
+            sentSnapshots.remove(localId)
+            baselines.remove(localId)
+            canonical.remove(localId)
+            admitted -= localId
+            deliveryIds.remove(localId)
+            draftSubmissions.remove(localId)
+            phraseMoments.remove(localId)
+        }
+        refreshDraftProtection()
+    }
+
+    private fun triggerOutboxFlush(
+        graph: ConnectionGraph,
+        gateway: ServerGateway,
+        delivery: ConnectionDelivery,
+    ) {
+        if (gateway.events.status.value != StreamStatus.Connected) return
+        val caps = gateway.capabilities.value
+        if (caps.offlinePromptQueue) {
+            delivery.sendWaiting()
+        } else if (caps != ServerCapabilities.Unknown && outboxIds.isNotEmpty()) {
+            flushManualOutbox(graph, gateway, delivery)
+        }
+    }
+
+    private fun flushManualOutbox(
+        graph: ConnectionGraph,
+        gateway: ServerGateway,
+        delivery: ConnectionDelivery,
+    ) {
+        if (flushingManualOutbox) return
+        val outbox = offlineOutbox ?: return
+        flushingManualOutbox = true
+        graph.scope.launch(registry.mainContext) {
+            try {
+                for ((entryId, localId) in outboxIds.toList()) {
+                    val attachedNow = connectedAttached(graph, gateway) ?: break
+                    flushManualOutboxEntry(entryId, localId, attachedNow, delivery, outbox)
+                }
+            } finally {
+                flushingManualOutbox = false
+            }
+        }
+    }
+
+    private fun connectedAttached(graph: ConnectionGraph, gateway: ServerGateway): Attached? {
+        val a = currentAttached() ?: return null
+        if (a.graph !== graph || gateway.events.status.value != StreamStatus.Connected) return null
+        return a
+    }
+
+    private suspend fun flushManualOutboxEntry(
+        entryId: String,
+        localId: Long,
+        attachedNow: Attached,
+        delivery: ConnectionDelivery,
+        outbox: OfflineOutbox,
+    ) {
+        if (entryId !in outboxIds || entryId in cancellingOutbox) return
+        val bubble = mutablePending.value.firstOrNull { it.localId == localId } ?: return
+        cancellingOutbox += entryId
+        val removed =
+            try {
+                outbox.cancel(entryId, delivery.queue)
+            } finally {
+                cancellingOutbox -= entryId
+            }
+        if (removed !is Outcome.Ok || !removed.value) return
+        outboxIds.remove(entryId)
+        baselines[localId] = attachedNow.handle.messageIds().mapTo(HashSet()) { "prompt:$it" }
+        setPending(localId) {
+            it.copy(state = PendingState.Sending, failure = null, serverRowKey = null)
+        }
+        val snapshot = sentSnapshots[localId] ?: SentSnapshot(persistentListOf(), null)
+        dispatch(localId, bubble.text, snapshot, attachedNow)
     }
 
     private fun clearReplacedModel(outcome: Outcome<Unit>) {
@@ -2940,9 +3245,12 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                     }
                 is SendOutcome.Queued ->
                     if (outcome.entryId == id.raw) {
-                        // The queue write is durable before this outcome; the waiting-send slot
-                        // owns display now.
+                        // B-500: keep the waiting bubble visible in the chat until reconnect sends it.
                         acknowledgedDraft(localId)
+                        outboxIds[outcome.entryId] = localId
+                        setPending(localId) {
+                            it.copy(state = PendingState.WaitingForConnection, failure = null)
+                        }
                         queuedLocalIds += localId
                     }
                 is SendOutcome.PutBack ->
@@ -2964,12 +3272,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 }
         }
         if (queuedLocalIds.isNotEmpty()) {
-            mutablePending.update { list ->
-                list.filterNot { it.localId in queuedLocalIds }.toImmutableList()
-            }
             for (localId in queuedLocalIds) {
-                sentSnapshots.remove(localId)
-                baselines.remove(localId)
                 deliveryIds.remove(localId)
             }
             refreshDraftProtection()
@@ -3088,7 +3391,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         val shownAs = HashMap<Long, String>()
         for (bubble in mutablePending.value) {
             val id = canonical[bubble.localId]
-            if (bubble.state == PendingState.Failed) continue
+            if (bubble.state == PendingState.Failed || bubble.state == PendingState.WaitingForConnection) continue
             val fileOnly = bubble.text.isBlank()
             val present =
                 id != null && (prompts.any { it.key == id } || (fileOnly && id in wordless))
@@ -3151,6 +3454,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             }
             acknowledgedDraft(bubble.localId)
             admitted -= bubble.localId
+            flushingOutbox -= bubble.localId
             canonical.remove(bubble.localId)
             baselines.remove(bubble.localId)
             sentSnapshots.remove(bubble.localId)

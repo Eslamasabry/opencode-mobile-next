@@ -576,7 +576,13 @@ public class ChatPresenter(
                     ChatLoad.Loading -> if (t.rows.isNotEmpty() || pending.isNotEmpty()) ChatPhase.Live else ChatPhase.Loading
                     ChatLoad.Live -> ChatPhase.Live
                     is ChatLoad.Failed ->
-                        if (kept != null) ChatPhase.Live else ChatPhase.Failed(load.failure, loadAgent())
+                        if (
+                            kept != null ||
+                                (load.failure !is Failure.NotFound &&
+                                    pending.any { it.state == PendingState.WaitingForConnection })
+                        )
+                            ChatPhase.Live
+                        else ChatPhase.Failed(load.failure, loadAgent())
                 },
             rows =
                 if (l.withdrawn.isEmpty() && l.hiddenStopNote == null) t.rows
@@ -864,7 +870,12 @@ public class ChatPresenter(
         l: ChatLocal,
     ): ImmutableList<PendingSend> {
         fun shown(p: PendingSend): Boolean {
-            val key = p.serverRowKey?.takeIf { p.state != PendingState.Failed && it !in l.withdrawn } ?: return false
+            val key =
+                p.serverRowKey?.takeIf {
+                    p.state != PendingState.Failed &&
+                        p.state != PendingState.WaitingForConnection &&
+                        it !in l.withdrawn
+                } ?: return false
             val row = t.indexOf(key).takeIf { it >= 0 }?.let(t.rows::getOrNull) ?: return false
             return !(l.hiddenStopNote != null && row is PromptRow && row.text.trim() == l.hiddenStopNote)
         }
@@ -1460,6 +1471,10 @@ public class ChatPresenter(
 
     override fun retrySend(localId: Long) {
         launcher.launch { world.retrySend(localId) }
+    }
+
+    override fun cancelWaitingSend(localId: Long) {
+        launcher.launch { world.cancelWaitingSend(localId) }
     }
 
     /** Set up at first use: the same set-up terminal the Agents page opens, for this conversation's phone owner. */

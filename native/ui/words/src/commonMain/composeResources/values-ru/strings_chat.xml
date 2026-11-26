@@ -1439,4 +1439,6 @@
     <string name="kitToolUnanswered">Остановлено до вашего ответа</string>
     <string name="chatErrorModelNotFoundNamed">Модель %1$s больше недоступна в %2$s.</string>
     <string name="chatModelReplacedNotice">Модель %1$s больше недоступна. Используется %2$s.</string>
+    <string name="chatWaitingForConnection">Ожидание подключения — отправится при восстановлении сети</string>
+    <string name="chatWaitingForConnectionCancel">Отмена</string>
 </resources>

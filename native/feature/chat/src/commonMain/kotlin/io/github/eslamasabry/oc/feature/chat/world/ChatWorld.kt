@@ -302,6 +302,9 @@ public interface ChatWorld {
     /** The person's own Try again on a failed bubble: one new dispatch of the same words. */
     public suspend fun retrySend(localId: Long): Outcome<Unit>
 
+    /** B-500: cancels a message waiting for connection so reconnect sends nothing. */
+    public suspend fun cancelWaitingSend(localId: Long): Outcome<Unit> = Outcome.Ok(Unit)
+
     /** Asks the server to stop the running reply. */
     public suspend fun stop(): Outcome<Unit>
 
@@ -522,6 +525,9 @@ public data class PendingFile(val name: String, val mime: String?, val url: Stri
 public enum class PendingState {
     /** On its way; the bubble shows at once (bubble first). */
     Sending,
+
+    /** B-500: held while offline; sends automatically once the connection returns. */
+    WaitingForConnection,
 
     /**
      * The server did not confirm it; it may already be in the conversation. Never resent on its
