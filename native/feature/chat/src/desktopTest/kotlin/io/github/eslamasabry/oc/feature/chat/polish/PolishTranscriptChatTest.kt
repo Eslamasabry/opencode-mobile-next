@@ -203,6 +203,41 @@ class PolishTranscriptChatTest {
         }
 
     @Test
+    fun `B-561 waiting words stay visible in a short chat`() =
+        kitUiTest(360, 480) {
+            val scene = ChatScene()
+            val state = scene.live().copy(phase = ChatPhase.Loading, rows = persistentListOf())
+            mainClock.autoAdvance = false
+            setContent {
+                E20Scene(scale = 1.3f, dark = true) {
+                    scene.Screen(state, canGoBack = true)
+                }
+            }
+            mainClock.advanceTimeBy(ChatPane.LOADING_WORDS_AFTER_MS + 500)
+            waitForIdle()
+            val lineMatcher =
+                SemanticsMatcher("kit-skeleton-line-*") {
+                    it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("kit-skeleton-line-") == true
+                }
+            val lines = onAllNodes(lineMatcher, useUnmergedTree = true)
+            val lineCount = lines.fetchSemanticsNodes().size
+            assertTrue(lineCount > 0, "expected kit-skeleton-line-* nodes")
+            val lastLineBottom = (0 until lineCount).maxOf { lines[it].getBoundsInRoot().bottom }
+            val words = onNodeWithTag("chat-loading-words", useUnmergedTree = true).getBoundsInRoot()
+            val composer = onNodeWithTag("kit-composer-box", useUnmergedTree = true).getBoundsInRoot()
+            val wordsHeight = (words.bottom - words.top).value
+            assertTrue(wordsHeight >= 14f, "chat-loading-words must stay visible at 1.3x, was $wordsHeight dp")
+            assertTrue(
+                words.top >= lastLineBottom,
+                "chat-loading-words top (${words.top}) must sit below skeleton ($lastLineBottom)",
+            )
+            assertTrue(
+                words.bottom <= composer.top + 1.dp,
+                "chat-loading-words bottom (${words.bottom}) must stay above composer (${composer.top})",
+            )
+        }
+
+    @Test
     fun `B-564 web ask row has no question-comma`() {
         val cards =
             listOf(
@@ -302,4 +337,35 @@ class PolishTranscriptChatTest {
                 "file row glyph x ($glyphX) must be 16 dp from column edge",
             )
         }
+
+    @Test
+    fun `B-580 file and folder glyphs share an edge`() {
+        for (style in listOf(Style.Solid, Style.Glass)) {
+            kitUiTest(360, 480) {
+                setContent {
+                    E20Scene(dark = true, style = style) {
+                        Box(Modifier.width(360.dp)) {
+                            TurnChangedFiles(
+                                files = listOf(ChangedFile("src/app.kt", 3, 1)),
+                                onOpenFile = {},
+                                onAllFiles = {},
+                            )
+                        }
+                    }
+                }
+                waitForIdle()
+                val fileGlyph = onNodeWithText("\ue23a", useUnmergedTree = true).getBoundsInRoot()
+                val folderGlyph = onNodeWithText("\ue256", useUnmergedTree = true).getBoundsInRoot()
+                val diff = abs((fileGlyph.left - folderGlyph.left).value)
+                assertTrue(
+                    diff <= 1f,
+                    "$style: file glyph left (${fileGlyph.left}) must match folder glyph (${folderGlyph.left})",
+                )
+                assertTrue(
+                    abs(fileGlyph.left.value - 16f) <= 1f,
+                    "$style: file glyph left (${fileGlyph.left}) must be 16 dp from column edge",
+                )
+            }
+        }
+    }
 }

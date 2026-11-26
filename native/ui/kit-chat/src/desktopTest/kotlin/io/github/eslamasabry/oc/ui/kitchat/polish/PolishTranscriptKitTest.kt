@@ -6,9 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -17,22 +20,32 @@ import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.security.Redactor
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
+import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
+import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
+import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.kitchat.ChatFakePlatform
 import io.github.eslamasabry.oc.ui.kitchat.ChatTestTheme
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.diff.DiffModel
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffPreview
 import io.github.eslamasabry.oc.ui.kitchat.diff.KitDiffView
@@ -41,7 +54,9 @@ import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestChange
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestLook
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTarget
 import io.github.eslamasabry.oc.ui.kitchat.request.KitRequestTargets
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepLight
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepLightLap
+import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepLightState
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitStepList
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
@@ -193,6 +208,110 @@ class PolishTranscriptKitTest {
             val allShown = (1..8).all { i -> allText.any { "wrappedLine$i" in it } }
             val hasGap = allText.any { "hidden lines" in it }
             assertTrue(allShown || hasGap, "dropped lines must show a hidden-lines label; texts=$allText")
+        }
+
+    @Test
+    fun `B-567 wrapped preview counts every hidden line and opens all changes`() {
+        val content24 = (1..24).joinToString("\n") { "val line$it = \"content of line $it\"" }
+        val file24 = DiffModel.fromBeforeAfter("WriteTarget.kt", null, content24)
+        var opened24 = false
+        kitUiTest(360, 780) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    ChatTestTheme(dark = true, fontScale = 1.3f) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                            Box(Modifier.width(360.dp).background(LocalKitColors.current.ground)) {
+                                KitDiffView(
+                                    file = file24,
+                                    maxLines = 12,
+                                    hunkLabel = { _, _, _, _ -> "hunk" },
+                                    gapLabel = { hidden -> "$hidden hidden lines" },
+                                    onOpenAll = { opened24 = true },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            onNodeWithText("18 hidden lines", useUnmergedTree = true).assertExists()
+            onNodeWithText("View all changes", useUnmergedTree = true).performClick()
+            assertTrue(opened24, "24-line wrapped preview footer must invoke onOpenAll")
+        }
+
+        val lines8 =
+            (1..8).map { i ->
+                "val wrappedLine$i = computeLongPreviewValueForCompactWidth(index = $i, label = \"segment-$i\")"
+            }
+        val file8 = DiffModel.fromBeforeAfter("LongPreview.kt", null, lines8.joinToString("\n"))
+        var opened8 = false
+        kitUiTest(360, 780) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    ChatTestTheme(dark = true, fontScale = 1.3f) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                            Box(Modifier.width(360.dp).background(LocalKitColors.current.ground)) {
+                                KitDiffView(
+                                    file = file8,
+                                    maxLines = 12,
+                                    hunkLabel = { _, _, _, _ -> "hunk" },
+                                    gapLabel = { hidden -> "$hidden hidden lines" },
+                                    onOpenAll = { opened8 = true },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            onNodeWithText("View all changes", useUnmergedTree = true).performClick()
+            assertTrue(opened8, "8-long-line wrapped preview footer must invoke onOpenAll")
+        }
+    }
+
+    @Test
+    fun `B-568 moving outline stays within 1_5 dp`() =
+        kitUiTest(48, 48) {
+            val frame = KitStepLightLap.frameAt(0.48f)
+            assertTrue(frame.heads && frame.fill > 0f, "frame at 0.48 must draw heads, got $frame")
+            mainClock.autoAdvance = false
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(2f)) {
+                    KitTheme(
+                        KitAppearance(mode = AppearanceMode.Dark, motion = MotionLevel.Full),
+                        ChatFakePlatform(),
+                        "en",
+                        stillFrame = false,
+                    ) {
+                        CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                            Box(Modifier.size(24.dp).background(Color.Black)) {
+                                KitStepLight(
+                                    KitStepLightState.Working,
+                                    Color.White,
+                                    24.dp,
+                                    animate = true,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            mainClock.advanceTimeBy(960)
+            waitForIdle()
+            val img = onRoot().captureToImage().toAwtImage()
+            val midY = img.height / 2
+            var litPx = 0
+            for (x in 0 until img.width / 2) {
+                val rgb = img.getRGB(x, midY)
+                val r = (rgb shr 16) and 0xFF
+                if (r >= 128) litPx++
+            }
+            assertTrue(litPx > 0, "expected visible moving head pixels on the node edge")
+            val strokeDp = litPx / 2f
+            assertTrue(
+                KitStepLightLap.HEAD_STROKE <= 1.5f && strokeDp <= 2.0f,
+                "moving outline head stroke must be <= 1.5 dp (const=${KitStepLightLap.HEAD_STROKE}, px=$litPx)",
+            )
         }
 
     @Test
