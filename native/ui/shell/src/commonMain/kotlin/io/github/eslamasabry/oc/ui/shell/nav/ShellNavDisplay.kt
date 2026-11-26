@@ -74,6 +74,7 @@ public fun ShellNavDisplay(
     // heat all apply to navigation too. Calm (and power saver, heat) cross-fades pages; only Off is instant (M-013).
     val effectiveLevel = shellLevel(level, KitMotion.state.level)
     val levelState = rememberUpdatedState(effectiveLevel)
+    val topKey = rememberUpdatedState(backStack.lastOrNull())
     val signals = remember { GestureSignals() }
     // Which pages the transition in flight joins: rows pair with a page only when one of them grows from a row.
     val growRoutes = remember { GrowRoutes(backStack.lastOrNull()) }
@@ -118,8 +119,10 @@ public fun ShellNavDisplay(
         { key ->
             val entry = entryProvider(key)
             val motion = (key as? AppRoute)?.motion
-            if (motion == null) entry
-            else NavEntry(key, entry.contentKey, entry.metadata + (ShellMotion.MOTION_KEY to motion)) { entry.Content() }
+            val meta =
+                if (motion == null) entry.metadata + (ROUTE_KEY to key)
+                else entry.metadata + (ShellMotion.MOTION_KEY to motion) + (ROUTE_KEY to key)
+            NavEntry(key, entry.contentKey, meta) { entry.Content() }
         }
     }
 
@@ -153,7 +156,7 @@ public fun ShellNavDisplay(
                             grows,
                         ),
                     ) {
-                        Box(leavingTakesNoTaps(contentScope, gate)) {
+                        Box(leavingTakesNoTaps(contentScope, gate, entry.metadata[ROUTE_KEY], topKey)) {
                             CompositionLocalProvider(LocalKitGrowHost provides host) { entry.Content() }
                         }
                     }
@@ -290,29 +293,39 @@ private fun Modifier.predictiveCorners(
     }
 }
 
+private const val ROUTE_KEY: String = "oc.shell.routeKey"
+
 /**
  * B-379: a page that is leaving (closed by a tap or button-back, or covered by a push — not under a back gesture)
- * takes no taps while its exit runs, so taps reach the settled page underneath. Clipping the inner layer to [NoArea]
- * makes Compose skip the page's children during hit-testing while recording and replaying its drawing one level up
- * keeps it visually unchanged.
+ * takes no taps while its exit runs, so taps reach the settled page underneath. Checking both the transition target
+ * and whether this entry is already off the top of the back stack closes the first-frame (16 ms) gap before the
+ * seekable transition updates. Clipping the inner layer to [NoArea] makes Compose skip the page's children during
+ * hit-testing while recording and replaying its drawing one level up keeps it visually unchanged.
  */
 @Composable
-private fun leavingTakesNoTaps(scope: AnimatedVisibilityScope, gate: RowTransformGate): Modifier {
+private fun leavingTakesNoTaps(
+    scope: AnimatedVisibilityScope,
+    gate: RowTransformGate,
+    entryKey: Any?,
+    topKey: androidx.compose.runtime.State<NavKey?>,
+): Modifier {
     val picture = rememberGraphicsLayer()
-    val leaving =
-        scope.transition.targetState == EnterExitState.PostExit &&
-            gate.state != GateState.Gesture &&
-            gate.state != GateState.GestureSettling
+    val isLeaving = {
+        val gesture = gate.state == GateState.Gesture || gate.state == GateState.GestureSettling
+        val offTop = entryKey != null && topKey.value != null && entryKey != topKey.value
+        !gesture && (scope.transition.targetState == EnterExitState.PostExit || offTop)
+    }
     return Modifier.drawWithContent {
             drawContent()
-            if (leaving) drawLayer(picture)
+            if (isLeaving()) drawLayer(picture)
         }
         .graphicsLayer {
+            val leaving = isLeaving()
             clip = leaving
             shape = if (leaving) NoArea else RectangleShape
         }
         .drawWithContent {
-            if (leaving) picture.record { this@drawWithContent.drawContent() } else drawContent()
+            if (isLeaving()) picture.record { this@drawWithContent.drawContent() } else drawContent()
         }
 }
 
