@@ -127,6 +127,11 @@ class MobileYesTest {
         updater.changed()
         assertEquals(emptyList(), jobs.started)
         assertEquals(AgentUpdateStep.WaitingMetered, updater.decision.value.step)
+        val waitLine = updater.decision.value.line().lowercase()
+        assertFalse(
+            listOf("metered", "wifi", "wi-fi", "mobile", "cellular").any { it in waitLine },
+            "wait log must not name a network type: $waitLine",
+        )
         metered = false
         updater.changed()
         updater.changed()
@@ -152,6 +157,11 @@ class MobileYesTest {
         updater.changed()
         assertEquals(emptyList(), jobs.started)
         assertEquals(AgentUpdateStep.WaitingMetered, updater.decision.value.step)
+        val waitLine = updater.decision.value.line().lowercase()
+        assertFalse(
+            listOf("metered", "wifi", "wi-fi", "mobile", "cellular").any { it in waitLine },
+            "wait log must not name a network type: $waitLine",
+        )
         metered = false
         updater.changed()
         updater.changed()

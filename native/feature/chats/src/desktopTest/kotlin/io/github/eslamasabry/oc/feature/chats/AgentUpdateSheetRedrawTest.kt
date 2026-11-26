@@ -8,8 +8,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -18,20 +21,24 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.core.common.text.PhoneSizes
 import io.github.eslamasabry.oc.engine.agents.AgentId
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateChoice
+import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateOffer
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateActions
 import io.github.eslamasabry.oc.feature.chats.presentation.AgentUpdateSheetModel
@@ -45,6 +52,7 @@ import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.gate.flicker.KitUiTest
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
+import io.github.eslamasabry.oc.ui.kit.KitPrimaryButtonKey
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
@@ -64,12 +72,13 @@ class AgentUpdateSheetRedrawTest {
         fontScale: Float = 1f,
         offered: RedrawOffered = RedrawOffered(offer),
         motion: MotionLevel = MotionLevel.Off,
+        localeTag: String = "en",
         block: suspend KitUiTest.() -> Unit,
     ) {
         val previous = Locale.getDefault()
         val scope = CoroutineScope(Job())
         try {
-            Locale.setDefault(Locale.forLanguageTag("en"))
+            Locale.setDefault(Locale.forLanguageTag(localeTag))
             val model = AgentUpdateSheetModel(offered, scope)
             val actions = actionsFor(model)
             kitUiTest(900, 2000) {
@@ -80,7 +89,7 @@ class AgentUpdateSheetRedrawTest {
                             KitTheme(
                                 appearance = KitAppearance(mode = AppearanceMode.Dark, motion = motion),
                                 platform = DesktopKitPlatform(),
-                                localeTag = "en",
+                                localeTag = localeTag,
                                 stillFrame = true,
                             ) {
                                 Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
@@ -382,17 +391,37 @@ class AgentUpdateSheetRedrawTest {
     fun `B-UPD-022 turning an agent switch off still shows both versions and size with no Stays`() =
         runSheet(redrawFiveOffer()) {
             val codex = onNode(isToggleable() and hasText("Codex", substring = true))
-            codex.performScrollTo().performClick()
+            codex.performScrollTo()
+            waitForIdle()
+            val pairOn = onNodeWithText("0.171.0", substring = true, useUnmergedTree = true).fetchSemanticsNode()
+            val spokenOn = spokenLabel(pairOn)
+            assertTrue(
+                spokenOn.contains("From 0.171.0 to 0.174.0", ignoreCase = true),
+                "expected spoken 'From 0.171.0 to 0.174.0' when ON, got: '$spokenOn'",
+            )
+            val onPeak = peakLuminance(pairOn.boundsInRoot)
+
+            codex.performClick()
             waitForIdle()
             codex.assertIsOff()
             onNodeWithText("Stays", substring = true, useUnmergedTree = true).assertDoesNotExist()
-            onNodeWithText("0.171.0", substring = true, useUnmergedTree = true).assertExists()
+            val pairOff = onNodeWithText("0.171.0", substring = true, useUnmergedTree = true).fetchSemanticsNode()
+            val spokenOff = spokenLabel(pairOff)
+            assertTrue(
+                spokenOff.contains("From 0.171.0 to 0.174.0", ignoreCase = true),
+                "expected spoken 'From 0.171.0 to 0.174.0' when OFF, got: '$spokenOff'",
+            )
             onNodeWithText("0.174.0", substring = true, useUnmergedTree = true).assertExists()
             onNodeWithText(PhoneSizes.text(48_000_000L), substring = true, useUnmergedTree = true).assertExists()
+            val offPeak = peakLuminance(pairOff.boundsInRoot)
+            assertTrue(
+                onPeak > offPeak + 0.05f,
+                "expected ON version pair ($onPeak) brighter than quieter OFF colour ($offPeak)",
+            )
         }
 
     @Test
-    fun `B-UPD-023 two buttons follow selection with size and Keep these versions is gone`() =
+    fun `B-UPD-023 two buttons follow selection with size and Keep these versions is gone`() {
         runSheet(noLockedFiveOffer(), motion = MotionLevel.Full) {
             val allBtn = onNodeWithText(updateAllFive())
             val notNow = onNodeWithText("Not now")
@@ -426,6 +455,43 @@ class AgentUpdateSheetRedrawTest {
             assertEquals(primarySlot, twoBtn.fetchSemanticsNode().boundsInRoot)
             assertEquals(notNowSlot, onNodeWithText("Not now").fetchSemanticsNode().boundsInRoot)
         }
+        runSheet(partialUnknownOffer(), fontScale = 1.3f, motion = MotionLevel.Full, localeTag = "ar") {
+            ALL_AGENTS.filter { it != "Claude Code" }.forEach { switchOff(it) }
+            val primary = SemanticsMatcher.keyIsDefined(KitPrimaryButtonKey)
+            val notNowAr = "ليس الآن"
+            val primaryBefore = onNode(primary).fetchSemanticsNode().boundsInRoot
+            val notNowBefore = onNodeWithText(notNowAr).fetchSemanticsNode().boundsInRoot
+            val codex = onNode(isToggleable() and hasText("Codex", substring = true))
+            codex.performScrollTo()
+            waitForIdle()
+            mainClock.advanceTimeBy(1_500)
+            mainClock.autoAdvance = false
+            codex.performClick()
+            repeat(SWAP_FRAMES) { frame ->
+                mainClock.advanceTimeByFrame()
+                assertEquals(
+                    primaryBefore,
+                    onNode(primary).fetchSemanticsNode().boundsInRoot,
+                    "primary button bounds moved on Arabic 1.3x swap frame $frame",
+                )
+                assertEquals(
+                    notNowBefore,
+                    onNodeWithText(notNowAr).fetchSemanticsNode().boundsInRoot,
+                    "Not now button bounds moved on Arabic 1.3x swap frame $frame",
+                )
+            }
+            mainClock.autoAdvance = true
+            waitForIdle()
+            assertEquals(primaryBefore, onNode(primary).fetchSemanticsNode().boundsInRoot)
+            assertEquals(notNowBefore, onNodeWithText(notNowAr).fetchSemanticsNode().boundsInRoot)
+            val layouts = mutableListOf<TextLayoutResult>()
+            onNode(primary).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            assertTrue(
+                layouts.any { it.lineCount >= 2 },
+                "expected wrapped Arabic primary label at 360 dp text 1.3, got lines=${layouts.map { it.lineCount }}",
+            )
+        }
+    }
 
     @Test
     fun `B-UPD-024 tapping Update all when every agent is off turns all on and starts`() {
@@ -450,6 +516,148 @@ class AgentUpdateSheetRedrawTest {
             assertEquals(5, offered.lastChoices?.size)
             assertTrue(offered.lastChoices?.values?.all { it == AgentUpdateChoice.Keep } == true)
         }
+    }
+
+    @Test
+    fun `B-UPD-026 Update all from zero selections waits for Wi-Fi when the choice is hidden`() {
+        val offered = RedrawOffered(noLockedFiveOffer())
+        runSheet(noLockedFiveOffer(), offered = offered, motion = MotionLevel.Full) {
+            val wifi = onNode(isToggleable() and hasText("Wi-Fi only", substring = true))
+            wifi.performClick()
+            waitForIdle()
+            wifi.assertIsOff()
+            mainClock.advanceTimeBy(1_500)
+            ALL_AGENTS.forEach { switchOff(it) }
+            onNodeWithText("Wi-Fi only").assertDoesNotExist()
+            onNodeWithText(updateAllFive()).performClick()
+            waitUntil(timeoutMillis = 2_000) { offered.lastWaitForWifi != null }
+            assertEquals(true, offered.lastWaitForWifi)
+            assertEquals(5, offered.lastChoices?.size)
+            assertTrue(offered.lastChoices?.values?.all { it == AgentUpdateChoice.Update } == true)
+        }
+    }
+
+    @Test
+    fun `B-UPD-027 a partial download size is labelled as a lower bound`() {
+        runSheet(partialUnknownOffer()) {
+            val allKnown = PhoneSizes.text(612_000_000L)
+            onNodeWithText("At least $allKnown", useUnmergedTree = true).assertExists()
+            onNodeWithText("Update all · At least $allKnown").assertExists()
+
+            ALL_AGENTS.forEach { switchOff(it) }
+            onNodeWithText("Update all · At least $allKnown").assertExists()
+
+            switchOff("Claude Code")
+            switchOff("Codex")
+            val partialSelected = PhoneSizes.text(394_000_000L)
+            onNodeWithText("At least $partialSelected", useUnmergedTree = true).assertExists()
+            onNodeWithText("Update ${Numbers.format(2)} selected · At least $partialSelected").assertExists()
+        }
+        runSheet(allUnknownOffer()) {
+            onNodeWithText("0 B", substring = true, useUnmergedTree = true).assertDoesNotExist()
+            onNodeWithText("Update all · Download size not known").assertExists()
+        }
+    }
+
+    @Test
+    fun `B-UPD-028 needed rows keep their own reason and refreshed offer order`() {
+        val initial = alwaysNeededOffer()
+        val offered = RedrawOffered(initial)
+        runSheet(initial, offered = offered, motion = MotionLevel.Full) {
+            onNodeWithText("Needed for these updates", substring = true, useUnmergedTree = true).assertExists()
+            onNodeWithText(
+                "Your agents need these to keep working.",
+                substring = true,
+                useUnmergedTree = true,
+            ).assertExists()
+            val helperTop =
+                onNodeWithText("Agent helper", substring = true, useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .boundsInRoot
+                    .top
+            val nodeTop =
+                onNodeWithText("Node.js", substring = true, useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .boundsInRoot
+                    .top
+            assertTrue(helperTop < nodeTop, "expected Agent helper ($helperTop) above Node.js ($nodeTop)")
+
+            val needed = initial.items.filter { it.group == AgentUpdateGroup.Needed }
+            val optional = initial.items.filter { it.group == AgentUpdateGroup.Optional }
+            offered.mutableOffer.value = initial.copy(items = needed.reversed() + optional)
+            waitForIdle()
+            val nodeTopAfter =
+                onNodeWithText("Node.js", substring = true, useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .boundsInRoot
+                    .top
+            val helperTopAfter =
+                onNodeWithText("Agent helper", substring = true, useUnmergedTree = true)
+                    .fetchSemanticsNode()
+                    .boundsInRoot
+                    .top
+            assertTrue(
+                nodeTopAfter < helperTopAfter,
+                "expected refreshed order Node.js ($nodeTopAfter) above Agent helper ($helperTopAfter)",
+            )
+            onNodeWithText("Needed for these updates", substring = true, useUnmergedTree = true).assertExists()
+            onNodeWithText(
+                "Your agents need these to keep working.",
+                substring = true,
+                useUnmergedTree = true,
+            ).assertExists()
+
+            ALL_AGENTS.dropLast(1).forEach { switchOff(it) }
+            val fold = walkSwitch("Qwen Code")
+            val helperFrames = fold.frames.count { words -> words.any { it.contains("Agent helper") } }
+            assertTrue(helperFrames >= 2, "Agent helper left in $helperFrames frame(s) after the tap")
+            onNodeWithText("Node.js", substring = true).assertExists()
+            onNodeWithText(
+                "Your agents need these to keep working.",
+                substring = true,
+                useUnmergedTree = true,
+            ).assertExists()
+        }
+    }
+
+    /** [noLockedFiveOffer] with Codex's download size unknown so totals and buttons carry a lower bound. */
+    private fun partialUnknownOffer(): AgentUpdateOffer =
+        noLockedFiveOffer().let { offer ->
+            offer.copy(
+                items = offer.items.map { if (it.id == AgentId("codex")) it.copy(downloadBytes = null) else it },
+            )
+        }
+
+    /** [noLockedFiveOffer] with every download size unknown. */
+    private fun allUnknownOffer(): AgentUpdateOffer =
+        noLockedFiveOffer().let { offer ->
+            offer.copy(items = offer.items.map { it.copy(downloadBytes = null) })
+        }
+
+    private fun spokenLabel(node: SemanticsNode): String =
+        node.config
+            .getOrNull(SemanticsProperties.ContentDescription)
+            ?.joinToString(" ")
+            ?.replace("\u2066", "")
+            ?.replace("\u2068", "")
+            ?.replace("\u2069", "")
+            .orEmpty()
+
+    private fun KitUiTest.peakLuminance(bounds: Rect): Float {
+        val map = onRoot().captureToImage().toPixelMap()
+        val x0 = bounds.left.toInt().coerceIn(0, map.width - 1)
+        val x1 = bounds.right.toInt().coerceIn(x0, map.width - 1)
+        val y0 = bounds.top.toInt().coerceIn(0, map.height - 1)
+        val y1 = bounds.bottom.toInt().coerceIn(y0, map.height - 1)
+        var peak = 0f
+        for (y in y0..y1) {
+            for (x in x0..x1) {
+                val c = map[x, y]
+                val lum = 0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue
+                if (lum > peak) peak = lum
+            }
+        }
+        return peak
     }
 
     /** [noLockedFiveOffer] with a second needed part that is always needed, right after the agent helper. */
@@ -569,6 +777,7 @@ class AgentUpdateSheetRedrawTest {
         const val HELPER_TOO_NEW = "Its version can't work with the new agent helper, so it can't be kept."
         const val METERED_LINE = "You're on mobile data. The updates download over it."
         const val FOLD_FRAMES = 40
+        const val SWAP_FRAMES = 20
         const val ONE_DP_PX = 3
         val ALL_AGENTS = listOf("Claude Code", "Codex", "Antigravity", "Gemini CLI", "Qwen Code")
     }

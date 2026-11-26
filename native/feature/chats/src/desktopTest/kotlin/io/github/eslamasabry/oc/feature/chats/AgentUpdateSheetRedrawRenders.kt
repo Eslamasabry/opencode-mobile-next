@@ -59,7 +59,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 internal class RedrawOffered(offer: AgentUpdateOffer) : AgentUpdateChoices {
-    override val offer: StateFlow<AgentUpdateOffer?> = MutableStateFlow(offer)
+    val mutableOffer: MutableStateFlow<AgentUpdateOffer?> = MutableStateFlow(offer)
+    override val offer: StateFlow<AgentUpdateOffer?> = mutableOffer
     var lastWaitForWifi: Boolean? = null
     var lastChoices: Map<AgentId, AgentUpdateChoice>? = null
 
