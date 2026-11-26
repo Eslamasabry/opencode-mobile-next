@@ -79,40 +79,41 @@ class ShellFastPlusAfterCloseTest {
         }
     }
 
+    private fun installerFor(h: H): EntryInstaller = EntryInstaller {
+        entry<ChatsRoute.Home> {
+            KitScreen(title = "Home") {
+                Box(Modifier.fillMaxSize()) {
+                    LazyColumn(Modifier.fillMaxSize()) {
+                        items((0 until 30).toList(), key = { it }) { i ->
+                            KitRow("Row $i", "preview", onClick = { rowTaps += "Row $i" })
+                        }
+                    }
+                    KitButton(
+                        "+",
+                        onClick = { h.navigator.open(ChatsRoute.New(profile = null)) },
+                        modifier = Modifier.align(Alignment.BottomEnd),
+                    )
+                }
+            }
+        }
+        entry<ChatsRoute.New> {
+            KitScreen(title = "New") {
+                KitButton("Close", onClick = { h.navigator.back() })
+                Box(
+                    Modifier.fillMaxWidth()
+                        .weight(1f)
+                        .testTag("new-body")
+                        .clickable { leavingTaps += "body" },
+                )
+            }
+        }
+    }
+
     private fun after(delayMs: Long, expectReopen: Boolean = true) =
         runDesktopComposeUiTest(360, 780) {
             rowTaps.clear()
             leavingTaps.clear()
-            val h = H()
-            h.installer = EntryInstaller {
-                entry<ChatsRoute.Home> {
-                    KitScreen(title = "Home") {
-                        Box(Modifier.fillMaxSize()) {
-                            LazyColumn(Modifier.fillMaxSize()) {
-                                items((0 until 30).toList(), key = { it }) { i ->
-                                    KitRow("Row $i", "preview", onClick = { rowTaps += "Row $i" })
-                                }
-                            }
-                            KitButton(
-                                "+",
-                                onClick = { h.navigator.open(ChatsRoute.New(profile = null)) },
-                                modifier = Modifier.align(Alignment.BottomEnd),
-                            )
-                        }
-                    }
-                }
-                entry<ChatsRoute.New> {
-                    KitScreen(title = "New") {
-                        KitButton("Close", onClick = { h.navigator.back() })
-                        Box(
-                            Modifier.fillMaxWidth()
-                                .weight(1f)
-                                .testTag("new-body")
-                                .clickable { leavingTaps += "body" },
-                        )
-                    }
-                }
-            }
+            val h = H().also { it.installer = installerFor(it) }
             setContent { h.Content() }
             waitForIdle()
             val spot = onNodeWithText("+").fetchSemanticsNode().boundsInRoot.center
