@@ -2536,15 +2536,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             return Outcome.Failed(Failure.Refused(RefusalReason.DispatchUncertain))
         }
         submission?.let { draftSubmissions[id] = it }
-        val selection =
-            models.value.selected
-                ?.takeUnless { models.value.displayOnly }
-                ?.let {
-                    ModelSelection(
-                        ModelRef(it.providerId, it.modelId),
-                        models.value.variant.takeIf { v -> v.isNotEmpty() },
-                    )
-                }
+        val selection = activeModelSelection()
         phraseMoments[id] =
             io.github.eslamasabry.oc.engine.composer.phrases.PhraseMomentRules.derive(
                     turnFeed.value.ledger.messages,
@@ -2570,6 +2562,16 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             if (submission != null) submissionOwner?.releaseSubmission(submission)
         }
     }
+
+    private fun activeModelSelection(): ModelSelection? =
+        models.value.selected
+            ?.takeUnless { models.value.displayOnly }
+            ?.let {
+                ModelSelection(
+                    ModelRef(it.providerId, it.modelId),
+                    models.value.variant.takeIf { v -> v.isNotEmpty() },
+                )
+            }
 
     private fun clearReplacedModel(outcome: Outcome<Unit>) {
         if (outcome is Outcome.Ok && mutableModels.value.replaced != null) {
@@ -3515,13 +3517,12 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
 
     /** Immediately drops undone turns from [boundary] onward so they never linger while reload runs. */
     private fun TranscriptState.withoutUndoneFrom(boundary: String): TranscriptState {
-        if (rows.isEmpty()) return this
         val oldestFirst = rows.asReversed()
         val cutIndex = oldestFirst.indexOfFirst { it.key == "prompt:$boundary" || it.turnId == boundary }
         val kept =
             if (cutIndex >= 0) oldestFirst.subList(0, cutIndex)
             else oldestFirst.filter { it.turnId < boundary }
-        if (kept.size == oldestFirst.size) return this
+        if (rows.isEmpty() || kept.size == oldestFirst.size) return this
         val keptKeys = kept.mapTo(HashSet()) { it.key }
         val nextPositions =
             kept.withIndex().associate { (index, row) -> row.key to index }.toPersistentMap()

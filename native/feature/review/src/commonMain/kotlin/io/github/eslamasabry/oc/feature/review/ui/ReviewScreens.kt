@@ -1087,35 +1087,54 @@ private fun UndoFromHereContent(state: UndoFromHereUi, actions: UndoFromHereActi
 }
 
 @Composable
-private fun undoFromHereBodyText(state: UndoFromHereUi): String {
+private fun undoFromHereBodyText(state: UndoFromHereUi): String =
     if (state.staged) {
-        return stringResource(
+        stringResource(
             if (!state.noFileCopies && state.applyFiles) Res.string.reviewRevertSheetBodyWithFiles
             else Res.string.reviewRevertSheetBodyMessagesOnly
         )
+    } else {
+        oneStepUndoBodyText(state)
     }
-    val count = state.messagesAfter
-    return when {
+
+@Composable
+private fun oneStepUndoBodyText(state: UndoFromHereUi): String =
+    when {
         !state.filesRollbackSupported ->
-            when (count) {
-                null -> stringResource(Res.string.undoFromHereBodyNoRollbackUnknown)
-                0 -> stringResource(Res.string.undoFromHereBodyNoRollback__eq0)
-                else -> pluralStringResource(Res.plurals.undoFromHereBodyNoRollback, count, count)
-            }
+            countedUndoBody(
+                state.messagesAfter,
+                Res.string.undoFromHereBodyNoRollbackUnknown,
+                Res.string.undoFromHereBodyNoRollback__eq0,
+                Res.plurals.undoFromHereBodyNoRollback,
+            )
         state.noFileCopies ->
-            when (count) {
-                null -> stringResource(Res.string.undoFromHereBodyNoGitUnknown)
-                0 -> stringResource(Res.string.undoFromHereBodyNoGit__eq0)
-                else -> pluralStringResource(Res.plurals.undoFromHereBodyNoGit, count, count)
-            }
+            countedUndoBody(
+                state.messagesAfter,
+                Res.string.undoFromHereBodyNoGitUnknown,
+                Res.string.undoFromHereBodyNoGit__eq0,
+                Res.plurals.undoFromHereBodyNoGit,
+            )
         else ->
-            when (count) {
-                null -> stringResource(Res.string.undoFromHereBodyUnknown)
-                0 -> stringResource(Res.string.undoFromHereBody__eq0)
-                else -> pluralStringResource(Res.plurals.undoFromHereBody, count, count)
-            }
+            countedUndoBody(
+                state.messagesAfter,
+                Res.string.undoFromHereBodyUnknown,
+                Res.string.undoFromHereBody__eq0,
+                Res.plurals.undoFromHereBody,
+            )
     }
-}
+
+@Composable
+private fun countedUndoBody(
+    count: Int?,
+    unknown: StringResource,
+    zero: StringResource,
+    plural: org.jetbrains.compose.resources.PluralStringResource,
+): String =
+    when (count) {
+        null -> stringResource(unknown)
+        0 -> stringResource(zero)
+        else -> pluralStringResource(plural, count, count)
+    }
 
 @Composable
 private fun UndoFromHereFilesSection(state: UndoFromHereUi, actions: UndoFromHereActions) {

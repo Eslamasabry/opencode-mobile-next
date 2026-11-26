@@ -200,13 +200,7 @@ public class ChangesPresenter(
                     val rows = markViewed(chosen, if (chosen == ReviewScope.Conversation) withTreeDiffs(scopedFiles) else scopedFiles)
                     val working = chosen != ReviewScope.Conversation
                     val scopes = scopes()
-                    // An empty folder or branch view says why: not under Git, or a clean tree (the agent's reported
-                    // edits are the Conversation view's own words). Also check Git setup when Undo all is offered so
-                    // non-Git projects never promise file rollback or pass applyFiles = true.
-                    val checkSetup =
-                        (rows.isEmpty() && working) ||
-                            (set.undoFrom != null && review.shape() == UndoShape.Staged)
-                    val setupState = if (checkSetup) setup.setup() else VersionControlSetupState.Unknown
+                    val setupState = readSetupForLoad(rows.isEmpty() && working)
                     val notRepository = rows.isEmpty() && working && setupState == VersionControlSetupState.Absent
                     val noFileCopies = setupState == VersionControlSetupState.Absent
                     mutable.update {
@@ -233,6 +227,13 @@ public class ChangesPresenter(
             }
         }
     }
+
+    private suspend fun readSetupForLoad(emptyWorking: Boolean): VersionControlSetupState =
+        if (emptyWorking || (set.undoFrom != null && review.shape() == UndoShape.Staged)) {
+            setup.setup()
+        } else {
+            VersionControlSetupState.Unknown
+        }
 
     /**
      * Every listed change opens its diff (walk F-020): a row the tools reported without lines (the agent wrote it
@@ -879,25 +880,27 @@ public class UndoFromHerePresenter(
     }
 
     override fun initializeGit() {
-        val init = gitInit ?: return
+        val init = gitInit
         val s = state.value
-        if (!s.canInitGit || s.initializingGit) return
-        if (s.working || s.block != null) return
-        mutable.update { it.copy(initializingGit = true, gitInitFailure = null) }
-        scope.launch {
-            when (val result = init.initialize()) {
-                is Outcome.Failed ->
-                    mutable.update { it.copy(initializingGit = false, gitInitFailure = result.failure) }
-                is Outcome.Ok -> {
-                    val nowAbsent = setup.setup() == VersionControlSetupState.Absent
-                    mutable.update {
-                        it.copy(
-                            initializingGit = false,
-                            noFileCopies = nowAbsent,
-                            canInitGit = nowAbsent && init.canInit(),
-                            applyFiles = !nowAbsent,
-                            gitInitFailure = null,
-                        )
+        val canStart = s.canInitGit && !s.initializingGit
+        val idle = !s.working && s.block == null
+        if (init != null && canStart && idle) {
+            mutable.update { it.copy(initializingGit = true, gitInitFailure = null) }
+            scope.launch {
+                when (val result = init.initialize()) {
+                    is Outcome.Failed ->
+                        mutable.update { it.copy(initializingGit = false, gitInitFailure = result.failure) }
+                    is Outcome.Ok -> {
+                        val nowAbsent = setup.setup() == VersionControlSetupState.Absent
+                        mutable.update {
+                            it.copy(
+                                initializingGit = false,
+                                noFileCopies = nowAbsent,
+                                canInitGit = nowAbsent && init.canInit(),
+                                applyFiles = !nowAbsent,
+                                gitInitFailure = null,
+                            )
+                        }
                     }
                 }
             }
@@ -1002,67 +1005,65 @@ public class StagedPresenter(
     }
 
     private fun load() {
-        mutable.update { if (it.updating) it.copy(loadFailure = null) else it.copy(phase = StagedPhase.Loading, loadFailure = null) }
+        mutable.update {
+            if (it.updating) it.copy(loadFailure = null) else it.copy(phase = StagedPhase.Loading, loadFailure = null)
+        }
         scope.launch {
             val read = review.refresh()
             if (read is Outcome.Failed && !review.state.value.loaded) {
                 mutable.update { if (it.updating) it.copy(updating = false) else it.copy(loadFailure = read.failure) }
                 return@launch
             }
-            take(review.review())
+            val current = review.review()
+            reviewed = current
+            if (current == null) {
+                mutable.update { it.copy(phase = StagedPhase.None, files = null, updating = false) }
+                return@launch
+            }
+            val id = current.revert.messageId.raw
+            val prompt = review.prompt(id)
+            val count = (review.messagesAfter(id) as? Outcome.Ok)?.value
+            val noFileCopies = setup.setup() == VersionControlSetupState.Absent
+            val canInitGit = noFileCopies && gitInit?.canInit() == true
+            if (reviewed != current) return@launch
+            mutable.update {
+                it.copy(
+                    phase = StagedPhase.Review,
+                    updating = false,
+                    files = current.revert.files,
+                    prompt = (prompt as? Outcome.Ok)?.value,
+                    promptUnavailable = prompt !is Outcome.Ok || prompt.value == null,
+                    messagesAfter = count,
+                    noFileCopies = noFileCopies,
+                    canInitGit = canInitGit,
+                    failure = null,
+                )
+            }
+            shelf?.keep(ReviewShelf.STAGED, KeptReview(staged = KeptStaged.of(state.value)))
         }
-    }
-
-    private suspend fun take(current: StagedReview?) {
-        reviewed = current
-        if (current == null) {
-            mutable.update { it.copy(phase = StagedPhase.None, files = null, updating = false) }
-            return
-        }
-        // The review is drawn once, settled: its prompt, its message count and whether the folder keeps file copies
-        // (not under Git: none, and it says so) are read first, so the page never words itself two ways. Until then
-        // it waits (Loading, or the shelf's last picture).
-        val id = current.revert.messageId.raw
-        val prompt = review.prompt(id)
-        val count = (review.messagesAfter(id) as? Outcome.Ok)?.value
-        val noFileCopies = setup.setup() == VersionControlSetupState.Absent
-        val canInitGit = noFileCopies && gitInit?.canInit() == true
-        if (reviewed != current) return
-        mutable.update {
-            it.copy(
-                phase = StagedPhase.Review,
-                updating = false,
-                files = current.revert.files,
-                prompt = (prompt as? Outcome.Ok)?.value,
-                promptUnavailable = prompt !is Outcome.Ok || prompt.value == null,
-                messagesAfter = count,
-                noFileCopies = noFileCopies,
-                canInitGit = canInitGit,
-                failure = null,
-            )
-        }
-        shelf?.keep(ReviewShelf.STAGED, KeptReview(staged = KeptStaged.of(state.value)))
     }
 
     override fun initializeGit() {
-        val init = gitInit ?: return
+        val init = gitInit
         val s = state.value
-        if (!s.canInitGit || s.initializingGit) return
-        if (s.working || s.busy) return
-        mutable.update { it.copy(initializingGit = true, gitInitFailure = null) }
-        scope.launch {
-            when (val result = init.initialize()) {
-                is Outcome.Failed ->
-                    mutable.update { it.copy(initializingGit = false, gitInitFailure = result.failure) }
-                is Outcome.Ok -> {
-                    val nowAbsent = setup.setup() == VersionControlSetupState.Absent
-                    mutable.update {
-                        it.copy(
-                            initializingGit = false,
-                            noFileCopies = nowAbsent,
-                            canInitGit = nowAbsent && init.canInit(),
-                            gitInitFailure = null,
-                        )
+        val canStart = s.canInitGit && !s.initializingGit
+        val idle = !s.working && !s.busy
+        if (init != null && canStart && idle) {
+            mutable.update { it.copy(initializingGit = true, gitInitFailure = null) }
+            scope.launch {
+                when (val result = init.initialize()) {
+                    is Outcome.Failed ->
+                        mutable.update { it.copy(initializingGit = false, gitInitFailure = result.failure) }
+                    is Outcome.Ok -> {
+                        val nowAbsent = setup.setup() == VersionControlSetupState.Absent
+                        mutable.update {
+                            it.copy(
+                                initializingGit = false,
+                                noFileCopies = nowAbsent,
+                                canInitGit = nowAbsent && init.canInit(),
+                                gitInitFailure = null,
+                            )
+                        }
                     }
                 }
             }

@@ -175,9 +175,11 @@ public class ReviewHub(
         }
 
     private suspend fun activeFolderGraph(ref: ConversationRef): ReviewGraphAccessors? {
-        val graph = registry.graphFor(ref) as? ReviewGraphAccessors ?: return null
+        val graph =
+            (registry.graphFor(ref) as? ReviewGraphAccessors)
+                ?.takeIf { it.reviewGateway.capabilities.value.gitInit }
+                ?: return null
         val gateway = graph.reviewGateway
-        if (!gateway.capabilities.value.gitInit) return null
         val sessionDir =
             (gateway.session(ref.sessionId) as? Outcome.Ok)?.value?.directory?.takeIf { it.isNotBlank() }
         val activeDir = gateway.location.value.directory?.takeIf { it.isNotBlank() }
