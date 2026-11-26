@@ -493,6 +493,7 @@ private class ReadOnlyMonitorGateway(
                             secret,
                             scope,
                             location = location,
+                            observeEvents = false,
                         )
                     )
                 }

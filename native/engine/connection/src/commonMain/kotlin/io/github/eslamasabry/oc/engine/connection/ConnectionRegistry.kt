@@ -185,7 +185,18 @@ public class ConnectionRegistry @Suppress("LongParameterList") constructor(
                     return@withLock read
                 }
             }
-        val spec = GatewaySpec(profile = profile, credentials = credentials, scope = scope)
+        val visibility = visibilitySources.singleOrNull()?.visibility()
+        val spec =
+            if (visibility != null) {
+                GatewaySpec(
+                    profile = profile,
+                    credentials = credentials,
+                    scope = scope,
+                    visibility = visibility,
+                )
+            } else {
+                GatewaySpec(profile = profile, credentials = credentials, scope = scope)
+            }
         val attempt = TimeSource.Monotonic.markNow()
         val connected = factory.connect(spec)
         // B-190: the kind of server and of failure only, never its address; dropped unless `usage` is on.
@@ -260,7 +271,19 @@ public class ConnectionRegistry @Suppress("LongParameterList") constructor(
         val proof =
             TransientConnection(profile, credentials, ownerProfileId, location, currentOwner)
         transientOwners.admit(proof)
-        val spec = GatewaySpec(profile, credentials, scope, location = location)
+        val visibility = visibilitySources.singleOrNull()?.visibility()
+        val spec =
+            if (visibility != null) {
+                GatewaySpec(
+                    profile,
+                    credentials,
+                    scope,
+                    location = location,
+                    visibility = visibility,
+                )
+            } else {
+                GatewaySpec(profile, credentials, scope, location = location)
+            }
         val connected =
             try {
                 factory.connect(spec)
