@@ -121,9 +121,8 @@ class ChatSpokenLabelsTest {
     private fun String.hasPrivateUseGlyph(): Boolean = any { it in '\uE000'..'\uF8FF' }
 
     private fun activeDescendants(node: SemanticsNode): List<SemanticsNode> =
-        node.children.flatMap { child ->
-            if (child.config.isClearingSemantics) listOf(child) else listOf(child) + activeDescendants(child)
-        }
+        if (node.config.isClearingSemantics) emptyList()
+        else node.children.flatMap { child -> listOf(child) + activeDescendants(child) }
 
     private fun spokenLabel(node: SemanticsNode): String {
         val desc = node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
