@@ -278,6 +278,19 @@ class HybridAtNewestTest {
         }
     }
 
+    @Test
+    fun `STEPS-SCROLL-020 hybrid upward reader scroll supersedes a pending row jump`() =
+        runA11yScenario(TranscriptAnchor.Hybrid) { state ->
+            assertTrue(state.following, "starts following")
+            assertFalse(state.isNormalOrder, "starts reversed")
+            onNodeWithTag("transcript-list", useUnmergedTree = true).performScrollToIndex(0)
+            a11yScroll(SMALL_SCROLL_PX, towardNewer = false, context = "hybrid supersede pending jump")
+            repeat(SETTLE_FRAMES) { mainClock.advanceTimeByFrame() }
+            assertFalse(state.following, "upward ScrollBy superseding ScrollToIndex(0) must end in reading")
+            assertTrue(state.isNormalOrder, "reading state must flip to normal order")
+            assertFalse(listScrollAxis().reverseScrolling, "reading axis must report reverseScrolling=false")
+        }
+
     private companion object {
         const val VIEWPORT_W_DP = 360
         const val VIEWPORT_H_DP = 800

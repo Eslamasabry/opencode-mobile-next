@@ -1,6 +1,8 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -67,6 +69,8 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.STEP_FOLD_ROW_TAG
 import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalTranscriptAnchor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalTranscriptProbe
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.abs
@@ -123,7 +127,7 @@ private object ScrollWalkScene {
         override fun now(): Instant = Instant.fromEpochMilliseconds(0)
     }
 
-    val composer =
+    fun composer(extraDp: () -> Int = { 0 }): ComposerHost =
         object : ComposerHost {
             @Composable
             override fun Composer(target: ComposerTarget, chrome: ComposerChrome, modifier: Modifier) {
@@ -139,9 +143,13 @@ private object ScrollWalkScene {
                         away = chrome.busy(),
                     )
                     KitText("Composer slot")
+                    val extra = extraDp()
+                    if (extra > 0) Spacer(Modifier.height(extra.dp))
                 }
             }
         }
+
+    val composer: ComposerHost = composer()
 
     private fun info(id: String, role: Role, at: Long, done: Long?): MessageInfo =
         MessageInfo(
@@ -191,14 +199,14 @@ private object ScrollWalkScene {
                 ToolState(
                     status = status,
                     input = JsonObject(mapOf("command" to JsonPrimitive(StepsCraftScene.commands[n - 1]))),
-                    output = "ok",
+                    output = if (status == ToolStatus.Error) "exit 1" else "ok",
                     startedAtMs = start,
-                    completedAtMs = if (status == ToolStatus.Completed) start + 2_400L else null,
+                    completedAtMs = if (status == ToolStatus.Running) null else start + 2_400L,
                 ),
         )
     }
 
-    private fun turnB(steps: Int, ended: Boolean): List<MessageWithParts> {
+    private fun turnB(steps: Int, ended: Boolean, failed: Boolean = false): List<MessageWithParts> {
         val userB =
             MessageWithParts(
                 info = info(TURN_B, Role.User, 100_000L, 100_000L),
@@ -206,7 +214,12 @@ private object ScrollWalkScene {
             )
         val parts =
             (1..steps).map { n ->
-                val status = if (!ended && n == steps) ToolStatus.Running else ToolStatus.Completed
+                val status =
+                    when {
+                        failed && n == steps -> ToolStatus.Error
+                        !ended && n == steps -> ToolStatus.Running
+                        else -> ToolStatus.Completed
+                    }
                 bashPart(n, status)
             }
         val assistantB =
@@ -217,14 +230,20 @@ private object ScrollWalkScene {
         return listOf(userB, assistantB)
     }
 
-    fun facts(steps: Int, ended: Boolean): TurnFactsUi {
+    fun facts(steps: Int, ended: Boolean, failed: Boolean = false): TurnFactsUi {
         val keeper = TurnFeedKeeper(sid)
-        keeper.history(doneTurnA() + turnB(steps, ended), newest = ended)
+        keeper.history(doneTurnA() + turnB(steps, ended, failed), newest = ended)
         if (ended) keeper.idle() else keeper.event(GatewayEvent.RunStarted(SessionId(sid)), 100_000L)
         return TurnFactsPresenter(FixedClock).present(keeper.feed.value, 160_000L)
     }
 
-    fun state(steps: Int, ended: Boolean): ChatUi {
+    fun state(steps: Int, ended: Boolean, failed: Boolean = false): ChatUi {
+        val workState =
+            when {
+                failed -> WorkState.EndedFailed
+                ended -> WorkState.Done
+                else -> WorkState.Running
+            }
         val rows =
             buildList {
                 add(
@@ -232,8 +251,8 @@ private object ScrollWalkScene {
                         key = "work:$TURN_B",
                         turnId = TURN_B,
                         calls = steps,
-                        failed = 0,
-                        state = if (ended) WorkState.Done else WorkState.Running,
+                        failed = if (failed) 1 else 0,
+                        state = workState,
                     )
                 )
                 add(prompt(TURN_B, ASK_B))
@@ -433,6 +452,29 @@ private fun ComposeUiTest.captureRender(fileName: String) {
 }
 
 @OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.captureFrame(): BufferedImage = onRoot().captureToImage().toAwtImage()
+
+private fun writeStrip(fileName: String, frames: List<BufferedImage>) {
+    if (frames.isEmpty()) return
+    val gap = STRIP_GAP_PX
+    val width = frames.sumOf { it.width } + gap * (frames.size - 1)
+    val height = frames.maxOf { it.height }
+    val strip = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+    val g = strip.createGraphics()
+    g.color = Color(STRIP_BG_RGB)
+    g.fillRect(0, 0, width, height)
+    var x = 0
+    for (img in frames) {
+        g.drawImage(img, x, 0, null)
+        x += img.width + gap
+    }
+    g.dispose()
+    val out = File("build/s1-o5-render/$fileName")
+    out.parentFile.mkdirs()
+    ImageIO.write(strip, "png", out)
+}
+
+@OptIn(ExperimentalTestApi::class)
 private fun ComposeUiTest.assertTodayA11yHeld(
     label: String,
     firstRow: TrackedNode?,
@@ -515,7 +557,57 @@ private const val A11Y_STEP_FRAMES = 60
 private const val A11Y_SCROLL_UP_PX = 480f
 private const val GROUP_TAP_LEFT_INSET_PX = 24f
 private const val GROUP_TAP_FRAMES = 40
+private const val GROUP_MID_FRAMES = 10
 private const val GROUP_SETTLE_MS = 900L
+private const val GROUP_GROW_MIN_PX = 20f
+private const val COMPOSER_EXTRA_DP = 80
+private const val COMPOSER_MIN_MOVE_PX = 40f
+private const val STRIP_GAP_PX = 4
+private const val STRIP_BG_RGB = 0x222222
+private const val NEWEST_GROUP_STEP_TAG = "chat-step-b-c1"
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.newestGroupBodyShown(): Boolean =
+    onAllNodesWithTag(NEWEST_GROUP_STEP_TAG, useUnmergedTree = true)
+        .fetchSemanticsNodes()
+        .any { it.boundsInRoot.height > 0f }
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.assertGroupToggleOutcome(
+    label: String,
+    phase: String,
+    shownControlFrame: Int,
+    lostFollowFrame: Int,
+    probe: ProbeLog,
+) {
+    assertTrue(
+        shownControlFrame < 0,
+        "$label jump-to-latest mounted while $phase newest group: " +
+            "max=0.0 frame=$shownControlFrame node=jump-to-latest${probe.tail()}",
+    )
+    assertTrue(
+        lostFollowFrame < 0,
+        "$label following turned false while $phase newest group: " +
+            "max=0.0 frame=$lostFollowFrame node=following${probe.tail()}",
+    )
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun ComposeUiTest.assertFollowAndNoDock(
+    label: String,
+    phase: String,
+    frames: Int,
+    probe: ProbeLog,
+) {
+    var shownControlFrame = -1
+    var lostFollowFrame = -1
+    repeat(frames) { i ->
+        mainClock.advanceTimeByFrame()
+        if (jumpControlShown() && shownControlFrame < 0) shownControlFrame = i + 1
+        if (probe.latest()?.contains("following=true") != true && lostFollowFrame < 0) lostFollowFrame = i + 1
+    }
+    assertGroupToggleOutcome(label, phase, shownControlFrame, lostFollowFrame, probe)
+}
 
 @OptIn(ExperimentalTestApi::class)
 private fun ComposeUiTest.findNewestGroupTag(): String {
@@ -560,6 +652,8 @@ private fun ComposeUiTest.assertTapNewestGroupKeepsFollowing(
     baseline: Map<Int, TrackedNode>,
     probe: ProbeLog,
 ) {
+    val collapsedHeight = boundsOfTag("chat-work-line").height
+    assertTrue(!newestGroupBodyShown(), "$label expected group body hidden before tap 1${probe.tail()}")
     var worst = Drift(0f, 0, "none")
     var frame = 0
     var shownControlFrame = -1
@@ -575,29 +669,122 @@ private fun ComposeUiTest.assertTapNewestGroupKeepsFollowing(
     }
     tapNewestGroupOutsideControl(label, tag, tapNum = 1, frame = frame, probe = probe)
     advanceCheck()
+    assertGroupToggleOutcome(label, "opening", shownControlFrame, lostFollowFrame, probe)
+    assertTrue(newestGroupBodyShown(), "$label expected group body visible after tap 1${probe.tail()}")
+    val openedHeight = boundsOfTag("chat-work-line").height
     assertTrue(
-        shownControlFrame < 0,
-        "$label jump-to-latest mounted while opening newest group: " +
-            "max=0.0 frame=$shownControlFrame node=jump-to-latest${probe.tail()}",
-    )
-    assertTrue(
-        lostFollowFrame < 0,
-        "$label following turned false while opening newest group: " +
-            "max=0.0 frame=$lostFollowFrame node=following${probe.tail()}",
+        openedHeight > collapsedHeight + 1f,
+        "$label expected group height to grow after tap 1 ($collapsedHeight -> $openedHeight)${probe.tail()}",
     )
     tapNewestGroupOutsideControl(label, tag, tapNum = 2, frame = frame, probe = probe)
     advanceCheck()
+    assertGroupToggleOutcome(label, "closing", shownControlFrame, lostFollowFrame, probe)
+    assertTrue(!newestGroupBodyShown(), "$label expected group body hidden after tap 2${probe.tail()}")
+    val closedHeight = boundsOfTag("chat-work-line").height
     assertTrue(
-        shownControlFrame < 0,
-        "$label jump-to-latest mounted while closing newest group: " +
-            "max=0.0 frame=$shownControlFrame node=jump-to-latest${probe.tail()}",
-    )
-    assertTrue(
-        lostFollowFrame < 0,
-        "$label following turned false while closing newest group: " +
-            "max=0.0 frame=$lostFollowFrame node=following${probe.tail()}",
+        abs(closedHeight - collapsedHeight) <= WALK_TOLERANCE_PX,
+        "$label expected group height to return after tap 2 ($collapsedHeight -> $closedHeight)${probe.tail()}",
     )
     assertNoDrift(worst, "$label tap group", probe)
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun runFollowsAfterGroupToggle(anchor: TranscriptAnchor) {
+    withFlickerReport("019") {
+        kitUiTest(A11Y_PHONE_W, A11Y_PHONE_H, options = KitUiOptions(mode = FlickerMode.Report)) {
+            ScrollPlaceStore.clear()
+            val probe = ProbeLog()
+            val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+            var failed by mutableStateOf(false)
+            var extraComposerDp by mutableIntStateOf(0)
+            val composer = ScrollWalkScene.composer { extraComposerDp }
+            mainClock.autoAdvance = false
+            setContent {
+                ScrollWalkRoot(anchor, probe = probe.sink) {
+                    ChatScreen(
+                        ScrollWalkScene.state(A11Y_START_STEPS, ended = true, failed = failed),
+                        actions,
+                        composer,
+                        facts = ScrollWalkScene.facts(A11Y_START_STEPS, ended = true, failed = failed),
+                    )
+                }
+            }
+            mainClock.advanceTimeBy(GROUP_SETTLE_MS)
+            val baseBottom = boundsOfTag("chat-work-line").bottom
+            val baseComposerTop = composerTop()
+            val baseGap = baseComposerTop - baseBottom
+            val collapsedHeight = boundsOfTag("chat-work-line").height
+            val baseline = visibleNodes()
+            assertTapNewestGroupKeepsFollowing("019", findNewestGroupTag(), baseline, probe)
+            failed = true
+            assertFollowAndNoDock("019", "growing newest row", GROUP_TAP_FRAMES, probe)
+            val grownBounds = boundsOfTag("chat-work-line")
+            assertTrue(
+                grownBounds.height > collapsedHeight + GROUP_GROW_MIN_PX,
+                "019 newest row did not grow ($collapsedHeight -> ${grownBounds.height})${probe.tail()}",
+            )
+            val growDelta = abs(grownBounds.bottom - baseBottom)
+            assertTrue(
+                growDelta <= WALK_TOLERANCE_PX,
+                "019 newest line drifted after row growth: max=${"%.1f".format(growDelta)}${probe.tail()}",
+            )
+            extraComposerDp = COMPOSER_EXTRA_DP
+            assertFollowAndNoDock("019", "resizing composer", GROUP_TAP_FRAMES, probe)
+            val newComposerTop = composerTop()
+            assertTrue(
+                baseComposerTop - newComposerTop >= COMPOSER_MIN_MOVE_PX,
+                "019 composer did not grow ($baseComposerTop -> $newComposerTop)${probe.tail()}",
+            )
+            val resizedGap = newComposerTop - boundsOfTag("chat-work-line").bottom
+            val resizeDelta = abs(resizedGap - baseGap)
+            assertTrue(
+                resizeDelta <= WALK_TOLERANCE_PX,
+                "019 newest line not pinned after composer resize: " +
+                    "expectedGap=${"%.1f".format(baseGap)} got=${"%.1f".format(resizedGap)}${probe.tail()}",
+            )
+            probe.printFlips("019")
+        }
+    }
+}
+
+@OptIn(ExperimentalTestApi::class)
+private fun runNewestGroupRenders(anchor: TranscriptAnchor) {
+    kitUiTest(A11Y_PHONE_W, A11Y_PHONE_H, options = KitUiOptions(mode = FlickerMode.Report)) {
+        ScrollPlaceStore.clear()
+        val probe = ProbeLog()
+        val actions = ChatPresenter(FakeChatWorld(), RecordingNavigator(), Immediate)
+        var failed by mutableStateOf(false)
+        var extraComposerDp by mutableIntStateOf(0)
+        val composer = ScrollWalkScene.composer { extraComposerDp }
+        mainClock.autoAdvance = false
+        setContent {
+            ScrollWalkRoot(anchor, probe = probe.sink) {
+                ChatScreen(
+                    ScrollWalkScene.state(A11Y_START_STEPS, ended = true, failed = failed),
+                    actions,
+                    composer,
+                    facts = ScrollWalkScene.facts(A11Y_START_STEPS, ended = true, failed = failed),
+                )
+            }
+        }
+        mainClock.advanceTimeBy(GROUP_SETTLE_MS)
+        val tag = findNewestGroupTag()
+        val beforeOpen = captureFrame()
+        tapNewestGroupOutsideControl("018-render", tag, tapNum = 1, frame = 0, probe = probe)
+        repeat(GROUP_MID_FRAMES) { mainClock.advanceTimeByFrame() }
+        val midOpen = captureFrame()
+        repeat(GROUP_TAP_FRAMES - GROUP_MID_FRAMES) { mainClock.advanceTimeByFrame() }
+        val afterOpen = captureFrame()
+        writeStrip("option-a-newest-group-before-after-open-360.png", listOf(beforeOpen, midOpen, afterOpen))
+        tapNewestGroupOutsideControl("018-render", tag, tapNum = 2, frame = GROUP_TAP_FRAMES, probe = probe)
+        repeat(GROUP_TAP_FRAMES) { mainClock.advanceTimeByFrame() }
+        val afterClose = captureFrame()
+        failed = true
+        extraComposerDp = COMPOSER_EXTRA_DP
+        repeat(GROUP_TAP_FRAMES) { mainClock.advanceTimeByFrame() }
+        val afterGrowResize = captureFrame()
+        writeStrip("option-a-newest-group-before-after-close-360.png", listOf(afterOpen, afterClose, afterGrowResize))
+    }
 }
 
 @OptIn(ExperimentalTestApi::class)
@@ -1204,5 +1391,14 @@ internal object ScrollAnchorWalks {
 
     fun walk018OpenNewestGroupKeepsFollowing(anchor: TranscriptAnchor) {
         runOpenNewestGroupKeepsFollowing(anchor)
+        walk018NewestGroupRenders(anchor)
+    }
+
+    fun walk018NewestGroupRenders(anchor: TranscriptAnchor = TranscriptAnchor.Hybrid) {
+        runNewestGroupRenders(anchor)
+    }
+
+    fun walk019FollowsAfterGroupToggle(anchor: TranscriptAnchor) {
+        runFollowsAfterGroupToggle(anchor)
     }
 }

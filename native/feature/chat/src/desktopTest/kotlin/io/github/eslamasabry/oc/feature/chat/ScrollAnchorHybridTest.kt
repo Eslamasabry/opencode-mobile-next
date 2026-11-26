@@ -53,4 +53,9 @@ class ScrollAnchorHybridTest {
     fun `STEPS-SCROLL-018 hybrid opening newest step group keeps following and hides jump dock`() {
         ScrollAnchorWalks.walk018OpenNewestGroupKeepsFollowing(TranscriptAnchor.Hybrid)
     }
+
+    @Test
+    fun `STEPS-SCROLL-019 hybrid follows the newest line after opening and closing a group`() {
+        ScrollAnchorWalks.walk019FollowsAfterGroupToggle(TranscriptAnchor.Hybrid)
+    }
 }
