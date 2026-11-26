@@ -3,7 +3,9 @@ package io.github.eslamasabry.oc.feature.chats
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -19,6 +21,7 @@ import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.common.text.PhoneSizes
@@ -59,6 +62,7 @@ import io.github.eslamasabry.oc.ui.kit.choice.KitSegmented
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.row.KIT_CONTAINER_GAP_DP
 import io.github.eslamasabry.oc.ui.kit.row.KitContentRow
 import io.github.eslamasabry.oc.ui.kit.row.KitGroupNote
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
@@ -293,7 +297,7 @@ class AgentUpdateSheetRedrawRenders {
                             ) {
                                 KitSheetHost(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) {
                                     ChatsScreen(mixed(), RecordingChatsActions())
-                                    BeforeRedesignSheet(state.agentUpdates.sheet)
+                                    BeforeRedesignView.Sheet(state.agentUpdates.sheet)
                                 }
                             }
                         }
@@ -540,147 +544,6 @@ class AgentUpdateSheetRedrawRenders {
         }
     }
 
-    @Composable
-    private fun BeforeRedesignSheet(shown: AgentUpdateSheetUi) {
-        KitSheet(
-            visible = shown.visible,
-            onDismissRequest = {},
-            title = stringResource(Res.string.agentUpdatesTitle),
-            closeLabel = stringResource(Res.string.kitSheetClose),
-            primary = KitAction(beforeButton(shown), {}),
-            secondary = KitAction(stringResource(Res.string.appUpdateNotNow), {}),
-        ) {
-            Column {
-                if (shown.optional.isNotEmpty()) {
-                    KitRowGroup(label = stringResource(Res.string.localAgentRowOptional)) {
-                        shown.optional.forEach { row -> BeforeOptionalRow(row) }
-                    }
-                }
-                if (shown.needed.isNotEmpty()) {
-                    KitRowGroup(
-                        label = stringResource(Res.string.agentUpdatesNeededLabel),
-                        note =
-                            stringResource(
-                                if (shown.neededWhy == AgentNeedRule.Always) Res.string.agentUpdatesNeededAlways
-                                else Res.string.agentUpdatesNeededWhy
-                            ),
-                    ) {
-                        shown.needed.forEach { row -> BeforeNeededRow(row) }
-                    }
-                }
-                BeforeTotals(shown)
-                when (shown.network) {
-                    AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
-                    AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
-                    AgentUpdateNetwork.Unmetered -> Unit
-                }
-                KitGroupNote(
-                    stringResource(Res.string.agentUpdatesAgentsLine),
-                    action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), {}),
-                )
-                KitGroupNote(
-                    stringResource(Res.string.agentUpdatesLinuxLine),
-                    action = KitAction(stringResource(Res.string.agentUpdatesLinuxAction), {}),
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun BeforeOptionalRow(row: AgentUpdateRowUi) {
-        KitContentRow(title = KitBidi.auto(row.name), supporting = versions(row.from, row.to)) {
-            Column {
-                if (row.choices.size >= 2) {
-                    val segments = row.choices.map { KitSegment(it, beforeChoiceWord(it)) }
-                    KitSegmented(
-                        segments = segments,
-                        selected = row.choice,
-                        semanticsLabel = stringResource(Res.string.agentUpdatesChoiceLabel, row.name),
-                        onChange = {},
-                    )
-                }
-                KitText(beforeConsequence(row), role = TypeRole.Secondary, tone = TextTone.Secondary)
-                row.keepBlock?.let {
-                    KitText(
-                        stringResource(
-                            when (it) {
-                                AgentKeepBlock.HelperTooNew -> Res.string.agentUpdatesKeepHelperTooNew
-                                AgentKeepBlock.NotSupportedAnyMore -> Res.string.agentUpdatesKeepNotSupported
-                            }
-                        ),
-                        role = TypeRole.Secondary,
-                        tone = TextTone.Secondary,
-                    )
-                }
-            }
-        }
-    }
-
-    @Composable
-    private fun BeforeNeededRow(row: AgentNeededRowUi) {
-        val dl =
-            row.downloadBytes?.let { stringResource(Res.string.agentUpdatesDownloads, PhoneSizes.text(it)) }
-                ?: stringResource(Res.string.agentUpdatesDownloadsUnknown)
-        KitRow(
-            title = KitBidi.auto(row.name),
-            supporting = "${versions(row.from, row.to)}\n$dl",
-            supportingMaxLines = 3,
-        )
-    }
-
-    @Composable
-    private fun BeforeTotals(sheet: AgentUpdateSheetUi) {
-        if (sheet.updating == 0 && sheet.removing == 0 && sheet.needed.isEmpty()) return
-        KitRowGroup {
-            if (sheet.updating > 0 || sheet.needed.isNotEmpty()) {
-                KitRow(
-                    stringResource(Res.string.agentUpdatesTotalDownload),
-                    trailing = KitRowTrailing.Value(amount(sheet.downloadBytes, sheet.downloadKnown), chevron = false),
-                )
-            }
-            if (sheet.removing > 0) {
-                KitRow(
-                    stringResource(Res.string.agentUpdatesTotalFrees),
-                    trailing = KitRowTrailing.Value(amount(sheet.freesBytes, sheet.freesKnown), chevron = false),
-                )
-            }
-        }
-    }
-
-    @Composable
-    private fun beforeButton(sheet: AgentUpdateSheetUi): String =
-        when {
-            sheet.updating > 0 && sheet.removing > 0 ->
-                pluralStringResource(Res.plurals.agentUpdatesButtonBoth, sheet.removing, sheet.updating, sheet.removing)
-            sheet.updating > 0 ->
-                pluralStringResource(Res.plurals.agentUpdatesButtonUpdate, sheet.updating, sheet.updating)
-            sheet.removing > 0 ->
-                pluralStringResource(Res.plurals.agentUpdatesButtonRemove, sheet.removing, sheet.removing)
-            else -> stringResource(Res.string.agentUpdatesButtonKeep)
-        }
-
-    @Composable
-    private fun beforeChoiceWord(choice: AgentUpdateChoice): String =
-        stringResource(
-            when (choice) {
-                AgentUpdateChoice.Update -> Res.string.agentUpdatesChoiceUpdate
-                AgentUpdateChoice.Keep -> Res.string.agentUpdatesChoiceKeep
-                AgentUpdateChoice.Remove -> Res.string.agentUpdatesChoiceRemove
-            }
-        )
-
-    @Composable
-    private fun beforeConsequence(row: AgentUpdateRowUi): String =
-        when (row.choice) {
-            AgentUpdateChoice.Update ->
-                row.downloadBytes?.let { stringResource(Res.string.agentUpdatesDownloads, PhoneSizes.text(it)) }
-                    ?: stringResource(Res.string.agentUpdatesDownloadsUnknown)
-            AgentUpdateChoice.Keep ->
-                row.from?.let { stringResource(Res.string.agentUpdatesStays, KitBidi.ltr(it)) }
-                    ?: stringResource(Res.string.agentUpdatesStaysUnknown)
-            AgentUpdateChoice.Remove -> frees(row.installedBytes)
-        }
-
     @androidx.compose.runtime.Composable
     private fun FullMotionSheet(model: AgentUpdateSheetModel) {
         val updates by model.ui.collectAsState(initial = remember { model.current() })
@@ -919,4 +782,152 @@ class AgentUpdateSheetRedrawRenders {
         const val CHUNK_HEADER = 8
         val PNG_SIG = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
     }
+}
+
+private object BeforeRedesignView {
+    @Composable
+    fun Sheet(shown: AgentUpdateSheetUi) {
+        KitSheet(
+            visible = shown.visible,
+            onDismissRequest = {},
+            title = stringResource(Res.string.agentUpdatesTitle),
+            closeLabel = stringResource(Res.string.kitSheetClose),
+            primary = KitAction(beforeButton(shown), {}),
+            secondary = KitAction(stringResource(Res.string.appUpdateNotNow), {}),
+        ) {
+            Column {
+                val hasOptional = shown.optional.isNotEmpty()
+                val hasNeeded = shown.needed.isNotEmpty()
+                val hasTotals = shown.updating > 0 || shown.removing > 0 || hasNeeded
+                if (hasOptional) {
+                    KitRowGroup(label = stringResource(Res.string.localAgentRowOptional)) {
+                        shown.optional.forEach { row -> BeforeOptionalRow(row) }
+                    }
+                }
+                if (hasOptional && hasNeeded) Spacer(Modifier.height(KIT_CONTAINER_GAP_DP.dp))
+                if (hasNeeded) {
+                    KitRowGroup(
+                        label = stringResource(Res.string.agentUpdatesNeededLabel),
+                        note =
+                            stringResource(
+                                if (shown.neededWhy == AgentNeedRule.Always) Res.string.agentUpdatesNeededAlways
+                                else Res.string.agentUpdatesNeededWhy
+                            ),
+                    ) {
+                        shown.needed.forEach { row -> BeforeNeededRow(row) }
+                    }
+                }
+                if ((hasOptional || hasNeeded) && hasTotals) Spacer(Modifier.height(KIT_CONTAINER_GAP_DP.dp))
+                BeforeTotals(shown)
+                when (shown.network) {
+                    AgentUpdateNetwork.Metered -> KitGroupNote(stringResource(Res.string.agentUpdatesMetered))
+                    AgentUpdateNetwork.Unknown -> KitGroupNote(stringResource(Res.string.agentUpdatesNetworkUnknown))
+                    AgentUpdateNetwork.Unmetered -> Unit
+                }
+                KitGroupNote(
+                    stringResource(Res.string.agentUpdatesAgentsLine),
+                    action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), {}),
+                )
+                KitGroupNote(
+                    stringResource(Res.string.agentUpdatesLinuxLine),
+                    action = KitAction(stringResource(Res.string.agentUpdatesLinuxAction), {}),
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun BeforeOptionalRow(row: AgentUpdateRowUi) {
+        KitContentRow(title = KitBidi.auto(row.name), supporting = versions(row.from, row.to)) {
+            Column {
+                if (row.choices.size >= 2) {
+                    val segments = row.choices.map { KitSegment(it, beforeChoiceWord(it)) }
+                    KitSegmented(
+                        segments = segments,
+                        selected = row.choice,
+                        semanticsLabel = stringResource(Res.string.agentUpdatesChoiceLabel, row.name),
+                        onChange = {},
+                    )
+                }
+                KitText(beforeConsequence(row), role = TypeRole.Secondary, tone = TextTone.Secondary)
+                row.keepBlock?.let {
+                    KitText(
+                        stringResource(
+                            when (it) {
+                                AgentKeepBlock.HelperTooNew -> Res.string.agentUpdatesKeepHelperTooNew
+                                AgentKeepBlock.NotSupportedAnyMore -> Res.string.agentUpdatesKeepNotSupported
+                            }
+                        ),
+                        role = TypeRole.Secondary,
+                        tone = TextTone.Secondary,
+                    )
+                }
+            }
+        }
+    }
+
+    @Composable
+    private fun BeforeNeededRow(row: AgentNeededRowUi) {
+        val dl =
+            row.downloadBytes?.let { stringResource(Res.string.agentUpdatesDownloads, PhoneSizes.text(it)) }
+                ?: stringResource(Res.string.agentUpdatesDownloadsUnknown)
+        KitRow(
+            title = KitBidi.auto(row.name),
+            supporting = "${versions(row.from, row.to)}\n$dl",
+            supportingMaxLines = 3,
+        )
+    }
+
+    @Composable
+    private fun BeforeTotals(sheet: AgentUpdateSheetUi) {
+        if (sheet.updating == 0 && sheet.removing == 0 && sheet.needed.isEmpty()) return
+        KitRowGroup {
+            if (sheet.updating > 0 || sheet.needed.isNotEmpty()) {
+                KitRow(
+                    stringResource(Res.string.agentUpdatesTotalDownload),
+                    trailing = KitRowTrailing.Value(amount(sheet.downloadBytes, sheet.downloadKnown), chevron = false),
+                )
+            }
+            if (sheet.removing > 0) {
+                KitRow(
+                    stringResource(Res.string.agentUpdatesTotalFrees),
+                    trailing = KitRowTrailing.Value(amount(sheet.freesBytes, sheet.freesKnown), chevron = false),
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun beforeButton(sheet: AgentUpdateSheetUi): String =
+        when {
+            sheet.updating > 0 && sheet.removing > 0 ->
+                pluralStringResource(Res.plurals.agentUpdatesButtonBoth, sheet.removing, sheet.updating, sheet.removing)
+            sheet.updating > 0 ->
+                pluralStringResource(Res.plurals.agentUpdatesButtonUpdate, sheet.updating, sheet.updating)
+            sheet.removing > 0 ->
+                pluralStringResource(Res.plurals.agentUpdatesButtonRemove, sheet.removing, sheet.removing)
+            else -> stringResource(Res.string.agentUpdatesButtonKeep)
+        }
+
+    @Composable
+    private fun beforeChoiceWord(choice: AgentUpdateChoice): String =
+        stringResource(
+            when (choice) {
+                AgentUpdateChoice.Update -> Res.string.agentUpdatesChoiceUpdate
+                AgentUpdateChoice.Keep -> Res.string.agentUpdatesChoiceKeep
+                AgentUpdateChoice.Remove -> Res.string.agentUpdatesChoiceRemove
+            }
+        )
+
+    @Composable
+    private fun beforeConsequence(row: AgentUpdateRowUi): String =
+        when (row.choice) {
+            AgentUpdateChoice.Update ->
+                row.downloadBytes?.let { stringResource(Res.string.agentUpdatesDownloads, PhoneSizes.text(it)) }
+                    ?: stringResource(Res.string.agentUpdatesDownloadsUnknown)
+            AgentUpdateChoice.Keep ->
+                row.from?.let { stringResource(Res.string.agentUpdatesStays, KitBidi.ltr(it)) }
+                    ?: stringResource(Res.string.agentUpdatesStaysUnknown)
+            AgentUpdateChoice.Remove -> frees(row.installedBytes)
+        }
 }
