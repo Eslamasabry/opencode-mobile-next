@@ -1,36 +1,26 @@
 package io.github.eslamasabry.oc.feature.chat.presentation
 
-import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
-import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.PromptAgentMention
 import io.github.eslamasabry.oc.core.model.PromptAttachment
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
-import io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy as DeliveryAutomationPolicy
-import io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection
-import io.github.eslamasabry.oc.engine.delivery.port.SendLink
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueue
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueueStore
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRead
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRefusal
 import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
 import io.github.eslamasabry.oc.engine.requests.consent.AutomationBehavior
-import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicy as ConsentAutomationPolicy
+import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicy
 import io.github.eslamasabry.oc.engine.requests.consent.AutomationPolicyOwner
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chat.world.ChatLoad
-import kotlin.coroutines.ContinuationInterceptor
 import kotlin.time.Clock
-import kotlin.time.Instant
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 /** Immutable payload of one prompt held in the offline outbox. */
 internal data class OutboxDraft(
@@ -42,38 +32,31 @@ internal data class OutboxDraft(
     val agent: String?,
 )
 
+/** Raw read result for a profile's `oc.automation.<id>` preference. */
+internal sealed interface AutomationPrefRead {
+    data object Absent : AutomationPrefRead
+
+    data class Text(val raw: String) : AutomationPrefRead
+
+    data object Invalid : AutomationPrefRead
+}
+
 /**
  * B-500: durable offline outbox routed exclusively through `:engine:delivery`'s [OfflineQueue].
  *
  * Never writes directly to `oc.offlineQueue`: every enqueue and cancel runs through a real
  * [OfflineQueue] instance (preferring the active connection's queue, then any live connection's
- * queue, then a single app-scoped detached [OfflineQueue] over the same [DeliveryStorage.journals]),
- * preserving the engine queue lock, closed-profile checks, tombstone checks, and B-STATE-046
- * eviction notices.
+ * queue, then the app-scoped detached [OfflineQueue] over [DeliveryStorage.journals]), preserving
+ * the engine queue lock, closed-profile checks, tombstone checks, and B-STATE-046 eviction notices.
  */
 internal class OfflineOutbox(
-    private val storage: DeliveryStorage,
+    storage: DeliveryStorage,
     private val registry: ConnectionRegistry,
+    private val detachedQueue: OfflineQueue?,
+    private val readAutomationPref: (String) -> AutomationPrefRead,
     private val clock: Clock? = null,
-    dispatchers: AppDispatchers? = null,
 ) {
     private val reader = OfflineQueueStore(storage.store, storage.lanes.app)
-    private val effectiveDispatchers: AppDispatchers? =
-        dispatchers
-            ?: (registry.mainContext[ContinuationInterceptor] as? CoroutineDispatcher)
-                ?.let(::ContextDispatchers)
-    private val detachedQueue: OfflineQueue? =
-        effectiveDispatchers?.let { d ->
-            OfflineQueue(
-                store = OfflineQueueStore(storage.store, storage.lanes.app),
-                journals = storage.journals,
-                connection = DetachedConnection,
-                policy = DeliveryAutomationPolicy { false },
-                clock = clock ?: ZeroClock,
-                scope = registry.appScope,
-                dispatchers = d,
-            )
-        }
     private var seq = 0L
 
     /** Read-only snapshot of unsent waiting entries for [ref], oldest first. Never mutates disk. */
@@ -87,12 +70,11 @@ internal class OfflineOutbox(
      * default (`true`); corrupt or wrongly typed storage grants nothing (`false`).
      */
     fun allowsAutomaticQueuedSends(profileId: ProfileId): Boolean =
-        when (val raw = storage.store.get(AutomationPolicyOwner.keyFor(profileId.raw))) {
-            null -> true
-            is PrefValue.Str ->
-                ConsentAutomationPolicy.fromJson(raw.value)
-                    .allows(AutomationBehavior.ReconcileQueuedSends)
-            else -> false
+        when (val raw = readAutomationPref(AutomationPolicyOwner.keyFor(profileId.raw))) {
+            AutomationPrefRead.Absent -> true
+            is AutomationPrefRead.Text ->
+                AutomationPolicy.fromJson(raw.raw).allows(AutomationBehavior.ReconcileQueuedSends)
+            AutomationPrefRead.Invalid -> false
         }
 
     /** Persists a new waiting prompt through [OfflineQueue.queuePrompt]. */
@@ -157,23 +139,6 @@ internal class OfflineOutbox(
                         Outcome.Failed(Failure.Refused(RefusalReason.OfflineQueueFull))
                 }
         }
-
-    private object DetachedConnection : DeliveryConnection {
-        override val link: StateFlow<SendLink?> = MutableStateFlow(null)
-        override val activeProfile: StateFlow<ProfileId?> = MutableStateFlow(null)
-    }
-
-    private object ZeroClock : Clock {
-        override fun now(): Instant = Instant.fromEpochMilliseconds(0L)
-    }
-
-    private class ContextDispatchers(private val dispatcher: CoroutineDispatcher) : AppDispatchers {
-        override val main: CoroutineDispatcher = dispatcher
-        override val default: CoroutineDispatcher = dispatcher
-        override val io: CoroutineDispatcher = dispatcher
-
-        override fun serial(name: String): CoroutineDispatcher = dispatcher
-    }
 
     companion object {
         /** A deleted conversation cannot accept offline sends; a network failure can. */

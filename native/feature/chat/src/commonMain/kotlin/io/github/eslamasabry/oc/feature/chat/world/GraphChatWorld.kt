@@ -50,6 +50,7 @@ import io.github.eslamasabry.oc.engine.delivery.StopAnswer
 import io.github.eslamasabry.oc.engine.delivery.TypedKind
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueState
 import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
+import io.github.eslamasabry.oc.feature.chat.presentation.AutomationPrefRead
 import io.github.eslamasabry.oc.feature.chat.presentation.OfflineOutbox
 import io.github.eslamasabry.oc.feature.chat.presentation.OutboxDraft
 import io.github.eslamasabry.oc.engine.requests.ConnectionRequests
@@ -147,7 +148,8 @@ public class GraphChatWorlds @Suppress("LongParameterList") constructor(
         storages.singleOrNull()?.let {
             io.github.eslamasabry.oc.engine.connection.adopted.WithdrawnPromptStore(it.store, it.lanes)
         }
-    private val outbox = storages.singleOrNull()?.let { OfflineOutbox(it, registry, clock, dispatchers) }
+    private val outbox =
+        storages.singleOrNull()?.let { buildOfflineOutbox(it, registry, clock, dispatchers) }
 
     /**
      * B3: shared by every conversation of the app run; B-STATE-032: saved per server (8 newest)
@@ -210,6 +212,70 @@ public class GraphChatWorlds @Suppress("LongParameterList") constructor(
             open[world.ref] = held to holders - 1
         }
     }
+}
+
+private fun buildOfflineOutbox(
+    storage: io.github.eslamasabry.oc.engine.delivery.DeliveryStorage,
+    registry: ConnectionRegistry,
+    clock: kotlin.time.Clock?,
+    dispatchers: io.github.eslamasabry.oc.core.common.AppDispatchers?,
+): OfflineOutbox {
+    val effective =
+        dispatchers
+            ?: (registry.mainContext[ContinuationInterceptor] as? kotlinx.coroutines.CoroutineDispatcher)
+                ?.let(::OutboxContextDispatchers)
+    val detached =
+        effective?.let { d ->
+            io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueue(
+                store =
+                    io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueueStore(
+                        storage.store,
+                        storage.lanes.app,
+                    ),
+                journals = storage.journals,
+                connection = DetachedDeliveryConnection,
+                policy = io.github.eslamasabry.oc.engine.delivery.port.AutomationPolicy { false },
+                clock = clock ?: OutboxZeroClock,
+                scope = registry.appScope,
+                dispatchers = d,
+            )
+        }
+    return OfflineOutbox(
+        storage = storage,
+        registry = registry,
+        detachedQueue = detached,
+        readAutomationPref = { key ->
+            when (val raw = storage.store.get(key)) {
+                null -> AutomationPrefRead.Absent
+                is io.github.eslamasabry.oc.core.data.kv.PrefValue.Str ->
+                    AutomationPrefRead.Text(raw.value)
+                else -> AutomationPrefRead.Invalid
+            }
+        },
+        clock = clock,
+    )
+}
+
+private object DetachedDeliveryConnection :
+    io.github.eslamasabry.oc.engine.delivery.port.DeliveryConnection {
+    override val link: StateFlow<io.github.eslamasabry.oc.engine.delivery.port.SendLink?> =
+        MutableStateFlow(null)
+    override val activeProfile: StateFlow<io.github.eslamasabry.oc.core.common.ids.ProfileId?> =
+        MutableStateFlow(null)
+}
+
+private object OutboxZeroClock : kotlin.time.Clock {
+    override fun now(): kotlin.time.Instant = kotlin.time.Instant.fromEpochMilliseconds(0L)
+}
+
+private class OutboxContextDispatchers(
+    private val dispatcher: kotlinx.coroutines.CoroutineDispatcher,
+) : io.github.eslamasabry.oc.core.common.AppDispatchers {
+    override val main: kotlinx.coroutines.CoroutineDispatcher = dispatcher
+    override val default: kotlinx.coroutines.CoroutineDispatcher = dispatcher
+    override val io: kotlinx.coroutines.CoroutineDispatcher = dispatcher
+
+    override fun serial(name: String): kotlinx.coroutines.CoroutineDispatcher = dispatcher
 }
 
 /**
