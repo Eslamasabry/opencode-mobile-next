@@ -379,8 +379,11 @@ public class TelemetryService(
             JourneyMilestones(
                 now = wallClockMs,
                 memory = memory,
-                emit = { milestone, after ->
-                    track(ProductEvent.JourneyMilestone, mapOf("step" to milestone.wire, "after_range" to after))
+                emit = { milestone, after, extra ->
+                    track(
+                        ProductEvent.JourneyMilestone,
+                        mapOf("step" to milestone.wire, "after_range" to after) + extra,
+                    )
                 },
                 stage = { word -> setUserProperties(mapOf("journey_stage" to word)) },
             )

@@ -2459,6 +2459,7 @@ collectDrop	13bd95a3dd
 collectDropLead	b749752e5b
 collectExit	34768d63e2
 collectExitLead	1e0dd23b57
+collectJourney	f9c2065de3
 collectJourneyLead	81e00637e2
 collectMemory	39a3b87916
 collectMemoryLead	dcfe9c6ebd
@@ -8012,7 +8013,7 @@ native44Output	a063f4c7f9
 native44Price	5cca42a3ab
 nativeAboutProvenance	e0bd072c84
 nativeAboutProvenanceTitle	f97ce82c6e
-nativeBundledPrivacy	361b7f663b
+nativeBundledPrivacy	d080aff0c3
 nativeCapabilitiesDetail	2fd99510fe
 nativeCapabilitiesTitle	3dd91e1995
 nativeCapabilityAddExternalAgentDetail	4c2eba1208

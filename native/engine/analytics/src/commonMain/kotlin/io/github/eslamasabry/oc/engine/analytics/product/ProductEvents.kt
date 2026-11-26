@@ -129,7 +129,9 @@ public enum class ProductEvent(public val wire: String) {
     /**
      * An early step of the install-to-first-reply funnel was reached, once per install: `step` (a
      * [io.github.eslamasabry.oc.engine.analytics.health.Milestone] word) and `after_range` (how long after the person
-     * first agreed to usage). Derived from the events above by `JourneyMilestones`, never sent by a call site.
+     * first agreed to usage). With `first_prompt_ended` only, `outcome` (how the first message ended) and `fail_kind`
+     * (its error kind): kind words only, never the message's words. Derived from the events above by
+     * `JourneyMilestones`, never sent by a call site.
      */
     JourneyMilestone("journey_milestone"),
 
@@ -437,6 +439,10 @@ public val productSchema: Map<String, Map<String, Set<String>>> =
                 mapOf(
                     "step" to Milestone.entries.map { it.wire }.toSet(),
                     "after_range" to HealthRanges.sinceStart.toSet(),
+                    "outcome" to HealthWords.firstPromptEndings,
+                    "fail_kind" to
+                        HealthWords.turnErrorKinds + HealthWords.failKinds +
+                            HealthWords.sendOnlyFailKinds + HealthWords.modelFailKinds,
                 ),
             ProductEvent.UseFor.wire to mapOf("kind" to ProductUseFor.entries.map { it.wire }.toSet()),
             ProductEvent.StarterUsed.wire to mapOf("starter" to ProductStarter.entries.map { it.wire }.toSet()),
