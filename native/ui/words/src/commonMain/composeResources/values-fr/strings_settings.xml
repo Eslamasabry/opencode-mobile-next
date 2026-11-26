@@ -848,4 +848,5 @@
     <string name="languageNameFrench">Français</string>
     <string name="languageNameChinese">Chinois</string>
     <string name="languageNameItalian">Italien</string>
+    <string name="notifySendTestBlockedDetail">Reste actif lorsque les notifications sont coupées afin de vérifier le réglage Android.</string>
 </resources>

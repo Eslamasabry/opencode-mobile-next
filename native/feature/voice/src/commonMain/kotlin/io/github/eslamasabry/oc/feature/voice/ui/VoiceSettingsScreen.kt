@@ -95,7 +95,6 @@ import io.github.eslamasabry.oc.ui.words.res.voiceAutoSetupMobileData
 import io.github.eslamasabry.oc.ui.words.res.voiceInputUnavailable
 import io.github.eslamasabry.oc.ui.words.res.voiceNativeNaturalNeedsEngine
 import io.github.eslamasabry.oc.ui.words.res.voiceNativePartial
-import io.github.eslamasabry.oc.ui.words.res.voiceNativePhoneEngine
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupBusyReason
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupDeletePack
 import io.github.eslamasabry.oc.ui.words.res.voiceSetupDownloadSize
@@ -179,13 +178,15 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                 )
             } else {
             // No early return out of this block: the rest of the page is the else branch.
-            KitText(
-                stringResource(Res.string.voiceSetupSubtitle),
-                gutter,
-                role = TypeRole.Secondary,
-                tone = TextTone.Secondary,
-            )
-            Spacer(Modifier.height(Space.S4.dp))
+            if (state.engine != SpeechEngineKind.PhoneRecognizer) {
+                KitText(
+                    stringResource(Res.string.voiceSetupSubtitle),
+                    gutter,
+                    role = TypeRole.Secondary,
+                    tone = TextTone.Secondary,
+                )
+                Spacer(Modifier.height(Space.S4.dp))
+            }
             // What is happening comes first (STATE-1): the running download or why it stopped.
             if (state.busy) {
                 DownloadProgress(state, actions, gutter)
@@ -196,12 +197,7 @@ public fun VoiceSettingsScreen(state: VoiceSettingsUi, actions: VoiceSettingsPre
                 Spacer(Modifier.height(Space.S3.dp))
             }
             KitNotice(
-                message =
-                    stringResource(
-                        if (state.engine == SpeechEngineKind.PhoneRecognizer)
-                            Res.string.voiceNativePhoneEngine
-                        else Res.string.e7VoiceUiPrivacyDownload
-                    ),
+                message = engineNoticeWords(state.engine),
                 modifier = gutter,
                 icon = KitIcons.locked,
                 liveRegion = false,

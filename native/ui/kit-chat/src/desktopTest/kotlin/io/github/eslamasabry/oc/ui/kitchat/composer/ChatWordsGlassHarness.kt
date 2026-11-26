@@ -270,13 +270,13 @@ abstract class ChatWordsGlassHarness {
      * that draw nothing) scrolled well away from the newest so it runs under the bar and the message box, and the box.
      */
     @Composable
-    private fun Scene(opts: SceneOptions, seen: Array<Any?>, lazy: Array<LazyListState?>) {
+    private fun Scene(opts: SceneOptions, seen: Array<Any?>, transcriptState: Array<TranscriptListState?>) {
         val insets = WindowInsets(top = opts.statusDp.dp, bottom = NAV_DP.dp)
         CompositionLocalProvider(LocalKitScreenInsets provides insets) {
             Box(Modifier.size(W.dp, H.dp).testTag("scene")) {
                 val source = rememberKitFrostState()
                 val state = rememberTranscriptListState()
-                lazy[0] = state.lazy
+                transcriptState[0] = state
                 seen[1] = source
                 KitScreen(
                     page = true,
@@ -355,11 +355,11 @@ abstract class ChatWordsGlassHarness {
         // (runDesktopComposeUiTest keeps that minute whatever it is told, PaneRimScenes.SCENE_TIMEOUT).
         runSkikoComposeUiTest(androidx.compose.ui.geometry.Size(W * D, H * D), testTimeout = SCENE_TIMEOUT) {
             val seen = arrayOfNulls<Any?>(2)
-            val lazy = arrayOfNulls<LazyListState>(1)
+            val transcriptState = arrayOfNulls<TranscriptListState>(1)
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(D)) {
                     KitTheme(appearance = appearance, platform = platform, localeTag = "en", stillFrame = true) {
-                        Scene(opts, seen, lazy)
+                        Scene(opts, seen, transcriptState)
                     }
                 }
             }
@@ -377,14 +377,18 @@ abstract class ChatWordsGlassHarness {
                 }
             }
             waitForIdle()
+            // A scroll from code keeps following the newest row: the person's choice is set by hand, so the docked
+            // "Jump to latest" row shows as it does for a person reading history.
+            if (opts.rows.scrollTo > 0) runOnIdle { transcriptState[0]!!.following = false }
             if (opts.rows.nudgeDp > 0) {
-                runOnIdle { lazy[0]!!.requestScrollToItem(opts.rows.scrollTo, (opts.rows.nudgeDp * D).roundToInt()) }
+                val offsetPx = (opts.rows.nudgeDp * D).roundToInt()
+                runOnIdle { transcriptState[0]!!.lazy.requestScrollToItem(opts.rows.scrollTo, offsetPx) }
                 waitForIdle()
             }
-            // The phrase row folding, the pill rising out of the box, the page's edges easing to their new place.
+            // The phrase row folding, the docked jump row showing, the page's edges easing to their new place.
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
-            shot = captureShot(opts, seen, lazy[0]!!)
+            shot = captureShot(opts, seen, transcriptState[0]!!.lazy)
         }
         return shot
     }

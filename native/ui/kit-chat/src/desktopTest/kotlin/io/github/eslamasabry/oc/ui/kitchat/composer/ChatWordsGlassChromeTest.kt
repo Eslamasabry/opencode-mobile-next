@@ -10,42 +10,42 @@ import io.github.eslamasabry.oc.ui.kit.platform.KitPlatform
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
- * Words on the chat's glass (device, Android 15, Glass dark, 2026-11-11) — request-card pill, phrase chips, top bar,
- * status notice line, and recording-clear checks. Sibling shard: [ChatWordsGlassTest].
+ * Words on the chat's glass (device, Android 15, Glass dark, 2026-11-11) — request-card docked row, phrase chips, top
+ * bar, status notice line, and recording-clear checks. Sibling shard: [ChatWordsGlassTest].
  */
 class ChatWordsGlassChromeTest : ChatWordsGlassHarness() {
     /**
-     * A decision waiting above the box: the pill stays clear of the card, not joined, in the faded zone above the
-     * block, with nothing of the transcript behind it.
+     * A decision waiting above the box: the docked row stands above the card (the bottom block's top), not on it, with
+     * nothing of the transcript behind it.
      */
     @Test
-    fun `B-CHAT-COL-04 with a request card above the box the pill stands apart over no words`() {
+    fun `B-CHAT-COL-04 with a request card above the box the docked row stands above the card over no words`() {
         val bright = shot(dark(Style.Glass), LensPlatform(), SceneOptions(bright = true, card = true))
         val none = shot(dark(Style.Glass), LensPlatform(), SceneOptions(bright = false, card = true))
-        val face = assertNotNull(bright.pillFace, "the pill shows")
-        assertEquals(0, bright.joined, "the pill is not joined to the box under the card")
-        assertTrue(face.bottom <= bright.block!!.top, "the pill sits above the block: $face block ${bright.block}")
-        val area = DpArea(face.left.value - 4f, face.top.value - 4f, face.right.value + 4f, face.bottom.value + 4f)
+        val row = assertNotNull(bright.pill, "the docked row shows")
+        val label = bright.label!!
+        assertTrue(row.bottom <= label.top, "the row sits above the card's label: $row label $label")
+        val area = DpArea(row.left.value, row.top.value, row.right.value, row.bottom.value)
         val (mean, max) = diff(bright.image, none.image, area)
-        println("pill over card: mean $mean max $max at $face")
+        println("docked row over card: mean $mean max $max at $row")
         val mapArea =
             DpArea(
-                face.left.value - 16f,
-                face.top.value - 24f,
-                face.right.value + 16f,
+                row.left.value,
+                row.top.value - 24f,
+                row.right.value,
                 bright.block!!.top.value + 8f,
             )
         assertTrue(
             mean <= WORDS_MEAN && max <= WORDS_MAX,
-            "the rows show behind the pill: mean $mean, max $max (none: ${none.pillFace})\n" +
+            "the rows show behind the docked row: mean $mean max $max (none: ${none.pill})\n" +
                 map(bright.image, none.image, mapArea),
         )
-        assertFadesOut(bright.image, none.image, FadeProbe(8f, face.top.value - 40f, face.top.value, "over the card"))
+        val top = row.top.value
+        assertFadesOut(bright.image, none.image, FadeProbe(8f, top - 40f, top, "over the card"))
     }
 
     /**

@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.common.text.Numbers
 import io.github.eslamasabry.oc.engine.integrations.usage.SubscriptionState
 import io.github.eslamasabry.oc.engine.integrations.usage.UsageWindowKind
 import io.github.eslamasabry.oc.engine.usage.UsageStamp
@@ -213,8 +214,12 @@ private fun Headline(window: LimitWindowUi) {
 @Composable
 private fun CompactGroup(group: LimitGroupUi) {
     val columns = limitColumns(kitFontScale())
+    val heading = windowName(group.kind, "")
+    val names = group.windows.map { windowName(it.kind, it.label) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.S3.dp)) {
-        KitText(windowName(group.kind, ""), role = TypeRole.Label, tone = TextTone.Secondary)
+        if (heading !in names) {
+            KitText(heading, role = TypeRole.Label, tone = TextTone.Secondary)
+        }
         for (pair in group.windows.chunked(columns)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.S4.dp)) {
                 for (window in pair) Cell(window, Modifier.weight(1f))
@@ -305,7 +310,7 @@ private fun Details(account: LimitAccountUi) {
     )
 }
 
-private fun stamp(s: UsageStamp): String = "${s.day} ${s.clock}"
+private fun stamp(s: UsageStamp): String = Numbers.digits("${s.day} ${s.clock}")
 
 @Composable
 private fun windowName(kind: UsageWindowKind, label: String): String {
@@ -320,7 +325,9 @@ private fun windowName(kind: UsageWindowKind, label: String): String {
     )
 }
 
-@Composable private fun leftWords(percent: Int): String = stringResource(Res.string.s9LimitsLeft, "$percent%")
+@Composable
+private fun leftWords(percent: Int): String =
+    stringResource(Res.string.s9LimitsLeft, "${Numbers.format(percent)}%")
 
 @Composable
 private fun resetWords(reset: ResetIn?): String =
@@ -346,7 +353,7 @@ private data class PaceWords(val tone: TextTone, val shown: String, val spoken: 
 @Composable
 private fun paceWords(window: LimitWindowUi): PaceWords? {
     val even = window.evenLeft ?: return null
-    val mark = stringResource(Res.string.s9LimitsPaceSpoken, "${(even * 100).toInt()}%")
+    val mark = stringResource(Res.string.s9LimitsPaceSpoken, "${Numbers.format((even * 100).toInt())}%")
     return when (window.pace) {
         LimitPace.Ahead ->
             stringResource(Res.string.s9LimitsAhead).let { PaceWords(TextTone.Attention, it, "$it. $mark") }
