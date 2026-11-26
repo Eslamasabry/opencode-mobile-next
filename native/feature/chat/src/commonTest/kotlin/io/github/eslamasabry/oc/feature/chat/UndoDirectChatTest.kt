@@ -211,7 +211,7 @@ class UndoDirectChatTest {
             val world = GraphChatWorld(ref, reg)
             val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
             world.attach()
-            gateway.events.connect()
+            base.events.connect()
             reg.open(profile)
             runCurrent()
             assertEquals(ChatLoad.Live, world.load.value)
@@ -222,7 +222,7 @@ class UndoDirectChatTest {
             gateway.holdNextHistory = reloadGate
             val revert = SessionRevert(MessageId("u2"), null, "snap", persistentListOf())
             gateway.staged = revert
-            gateway.events.emit(GatewayEvent.RevertChanged(ref.sessionId, RevertKind.Staged))
+            base.events.emit(GatewayEvent.RevertChanged(ref.sessionId, RevertKind.Staged))
             runCurrent()
 
             assertTrue(
@@ -281,7 +281,7 @@ class UndoDirectChatTest {
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
 
             world.attach()
-            gateway.events.connect()
+            base.events.connect()
             reg.open(profile)
             runCurrent()
             assertEquals(ChatLoad.Live, world.load.value)
