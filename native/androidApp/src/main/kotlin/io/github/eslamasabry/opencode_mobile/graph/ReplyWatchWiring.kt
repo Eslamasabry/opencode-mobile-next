@@ -69,22 +69,27 @@ class ReplyWatchFlag {
     private val rearming = MutableStateFlow(false)
     private val watchingState = MutableStateFlow(false)
 
-    /** True while reply watch is active OR handing off on activity stop before start/skip settles. */
+    /** True while reply watch is active, handing off on stop, or armed to re-arm. */
     val watching: StateFlow<Boolean> = watchingState
 
     internal fun set(on: Boolean) {
         mutable.value = on
         if (on) pending.value = false
-        watchingState.value = mutable.value || pending.value
+        refreshWatching()
     }
 
     internal fun setPending(on: Boolean) {
         pending.value = on
-        watchingState.value = mutable.value || pending.value
+        refreshWatching()
     }
 
     internal fun setRearming(on: Boolean) {
         rearming.value = on
+        refreshWatching()
+    }
+
+    private fun refreshWatching() {
+        watchingState.value = mutable.value || pending.value || rearming.value
     }
 }
 
@@ -185,12 +190,14 @@ class ReplyWatchHub(
         scope.launch {
             body.ended.collect { end ->
                 if (end == null) return@collect
+                val willRearm = ReplyWatchPolicy.rearms(end) && started.isEmpty()
+                if (willRearm) flag.setRearming(true)
                 flag.set(false)
                 follow?.cancel()
                 follow = null
                 // Live mode still holds the row: its own content and Pause action come back at once.
                 if (background.live.value.active) attention.repost()
-                if (ReplyWatchPolicy.rearms(end)) rearm()
+                if (willRearm) rearm()
             }
         }
         scope.launch { background.live.collect { if (it.active && flag.active.value) body.yieldToLive() } }
@@ -282,6 +289,7 @@ class ReplyWatchHub(
         decision = null
         rearmJob?.cancel()
         rearmJob = null
+        flag.setRearming(false)
     }
 
     override fun onActivityStopped(activity: Activity) {
@@ -341,16 +349,34 @@ class ReplyWatchHub(
      */
     private fun rearm() {
         rearmJob?.cancel()
-        if (started.isNotEmpty()) return
-        rearmJob =
+        if (started.isNotEmpty()) {
+            rearmJob = null
+            flag.setRearming(false)
+            return
+        }
+        flag.setRearming(true)
+        var job: Job? = null
+        job =
             scope.launch {
-                withTimeoutOrNull(ReplyWatchPolicy.HARD_CAP_MS) {
-                    runtime.snapshot.first {
-                        started.isEmpty() && !body.active && measure(SystemClock.elapsedRealtime())
+                try {
+                    withTimeoutOrNull(ReplyWatchPolicy.HARD_CAP_MS) {
+                        runtime.snapshot.first {
+                            started.isEmpty() && !body.active && measure(SystemClock.elapsedRealtime())
+                        }
+                    } ?: return@launch
+                    if (started.isEmpty() && !body.active) decide(changing = false, covering = false)
+                } finally {
+                    if (rearmJob === job) {
+                        rearmJob = null
+                        flag.setRearming(false)
                     }
-                } ?: return@launch
-                if (started.isEmpty() && !body.active) decide(changing = false, covering = false)
+                }
             }
+        rearmJob = job
+        if (!job.isActive) {
+            rearmJob = null
+            flag.setRearming(false)
+        }
     }
 
     override fun onActivityDestroyed(activity: Activity) {
