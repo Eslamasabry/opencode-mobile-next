@@ -574,6 +574,7 @@ public fun BasicComposer(
             state.filesAvailable,
             state.attachKinds,
         )
+    val trayOpen = addOpen && trayItems.isNotEmpty()
     val attachBlockedReason =
         if (ComposerTrayRules.attachBlocked(state))
             stringResource(Res.string.chatUiAvailableWhenTheCurrentRunFinishes)
@@ -1140,62 +1141,66 @@ public fun BasicComposer(
                 },
                 fieldEnd = { if (stopShown) stopPart() },
                 above = {
-                    // A dictation that ended with something to say (nothing heard, the microphone is off, it failed,
-                    // no speech model) says it here, inside the box, with its way forward.
-                    voice?.Note(voiceField, Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp))
-                    phraseRow()
-                    ComposerLimitArea(limits, state, conversationRef)
-                    KitComposerTray(
-                        open = addOpen,
-                        actions =
-                            trayItems.map { item ->
-                                when (item) {
-                                    TrayItem.Photos ->
-                                        KitComposerTrayAction(
-                                            stringResource(Res.string.composerTrayPhotos),
-                                            KitIcons.images,
-                                            {
-                                                addOpen = false
-                                                actions.attach(AttachKind.Photos)
-                                            },
-                                            attachBlockedReason,
-                                            "composer-tool-gallery",
-                                        )
-                                    TrayItem.Camera ->
-                                        KitComposerTrayAction(
-                                            stringResource(Res.string.composerTrayCamera),
-                                            KitIcons.camera,
-                                            {
-                                                addOpen = false
-                                                actions.attach(AttachKind.Camera)
-                                            },
-                                            attachBlockedReason,
-                                            "composer-tool-camera",
-                                        )
-                                    TrayItem.File ->
-                                        KitComposerTrayAction(
-                                            stringResource(Res.string.composerTrayFile),
-                                            KitIcons.attach,
-                                            {
-                                                addOpen = false
-                                                actions.attachFile()
-                                            },
-                                            attachBlockedReason,
-                                            "composer-tool-attach",
-                                        )
-                                    TrayItem.More ->
-                                        KitComposerTrayAction(
-                                            stringResource(Res.string.composerTrayMore),
-                                            KitIcons.more,
-                                            {
-                                                addOpen = false
-                                                toolsOpen = true
-                                            },
-                                            testTag = "composer-tray-more",
-                                        )
-                                }
-                            },
-                    )
+                    // B-483: stack every item in KitComposerBox's `above` slot vertically so a voice note,
+                    // phrase row, limit strip, and "+" tray never overlap each other (even mid-transition).
+                    Column(Modifier.fillMaxWidth()) {
+                        // A dictation that ended with something to say (nothing heard, microphone off,
+                        // failed, no speech model) says it here, inside the box, with its way forward.
+                        voice?.Note(voiceField, Modifier.fillMaxWidth().padding(horizontal = Space.S3.dp))
+                        phraseRow()
+                        ComposerLimitArea(limits, state, conversationRef)
+                        KitComposerTray(
+                            open = trayOpen,
+                            actions =
+                                trayItems.map { item ->
+                                    when (item) {
+                                        TrayItem.Photos ->
+                                            KitComposerTrayAction(
+                                                stringResource(Res.string.composerTrayPhotos),
+                                                KitIcons.images,
+                                                {
+                                                    addOpen = false
+                                                    actions.attach(AttachKind.Photos)
+                                                },
+                                                attachBlockedReason,
+                                                "composer-tool-gallery",
+                                            )
+                                        TrayItem.Camera ->
+                                            KitComposerTrayAction(
+                                                stringResource(Res.string.composerTrayCamera),
+                                                KitIcons.camera,
+                                                {
+                                                    addOpen = false
+                                                    actions.attach(AttachKind.Camera)
+                                                },
+                                                attachBlockedReason,
+                                                "composer-tool-camera",
+                                            )
+                                        TrayItem.File ->
+                                            KitComposerTrayAction(
+                                                stringResource(Res.string.composerTrayFile),
+                                                KitIcons.attach,
+                                                {
+                                                    addOpen = false
+                                                    actions.attachFile()
+                                                },
+                                                attachBlockedReason,
+                                                "composer-tool-attach",
+                                            )
+                                        TrayItem.More ->
+                                            KitComposerTrayAction(
+                                                stringResource(Res.string.composerTrayMore),
+                                                KitIcons.more,
+                                                {
+                                                    addOpen = false
+                                                    toolsOpen = true
+                                                },
+                                                testTag = "composer-tray-more",
+                                            )
+                                    }
+                                },
+                        )
+                    }
                 },
                 field = {
                     // Keep the editor mounted while an approval or form waits. Submission stays
@@ -1279,13 +1284,13 @@ public fun BasicComposer(
                     KitComposerAdd(
                         label =
                             stringResource(
-                                if (addOpen && trayItems.isNotEmpty()) Res.string.kitComposerTrayClose
+                                if (trayOpen) Res.string.kitComposerTrayClose
                                 else Res.string.kitComposerTools
                             ),
                         onClick = {
                             if (trayItems.isEmpty()) toolsOpen = true else addOpen = !addOpen
                         },
-                        open = addOpen && trayItems.isNotEmpty(),
+                        open = trayOpen,
                         modifier = Modifier.testTag("chat-attach-button"),
                     )
                 },
