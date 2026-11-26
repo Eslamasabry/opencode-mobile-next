@@ -412,6 +412,17 @@ internal object ListKeys {
 }
 
 /**
+ * True when a newest-row change should glide smoothly into view rather than land at index 0 on the
+ * same frame: incoming turns smooth-follow, while the person's own pending prompt (owner decision
+ * #25 prompt lift) and an active streaming reply's chunks/closing footer stay glued at index 0.
+ */
+internal fun shouldSmoothFollow(
+    hasPending: Boolean,
+    streamingTail: Boolean,
+    sameStreamingTurn: Boolean,
+): Boolean = !hasPending && !streamingTail && !sameStreamingTurn
+
+/**
  * The P3 transcript: the engine's rows only (kept for `:quality`'s P3 stream test). P12-CHAT-FEEL:
  * it draws replies the way the chat screen does (Markdown, code with Copy), so the frame test
  * measures the shipping path; links and Copy do nothing here.
@@ -615,9 +626,19 @@ internal fun ChatTranscriptList(
     }
     // B-CHAT-547 (owner decision O2 = D, 2026-11-24): the running turn's dock status is built without reading the
     // clock (B-CHAT-340: clock ticks recompose only the row that draws a time, never the list).
-    val runTurn = unique.firstOrNull()?.turnId
+    val newestRow = unique.firstOrNull()
+    val runTurn = newestRow?.turnId
     val runWork = runTurn?.let { facts.work[it] }
-    val streaming = unique.firstOrNull().let { it is BlockRow && it.live }
+    val streaming = newestRow is BlockRow && newestRow.live
+    val lastStreamingTurn = remember { arrayOfNulls<String>(1) }
+    val sameStreamingTurn =
+        newestRow != null &&
+            (newestRow is BlockRow || newestRow is FooterRow) &&
+            lastStreamingTurn[0] == newestRow.turnId
+    SideEffect {
+        if (streaming) lastStreamingTurn[0] = newestRow.turnId
+    }
+    val smoothFollow = shouldSmoothFollow(pending.isNotEmpty(), streaming, sameStreamingTurn)
     val onRail = runWork != null && runWork.steps.isNotEmpty() && !streaming
     val liveStyled = LocalKitAppearance.current.style != KitSurfaceStyle.Signal
     val liveUi = if (liveRow) live else null
@@ -656,6 +677,7 @@ internal fun ChatTranscriptList(
         // Reading back to the top of what is loaded brings the earlier messages by itself; the row stays the visible
         // way to them (and the way to try again after a read that failed).
         onReachOldest = if (older != null && !older.loading && older.failure == null) onLoadOlder else null,
+        smoothFollow = smoothFollow,
     ) {
         // The dock's Undo bar takes this room under the newest content. An item, not padding: the list keeps the
         // row the person reads in place by its key, and at the end the newest content rides up with the room.

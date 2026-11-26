@@ -53,9 +53,13 @@ import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+private const val PROOF_PHASE = "after"
+
 /**
- * Slow-motion 360 dp BEFORE (1-frame snap-up) vs AFTER (smooth follow-scroll) proof renders
- * for B-530, written to `build/smooth-follow-renders` (and `~/render-out/smooth-follow` if present).
+ * Slow-motion 360 dp proof renders at `MotionLevel.Full` / `KitMotionLevel.Full` for B-530,
+ * written to `build/smooth-follow-renders` (and `~/render-out/smooth-follow` if present).
+ * BEFORE frames are captured against the unmodified pre-fix `TranscriptList.kt`; AFTER frames
+ * are captured against the fixed smooth follow-scroll implementation.
  */
 class SmoothFollowProofRenders {
     private val outputs: List<File> =
@@ -72,24 +76,19 @@ class SmoothFollowProofRenders {
         (20 downTo 1).map { i -> "Turn $i: older transcript line kept steady while new turns arrive." }
 
     @Test
-    fun `B-530 before and after 360 dp slow-motion sequence`() {
-        capture(phase = "before", motion = KitMotionLevel.Off, level = MotionLevel.Off)
-        capture(phase = "after", motion = KitMotionLevel.Full, level = MotionLevel.Full)
-    }
-
-    private fun capture(phase: String, motion: KitMotionLevel, level: MotionLevel) =
+    fun `B-530 360 dp slow-motion sequence at Full motion`() =
         runDesktopComposeUiTest(W_PX, H_PX) {
             var rows by mutableStateOf(initialRows())
             lateinit var list: TranscriptListState
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(DENSITY, 1f)) {
                     KitTheme(
-                        KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = level),
+                        KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = MotionLevel.Full),
                         DesktopKitPlatform(),
                         "en",
-                        stillFrame = true,
+                        stillFrame = false,
                     ) {
-                        Page(rows, motion) { list = it }
+                        Page(rows) { list = it }
                     }
                 }
             }
@@ -99,7 +98,7 @@ class SmoothFollowProofRenders {
 
             fun snap(tag: String) {
                 val img = onAllNodes(isRoot())[0].captureToImage().toAwtImage()
-                for (dir in outputs) ImageIO.write(img, "png", File(dir, "$phase-$tag.png"))
+                for (dir in outputs) ImageIO.write(img, "png", File(dir, "$PROOF_PHASE-$tag.png"))
             }
 
             val restTop = onNodeWithTag("Turn 20").getBoundsInRoot().top
@@ -126,18 +125,18 @@ class SmoothFollowProofRenders {
             repeat(30) { mainClock.advanceTimeByFrame() }
             snap("f06-624ms-settled")
 
-            if (phase == "before") {
-                assertTrue(abs((restTop - frame1Top).value) > 24f, "before snaps up in 1 frame")
+            if (PROOF_PHASE == "before") {
+                assertTrue(abs((restTop - frame1Top).value) > 24f, "pre-fix Full motion snaps up in 1 frame")
             } else {
-                assertTrue(abs((restTop - frame1Top).value) <= 1f, "after stays anchored on frame 1")
+                assertTrue(abs((restTop - frame1Top).value) <= 1f, "post-fix Full motion anchors on frame 1")
             }
-            assertTrue(list.lazy.firstVisibleItemIndex == 0, "$phase settled on index 0")
+            assertTrue(list.lazy.firstVisibleItemIndex == 0, "$PROOF_PHASE settled on index 0")
             mainClock.autoAdvance = true
             waitForIdle()
         }
 
     @Composable
-    private fun Page(rows: List<String>, motion: KitMotionLevel, onState: (TranscriptListState) -> Unit) {
+    private fun Page(rows: List<String>, onState: (TranscriptListState) -> Unit) {
         val source = rememberKitFrostState()
         val state = rememberTranscriptListState()
         onState(state)
@@ -153,12 +152,14 @@ class SmoothFollowProofRenders {
                     edges = KitScreenEdges.Bleed,
                 ) {
                     Box(Modifier.fillMaxSize().kitFrostSource(source)) {
-                        KitTranscriptList(state, rows.firstOrNull(), "Jump to latest", motion) {
+                        KitTranscriptList(state, rows.firstOrNull(), "Jump to latest", KitMotionLevel.Full) {
                             items(rows, key = { it }, contentType = { "row" }) { text ->
                                 val tag = text.substringBefore(':')
                                 KitText(
                                     text,
-                                    Modifier.padding(horizontal = 16.dp, vertical = 12.dp).testTag(tag),
+                                    kitTranscriptItemMotion()
+                                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                                        .testTag(tag),
                                     role = TypeRole.Body,
                                 )
                             }

@@ -77,6 +77,7 @@ import io.github.eslamasabry.oc.ui.kit.icon.KitIconSize
 import io.github.eslamasabry.oc.ui.kit.icon.KitIcons
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.stream.LocalKitPromptLift
 import io.github.eslamasabry.oc.ui.kitchat.tool.railMeasures
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveLine
 import io.github.eslamasabry.oc.ui.kitchat.turn.KitTurnLiveTone
@@ -122,10 +123,8 @@ internal constructor(
 
     /** Plan 09 §7.3: away once index 0 left the bottom or it is scrolled more than 480 dp. */
     public val awayFromLatest: Boolean by derivedStateOf {
-        !following && (
-            lazy.firstVisibleItemIndex > 0 ||
-                lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
-            )
+        lazy.firstVisibleItemIndex > 0 ||
+            lazy.firstVisibleItemScrollOffset > with(density) { AWAY_DP.dp.roundToPx() }
     }
 
     private var slotHeight = -1
@@ -161,18 +160,19 @@ internal constructor(
 
     /**
      * Handles a new item arriving at the newest end while [following] is true:
-     * - Under reduced motion ([reduced]): settles at index 0 immediately without animation.
+     * - When [snap] is true (reduced motion, live streaming tail, or the person's own sent prompt
+     *   lifting from the composer): settles at index 0 immediately without animation.
      * - Otherwise: leaves the prior newest item anchored across the prepend (no 1-frame snap-up)
      *   and smoothly glides the scroll offset back to index 0, coalescing rapid bursts.
      */
     internal fun onNewestKeyChanged(
         hadPrevious: Boolean,
-        reduced: Boolean,
+        snap: Boolean,
         scope: CoroutineScope,
         motion: () -> KitMotionLevel,
     ) {
         if (!following) return
-        if (reduced) {
+        if (snap) {
             cancelFollowScroll()
             lazy.requestScrollToItem(0)
         } else if (hadPrevious) {
@@ -270,7 +270,8 @@ public data class KitTranscriptDockLive(
  * Follow: growth of the bottom item keeps it glued for free; when a new item arrives at index 0
  * while following, the list keeps the prior newest item anchored across the prepend and smoothly
  * glides back to index 0 (coalescing rapid bursts and cancelling on drag), or settles at once under
- * reduced motion. Reading history (not following) never moves.
+ * reduced motion, when [smoothFollow] is false (streaming tail / own send), or when a prompt lift
+ * is pending. Reading history (not following) never moves.
  */
 @Composable
 @Suppress("LongParameterList") // composable part; rule retired for @Composable in the 3.0.1 rule-set review
@@ -292,20 +293,28 @@ public fun KitTranscriptList(
      * bottom row in place), so this is safe mid-scroll. Null: nothing.
      */
     onReachOldest: (() -> Unit)? = null,
+    /**
+     * True (default): smooth follow-scroll when [newestKey] changes while following and motion is on.
+     * False: settle on index 0 immediately (e.g. a live streaming reply chunk or the person's own send).
+     */
+    smoothFollow: Boolean = true,
     content: LazyListScope.() -> Unit,
 ) {
     // Owned by the list, not the docked row: tapping the row turns following on and unmounts it on the next frame,
     // so a scope inside the row would cancel the glide after scrollToItem(2).
     val scope = rememberCoroutineScope()
     val latestMotion = rememberUpdatedState(motion)
-    val reducedMotion = motion == KitMotionLevel.Off || KitMotion.state.reduced
+    val promptLift = LocalKitPromptLift.current
+    val snapFollow =
+        !smoothFollow || motion == KitMotionLevel.Off || KitMotion.state.reduced ||
+            promptLift?.hasPendingOffer == true
     val lastKey = remember { arrayOfNulls<String>(1) }
     SideEffect {
         if (newestKey != lastKey[0]) {
             val hadPrevious = lastKey[0] != null
             lastKey[0] = newestKey
             if (newestKey != null) {
-                state.onNewestKeyChanged(hadPrevious, reducedMotion, scope) { latestMotion.value }
+                state.onNewestKeyChanged(hadPrevious, snapFollow, scope) { latestMotion.value }
             }
         }
     }

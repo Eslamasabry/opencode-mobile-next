@@ -40,6 +40,10 @@ public class KitPromptLiftState {
         if (id == serial) offered = null
     }
 
+    /** True while an offered composer prompt is waiting to mount and lift into index 0. */
+    internal val hasPendingOffer: Boolean
+        get() = offered != null
+
     internal fun take(text: String): Rect? {
         val offer = offered?.takeIf { it.first == text.trim() } ?: return null
         offered = null
