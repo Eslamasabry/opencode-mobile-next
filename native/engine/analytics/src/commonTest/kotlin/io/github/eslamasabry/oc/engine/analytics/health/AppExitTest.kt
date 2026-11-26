@@ -69,4 +69,100 @@ class AppExitTest {
         assertEquals(listOf(mapOf("exit_reason" to "low_memory")), vendor.events.filter { it.first == "app_exit" }.map { it.second })
         assertTrue(vendor.failures.isEmpty())
     }
+
+    private fun expectedAppExit(reason: Int, foreground: Boolean?): Map<String, String> =
+        buildMap {
+            put("exit_reason", appExitReasonWord(reason))
+            foreground?.let { put("foreground", if (it) "yes" else "no") }
+        }
+
+    @Test
+    fun `B-435 background or unknown foreground OS reclaims do not send process_exit`() = runTest {
+        val backgroundReclaims = listOf(3, 9, 2, 12, 13, 14, 11, 15, 8, 0)
+        for (reason in backgroundReclaims) {
+            for (foreground in listOf(false, null)) {
+                val vendor = RecordingVendor()
+                val service = TelemetryService(vendor, true, scope = this)
+                service.start(TelemetryConsent(usage = true, crashes = true), Store, MemoryTelemetryReportStore())
+                val marks = Marks()
+                val exit = HealthExit(reason, 5_000, foreground)
+                HealthTelemetry(service, Platform(exit), marks, backgroundScope, Clock.System).start()
+                runCurrent()
+                assertTrue(
+                    vendor.failures.isEmpty(),
+                    "reason=$reason foreground=$foreground must not send process_exit",
+                )
+                assertEquals(5_000L, marks.crashAt)
+                assertEquals(
+                    listOf(expectedAppExit(reason, foreground)),
+                    vendor.events.filter { it.first == "app_exit" }.map { it.second },
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `B-435 foreground OS exits send process_exit with exit_reason key only`() = runTest {
+        val osExits = listOf(3, 9, 2, 12, 13, 14, 11, 15, 8)
+        for (reason in osExits) {
+            val vendor = RecordingVendor()
+            val service = TelemetryService(vendor, true, scope = this)
+            service.start(TelemetryConsent(usage = true, crashes = true), Store, MemoryTelemetryReportStore())
+            val exit = HealthExit(reason, 5_000, foreground = true)
+            HealthTelemetry(service, Platform(exit), Marks(), backgroundScope, Clock.System).start()
+            runCurrent()
+            val expectedWord = exitReasonWord(reason)!!
+            assertEquals(listOf("process_exit" to mapOf("exit_reason" to expectedWord)), vendor.failures)
+            assertEquals(
+                listOf(expectedAppExit(reason, true)),
+                vendor.events.filter { it.first == "app_exit" }.map { it.second },
+            )
+        }
+    }
+
+    @Test
+    fun `B-435 fault exits send process_exit regardless of foreground state`() = runTest {
+        val faultExits = listOf(4 to "crash", 5 to "crash_native", 6 to "anr", 7 to "other")
+        for ((reason, expectedWord) in faultExits) {
+            for (foreground in listOf(true, false, null)) {
+                val vendor = RecordingVendor()
+                val service = TelemetryService(vendor, true, scope = this)
+                service.start(TelemetryConsent(usage = true, crashes = true), Store, MemoryTelemetryReportStore())
+                val exit = HealthExit(reason, 5_000, foreground)
+                HealthTelemetry(service, Platform(exit), Marks(), backgroundScope, Clock.System).start()
+                runCurrent()
+                assertEquals(
+                    listOf("process_exit" to mapOf("exit_reason" to expectedWord)),
+                    vendor.failures,
+                    "fault reason=$reason foreground=$foreground must send process_exit",
+                )
+                assertEquals(
+                    listOf(expectedAppExit(reason, foreground)),
+                    vendor.events.filter { it.first == "app_exit" }.map { it.second },
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `B-435 excluded exit reasons never send process_exit even in foreground`() = runTest {
+        for (reason in listOf(1, 10, 16)) {
+            for (foreground in listOf(true, false, null)) {
+                val vendor = RecordingVendor()
+                val service = TelemetryService(vendor, true, scope = this)
+                service.start(TelemetryConsent(usage = true, crashes = true), Store, MemoryTelemetryReportStore())
+                val exit = HealthExit(reason, 5_000, foreground)
+                HealthTelemetry(service, Platform(exit), Marks(), backgroundScope, Clock.System).start()
+                runCurrent()
+                assertTrue(
+                    vendor.failures.isEmpty(),
+                    "excluded reason=$reason foreground=$foreground must not send process_exit",
+                )
+                assertEquals(
+                    listOf(expectedAppExit(reason, foreground)),
+                    vendor.events.filter { it.first == "app_exit" }.map { it.second },
+                )
+            }
+        }
+    }
 }
