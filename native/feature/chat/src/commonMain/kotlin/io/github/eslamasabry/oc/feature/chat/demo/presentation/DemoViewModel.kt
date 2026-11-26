@@ -23,6 +23,8 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -32,15 +34,16 @@ import kotlinx.coroutines.launch
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class DemoViewModel(nav: AppNavigator, dispatchers: AppDispatchers) :
+public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispatchers) :
     ViewModel(), BasicComposerActions {
     private val world = DemoWorld(dispatchers)
     private val presenter =
         ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } })
     public val actions: ChatActions = presenter
     public val state =
-        presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(5_000))
+        presenter.states(viewModelScope, world.work, SharingStarted.Eagerly)
     public val stage = world.stage
+    public val ownReplyKey = world.ownReplyKey
     public val composer =
         combine(world.draft, world.stage, world.model, world.title) { draft, phase, model, title ->
                 // One sample model, so the model chip names something and its sheet is not an empty list; its group
@@ -61,7 +64,7 @@ public class DemoViewModel(nav: AppNavigator, dispatchers: AppDispatchers) :
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.Eagerly,
                 BasicComposerUi(available = false, sending = false, steers = false),
             )
 
@@ -82,7 +85,7 @@ public class DemoViewModel(nav: AppNavigator, dispatchers: AppDispatchers) :
                     }
                 )
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RequestSlotUi())
+            .stateIn(viewModelScope, SharingStarted.Eagerly, RequestSlotUi())
 
     /** Allow and Deny answer the sample; the demo has no questions, no saved rules and nothing to undo. */
     public val requestActions: ChatRequestActions =
@@ -140,6 +143,20 @@ public class DemoViewModel(nav: AppNavigator, dispatchers: AppDispatchers) :
 
     public fun reset(): Unit {
         viewModelScope.launch { world.reset() }
+    }
+
+    public fun runSample(): Unit {
+        viewModelScope.launch { world.runSample() }
+    }
+
+    public fun setUpPhone(): Unit {
+        nav.back()
+        nav.open(PhoneSetupRoute.Setup)
+    }
+
+    public fun connectComputer(): Unit {
+        nav.back()
+        nav.open(ServersRoute.Edit())
     }
 
     override fun onCleared() {

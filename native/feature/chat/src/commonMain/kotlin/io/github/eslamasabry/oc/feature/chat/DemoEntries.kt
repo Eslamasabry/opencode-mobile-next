@@ -1,7 +1,7 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -17,8 +17,11 @@ import io.github.eslamasabry.oc.feature.chat.composer.BasicComposer
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerHost
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerTarget
+import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoStage
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoViewModel
 import io.github.eslamasabry.oc.feature.chat.demo.presentation.DemoWords
+import io.github.eslamasabry.oc.feature.chat.demo.ui.DemoOwnReply
+import io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kitchat.KitChatEnvironment
@@ -46,7 +49,6 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
     override fun EntryProviderScope<NavKey>.install() {
         entry<DemoRoute> {
             val vm = metroViewModel<DemoViewModel>()
-            val state by vm.state.collectAsStateWithLifecycle()
             val before = stringResource(Res.string.stateDemoBefore)
             val after = stringResource(Res.string.stateDemoAfter)
             val prompt = stringResource(Res.string.stateDemoPrompt)
@@ -63,28 +65,45 @@ public class DemoEntries(private val environment: KitChatEnvironment) : EntryIns
                     model = stringResource(Res.string.stateDemoModel),
                     own = stringResource(Res.string.stateDemoOwn, prompt),
                 )
-            LaunchedEffect(words) { vm.configure(words) }
+            remember(vm, words) { vm.configure(words) }
+            val state by vm.state.collectAsStateWithLifecycle()
+            val stage by vm.stage.collectAsStateWithLifecycle()
+            val ownReplyKey by vm.ownReplyKey.collectAsStateWithLifecycle()
+            val demoOwnReply =
+                remember(ownReplyKey, stage, prompt, vm) {
+                    ownReplyKey?.let { key ->
+                        DemoOwnReply(
+                            rowKey = key,
+                            samplePrompt = if (stage == DemoStage.Ready) prompt else "",
+                            onRunSample = vm::runSample,
+                            onSetUpPhone = vm::setUpPhone,
+                            onConnectComputer = vm::connectComputer,
+                        )
+                    }
+                }
             val composer = remember(vm) { DemoComposerHost(vm) }
             // The sample agent's ask is the app's own request card over the message box, as in a real conversation
             // (owner 2026-11-10: two "simulated edit" buttons in the message box's place "feels slop").
             val requests by vm.requests.collectAsStateWithLifecycle()
             environment.Provide {
-                ChatScreen(
-                    state,
-                    vm.actions,
-                    composer,
-                    requests = requests,
-                    requestActions = vm.requestActions,
-                    demoMode = true,
-                    extraActions =
-                        listOf(
-                            KitLineAction(stringResource(Res.string.stateDemoReset), vm::reset),
-                            KitLineAction(
-                                stringResource(Res.string.stateDemoLeave),
-                                vm.actions::leaveRequested,
+                CompositionLocalProvider(LocalDemoOwnReply provides demoOwnReply) {
+                    ChatScreen(
+                        state,
+                        vm.actions,
+                        composer,
+                        requests = requests,
+                        requestActions = vm.requestActions,
+                        demoMode = true,
+                        extraActions =
+                            listOf(
+                                KitLineAction(stringResource(Res.string.stateDemoReset), vm::reset),
+                                KitLineAction(
+                                    stringResource(Res.string.stateDemoLeave),
+                                    vm.actions::leaveRequested,
+                                ),
                             ),
-                        ),
-                )
+                    )
+                }
             }
         }
     }

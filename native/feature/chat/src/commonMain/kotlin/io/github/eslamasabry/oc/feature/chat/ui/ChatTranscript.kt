@@ -1363,30 +1363,42 @@ private fun ChatRow(
 ) {
     when (row) {
         is BlockRow -> {
-            val content: @Composable () -> Unit = {
-                if (reply != null) KitMdNest(row.depth) { RichBlock(row, reveal, motion, reply, copyCode) }
-                else
-                    KitReplyBlock(
-                        text = row.text,
-                        kind = row.kind.toKit(),
-                        live = row.live,
-                        streamed = row.origin == Origin.Streamed,
-                        revealKey = row.key,
-                        revealGroup = row.key.substringBeforeLast(':'),
-                        registry = reveal,
-                        motion = motion,
-                        continued = row.continued,
-                        continues = row.continues,
-                    )
-            }
-            if (onOpenMenu != null && listWords != null) {
-                KitMessageActions(
-                    label = listWords.messageActions,
-                    onOpen = { onOpenMenu(row.key) },
-                ) {
-                    content()
+            val demoReply =
+                io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply.current?.takeIf {
+                    it.rowKey == row.key
                 }
-            } else content()
+            val block: @Composable () -> Unit = {
+                val content: @Composable () -> Unit = {
+                    if (reply != null) KitMdNest(row.depth) { RichBlock(row, reveal, motion, reply, copyCode) }
+                    else
+                        KitReplyBlock(
+                            text = row.text,
+                            kind = row.kind.toKit(),
+                            live = row.live,
+                            streamed = row.origin == Origin.Streamed,
+                            revealKey = row.key,
+                            revealGroup = row.key.substringBeforeLast(':'),
+                            registry = reveal,
+                            motion = motion,
+                            continued = row.continued,
+                            continues = row.continues,
+                        )
+                }
+                if (onOpenMenu != null && listWords != null) {
+                    KitMessageActions(
+                        label = listWords.messageActions,
+                        onOpen = { onOpenMenu(row.key) },
+                    ) {
+                        content()
+                    }
+                } else content()
+            }
+            if (demoReply != null) {
+                Column {
+                    block()
+                    io.github.eslamasabry.oc.feature.chat.demo.ui.DemoOwnReplyActions(demoReply)
+                }
+            } else block()
         }
         is PromptRow ->
             Column {
