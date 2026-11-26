@@ -85,15 +85,7 @@ class PolishMessageBoxRenderTest {
                                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     KitComposerStop("Stopping", "Stopping", {}, state = KitStopState.Working)
                                 }
-                                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                                    Row(
-                                        Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    ) {
-                                        KitComposerStop("Stop", "Stop", {}, state = KitStopState.Running)
-                                        KitComposerStop("Stop", "Stop", {}, state = KitStopState.Stuck)
-                                    }
-                                }
+                                PolishRtlStopRow(mode)
                             }
                         }
                     }
@@ -157,6 +149,24 @@ class PolishMessageBoxRenderTest {
             waitForIdle()
             val file = File(out, "40-$STAGE-shield-$modeName-$scaleName.png")
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", file)
+        }
+    }
+}
+
+@androidx.compose.runtime.Composable
+internal fun PolishRtlStopRow(mode: AppearanceMode) {
+    KitTheme(
+        KitAppearance(mode = mode, style = Style.Solid, motion = MotionLevel.Off),
+        DesktopKitPlatform(),
+        "ar",
+        stillFrame = true,
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            KitComposerStop("إيقاف", "إيقاف الرد", {}, state = KitStopState.Running)
+            KitComposerStop("إيقاف", "إيقاف الرد", {}, state = KitStopState.Stuck)
         }
     }
 }

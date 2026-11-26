@@ -74,9 +74,6 @@ class ChatJumpDockRenders {
         val rtl: Boolean = false,
     )
 
-    private val rows =
-        (0 until 40).map { i -> "Row $i: the build finished and every check passed, then the notes were written." }
-
     /** The page's list state, hoisted out of the composition. */
     private lateinit var list: TranscriptListState
 
@@ -184,6 +181,7 @@ class ChatJumpDockRenders {
     /** The page: a header capsule over the transcript, the message box over it. */
     @Composable
     private fun Page(picture: Picture) {
+        val words = DockPictureWords.of(picture.rtl)
         val source = rememberKitFrostState()
         list = rememberTranscriptListState()
         KitScreen(
@@ -191,65 +189,76 @@ class ChatJumpDockRenders {
             overlayChrome = true,
             frost = source,
             floating = picture.floating,
-            topBar = { Bar() },
-            bottom = { Composer() },
+            topBar = { Bar(words) },
+            bottom = { Composer(words) },
             edges = KitScreenEdges.Bleed,
         ) {
-            Box(Modifier.fillMaxSize().kitFrostSource(source)) { Rows(picture) }
+            Box(Modifier.fillMaxSize().kitFrostSource(source)) { Rows(picture, words) }
         }
     }
 
     /** The transcript: a running reply's live line above 40 rows (newest first). */
     @Composable
-    private fun Rows(picture: Picture) {
+    private fun Rows(picture: Picture, words: DockPictureWords) {
+        val dockLive = KitTranscriptDockLive(words.working, KitTurnLiveTone.Working, words.working, false)
         KitTranscriptList(
             state = list,
-            newestKey = if (picture.live) LIVE_KEY else rows.first(),
-            jumpLabel = "Jump to latest",
+            newestKey = if (picture.live) LIVE_KEY else words.rows.first(),
+            jumpLabel = words.jumpLabel,
             motion = KitMotionLevel.Off,
-            dockLive = if (picture.live) DOCK_LIVE else null,
+            dockLive = if (picture.live) dockLive else null,
         ) {
             if (picture.live) item(key = LIVE_KEY, contentType = LIVE_KEY) {
-                Box(kitTranscriptItemMotion()) { KitTurnLiveLine("Working…", Modifier.padding(horizontal = 16.dp)) }
+                Box(kitTranscriptItemMotion()) {
+                    KitTurnLiveLine(words.working, Modifier.padding(horizontal = 16.dp))
+                }
             }
-            items(rows, key = { it }, contentType = { "row" }) { text ->
+            items(words.rows, key = { it }, contentType = { "row" }) { text ->
                 KitText(text, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), role = TypeRole.Body)
             }
         }
     }
 
     @Composable
-    private fun Bar() {
+    private fun Bar(words: DockPictureWords) {
+        val header = words.header
         KitTopBar(
-            "Tidy the README",
+            header.title,
             scope = {
                 KitTopBarScope(
-                    "demo-shop",
-                    "This phone",
-                    "Files of demo-shop",
+                    header.project,
+                    header.server,
+                    header.projectAction,
                     onProject = {},
-                    branch = "Git",
+                    branch = header.branch,
                     onBranch = {},
                 )
             },
             exit = KitTopBarExit.Back,
-            exitLabel = "Back",
+            exitLabel = header.back,
             onExit = {},
             backBesideTitle = true,
         )
     }
 
     @Composable
-    private fun Composer() {
+    private fun Composer(words: DockPictureWords) {
+        val composer = words.composer
         KitComposerBox(
             running = false,
             stacked = true,
             hasLeading = true,
             field = {
-                KitText("Ask OpenCode…", role = TypeRole.Body, tone = TextTone.Tertiary, kind = KitTextKind.Frame)
+                KitText(
+                    composer.askPlaceholder,
+                    Modifier.testTag("dock-composer-hint"),
+                    role = TypeRole.Body,
+                    tone = TextTone.Tertiary,
+                    kind = KitTextKind.Frame,
+                )
             },
-            leading = { KitComposerAdd("Tools", onClick = {}, open = false) },
-            trailing = { KitComposerSend("Send", onClick = {}) },
+            leading = { KitComposerAdd(composer.tools, onClick = {}, open = false) },
+            trailing = { KitComposerSend(composer.send, onClick = {}) },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
     }
@@ -260,7 +269,83 @@ class ChatJumpDockRenders {
         const val STATUS_DP = 28
         const val NAV_DP = 20
         const val LIVE_KEY = "live"
+    }
+}
 
-        val DOCK_LIVE = KitTranscriptDockLive("Working…", KitTurnLiveTone.Working, "Working…", false)
+internal data class DockHeaderWords(
+    val title: String,
+    val project: String,
+    val server: String,
+    val projectAction: String,
+    val branch: String,
+    val back: String,
+)
+
+internal data class DockComposerWords(
+    val askPlaceholder: String,
+    val tools: String,
+    val send: String,
+)
+
+/** Localized copy for [ChatJumpDockRenders] so RTL pictures use real Arabic words instead of forced-RTL English. */
+internal data class DockPictureWords(
+    val header: DockHeaderWords,
+    val composer: DockComposerWords,
+    val jumpLabel: String,
+    val working: String,
+    val rows: List<String>,
+) {
+    companion object {
+        fun of(rtl: Boolean): DockPictureWords = if (rtl) arabic() else english()
+
+        private fun arabic(): DockPictureWords =
+            DockPictureWords(
+                header =
+                    DockHeaderWords(
+                        title = "تنظيف ملف التمهيد",
+                        project = "demo-shop",
+                        server = "هذا الهاتف",
+                        projectAction = "ملفات demo-shop",
+                        branch = "Git",
+                        back = "رجوع",
+                    ),
+                composer =
+                    DockComposerWords(
+                        askPlaceholder = "اسأل OpenCode…",
+                        tools = "الأدوات",
+                        send = "إرسال",
+                    ),
+                jumpLabel = "الانتقال إلى الأحدث",
+                working = "قيد العمل…",
+                rows =
+                    (0 until 40).map { i ->
+                        "سطر $i: اكتمل البناء واجتازت جميع الفحوصات، ثم كُتبت الملاحظات."
+                    },
+            )
+
+        private fun english(): DockPictureWords =
+            DockPictureWords(
+                header =
+                    DockHeaderWords(
+                        title = "Tidy the README",
+                        project = "demo-shop",
+                        server = "This phone",
+                        projectAction = "Files of demo-shop",
+                        branch = "Git",
+                        back = "Back",
+                    ),
+                composer =
+                    DockComposerWords(
+                        askPlaceholder = "Ask OpenCode…",
+                        tools = "Tools",
+                        send = "Send",
+                    ),
+                jumpLabel = "Jump to latest",
+                working = "Working…",
+                rows =
+                    (0 until 40).map { i ->
+                        "Row $i: the build finished and every check passed, then the notes were written."
+                    },
+            )
     }
 }

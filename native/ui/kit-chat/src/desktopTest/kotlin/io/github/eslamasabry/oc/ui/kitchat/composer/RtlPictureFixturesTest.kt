@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
@@ -29,6 +31,7 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.KitTextKind
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kitchat.transcript.DockPictureWords
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -139,6 +142,20 @@ class RtlPictureFixturesTest {
                 first.right >= width - 2f,
                 "First Arabic glyph must anchor at right edge (${first.right} vs $width), leaving ellipsis at left end",
             )
+        }
+    }
+
+    @Test
+    fun `B-606 PolishRtlStopRow and DockPictureWords RTL fixtures render Arabic copy`() {
+        val rtlDock = DockPictureWords.of(rtl = true)
+        assertEquals("اسأل OpenCode…", rtlDock.composer.askPlaceholder)
+        assertEquals("الانتقال إلى الأحدث", rtlDock.jumpLabel)
+        assertEquals("قيد العمل…", rtlDock.working)
+        runDesktopComposeUiTest(360, 120) {
+            setContent { PolishRtlStopRow(AppearanceMode.Dark) }
+            waitForIdle()
+            onAllNodesWithText("إيقاف", useUnmergedTree = true).assertCountEquals(2)
+            onAllNodesWithText("Stop", useUnmergedTree = true).assertCountEquals(0)
         }
     }
 
