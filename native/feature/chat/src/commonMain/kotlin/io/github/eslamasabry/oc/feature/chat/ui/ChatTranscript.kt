@@ -305,8 +305,6 @@ internal class ReplyActions(
     val onRerunCommand: ((String) -> Unit)? = null,
     /** A cut diff preview's "Changes" opens the conversation's Changes view; null hides the button. */
     val onOpenChanges: (() -> Unit)? = null,
-    val answered: () -> List<io.github.eslamasabry.oc.feature.chat.world.ModelKey> = { emptyList() },
-    val modelGoneLabel: ((model: String, provider: String) -> String)? = null,
 )
 
 /**
@@ -1530,26 +1528,20 @@ private fun ChatRow(
                         val stillWorking =
                             facts.live is LiveNoticeUi.Retry ||
                                 facts.work[row.turnId]?.state == WorkLineState.Running
-                        val kind = ReplyFailureKind.of(reason)
-                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
-                        val limits = LocalLimitSwitchReply.current
-                        val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
-                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
-                        val setUpReply = LocalAgentSetUpReply.current
-                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". When it is the
                         // cause, that sentence REPLACES "send a message to carry on" (sending cannot work until the
                         // person signs in), and its one button is the only way on.
+                        val limitForSignIn = reply?.let { LocalLimitSwitchReply.current?.limitSwitch?.get(row.turnId) }
+                        val setUpForSignIn = LocalAgentSetUpReply.current?.needs?.get(row.turnId)
                         val signInAgainEarly =
-                            if (setUp == null && limit == null && AgentErrorText.signInExpired(reason))
+                            if (
+                                setUpForSignIn == null &&
+                                    limitForSignIn == null &&
+                                    AgentErrorText.signInExpired(reason)
+                            )
                                 row.providerId?.let { reply?.signInAgainWords?.invoke(it) }
                             else null
-                        val goneKey = goneModelKey(row)
-                        val modelGone = modelGoneWords(row, kind, goneKey, reply)
-                        // B-523: a known gone model names the model and offers Use/Choose; omit "send a message to
-                        // carry on" so the card does not contradict the primary button.
-                        val modelGoneKnown = modelGone != null && setUp == null && limit == null
-                        if (signInAgainEarly == null && (stillWorking || !modelGoneKnown))
+                        if (signInAgainEarly == null)
                             KitQuietLine(
                                 stringResource(
                                     if (stillWorking) Res.string.liveFailedStillWorking
@@ -1559,6 +1551,7 @@ private fun ChatRow(
                                     liveRegion = LiveRegionMode.Polite
                                 },
                             )
+                        val kind = ReplyFailureKind.of(reason)
                         // The server's typed error class reads first (rest-1); the reason text only
                         // drives the generic words when there is no typed class.
                         val typed =
@@ -1566,6 +1559,12 @@ private fun ChatRow(
                                 ?.takeUnless { it == MessageErrorKind.Unknown }
                                 ?.let(listWords.messageError)
                                 ?.takeIf { it.isNotBlank() }
+                        // B-169 §2: a lasting limit reads plainly ("{Model} is used up for now").
+                        val limits = LocalLimitSwitchReply.current
+                        val limit = reply?.let { limits?.limitSwitch?.get(row.turnId) }
+                        // Set up at first use: the agent was never set up (omp's first answer); one line, one action.
+                        val setUpReply = LocalAgentSetUpReply.current
+                        val setUp = setUpReply?.needs?.get(row.turnId)
                         // B-AGENT-189: a lapsed sign-in names the agent and says "sign in again". B-458: once the agent
                         // is signed in again (or for an older turn), the same sentence in the past and no Sign in.
                         val signInTurns = LocalSignInTurnReply.current
@@ -1582,7 +1581,6 @@ private fun ChatRow(
                         else if (limit != null && limits != null) KitQuietLine(limits.words.usedUp(limit.modelName))
                         else if (signInAgain != null)
                             KitQuietLine(signInAgain, modifier = Modifier.testTag("chat-sign-in-again"))
-                        else if (modelGone != null) KitQuietLine(modelGone)
                         else if (typed != null) KitQuietLine(typed)
                         else {
                             val (headline, hint) = agentFailureWords(reason, row.createdMs, reply?.onThisPhone == true)
@@ -1644,14 +1642,9 @@ private fun ChatRow(
                                     if (
                                         row.errorKind == MessageErrorKind.ModelNotFound ||
                                             kind == ReplyFailureKind.Model
-                                    ) {
+                                    )
                                         ErrorRecovery.suggestedModel(reason, reply.models)
-                                            ?: io.github.eslamasabry.oc.feature.chat.world.ModelFallback.pick(
-                                                goneKey,
-                                                reply.answered(),
-                                                reply.models,
-                                            )
-                                    } else null
+                                    else null
                                 val showSignIn =
                                     AgentErrorText.classify(reason)?.offersSignIn == true &&
                                         reply.signInSettingsLabel != null
@@ -1701,7 +1694,7 @@ private fun ChatRow(
                                                                 suggestion.modelId,
                                                             )
                                                         },
-                                                        role = KitButtonRole.Primary,
+                                                        role = KitButtonRole.Secondary,
                                                         modifier = Modifier.testTag("error-action-use-model"),
                                                     )
                                             ErrorFix.ChooseModel ->
@@ -1927,39 +1920,6 @@ internal fun turnGap(row: TranscriptRow, older: TranscriptRow?): Int {
 
 /** NV: LAYOUT-RULES.md edge-tap: a target keeps 4 dp from the window edge. */
 private const val FOOTER_EDGE_INSET_DP = 4 // NV: LAYOUT-RULES.md edge-tap minimum
-
-private fun goneModelKey(row: FooterRow): io.github.eslamasabry.oc.feature.chat.world.ModelKey? =
-    row.providerId?.takeIf { it.isNotBlank() }?.let { provider ->
-        row.modelId?.takeIf { it.isNotBlank() }?.let { model ->
-            io.github.eslamasabry.oc.feature.chat.world.ModelKey(provider, model)
-        }
-    }
-
-private fun modelGoneWords(
-    row: FooterRow,
-    kind: ReplyFailureKind,
-    goneKey: io.github.eslamasabry.oc.feature.chat.world.ModelKey?,
-    reply: ReplyActions?,
-): String? {
-    val format = reply?.modelGoneLabel
-    val isModelError = row.errorKind == MessageErrorKind.ModelNotFound || kind == ReplyFailureKind.Model
-    return if (format == null || goneKey == null || !isModelError) null
-    else {
-        val listed =
-            reply.models.firstOrNull {
-                it.providerId == goneKey.providerId && it.modelId == goneKey.modelId
-            }
-        val modelName =
-            listed?.label?.takeIf { it.isNotBlank() }
-                ?: io.github.eslamasabry.oc.feature.chat.world.ModelNames.fromId(goneKey.modelId)
-        val providerName =
-            reply.models
-                .firstOrNull { it.providerId == goneKey.providerId && it.providerName.isNotBlank() }
-                ?.providerName
-                ?: goneKey.providerId
-        format(modelName, providerName)
-    }
-}
 
 /**
  * Plan 09 R13 column (as the kit's reply block): 700 dp cap, the row gap only where the block does

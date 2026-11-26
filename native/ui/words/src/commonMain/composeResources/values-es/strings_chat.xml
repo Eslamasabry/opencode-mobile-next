@@ -1375,6 +1375,4 @@
     <string name="kitTurnLiveStillThinking">Sigue pensando</string>
     <string name="chatQuietThinkingHint">Algunos modelos piensan en silencio durante varios minutos.</string>
     <string name="kitToolUnanswered">Se detuvo antes de que respondieras</string>
-    <string name="chatErrorModelNotFoundNamed">%1$s ya no está disponible en %2$s.</string>
-    <string name="chatModelReplacedNotice">%1$s ya no está disponible. Se usa %2$s.</string>
 </resources>

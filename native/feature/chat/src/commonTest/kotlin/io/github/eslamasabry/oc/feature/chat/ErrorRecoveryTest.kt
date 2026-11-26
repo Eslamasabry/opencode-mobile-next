@@ -53,7 +53,7 @@ class ErrorRecoveryTest {
             ErrorRecovery.fixes(null, ReplyFailureKind.NoCredit, "402", false, false),
         )
         assertEquals(
-            listOf(ErrorFix.UseModel, ErrorFix.ChooseModel),
+            listOf(ErrorFix.UseModel),
             ErrorRecovery.fixes(
                 MessageErrorKind.ModelNotFound,
                 ReplyFailureKind.Model,

@@ -154,11 +154,9 @@ import io.github.eslamasabry.oc.ui.words.res.agentErrorOpenSettings
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContentFilter
 import io.github.eslamasabry.oc.ui.words.res.chatErrorContextOverflow
 import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFound
-import io.github.eslamasabry.oc.ui.words.res.chatErrorModelNotFoundNamed
 import io.github.eslamasabry.oc.ui.words.res.chatErrorOutputLength
 import io.github.eslamasabry.oc.ui.words.res.chatErrorProviderAuth
 import io.github.eslamasabry.oc.ui.words.res.chatErrorUnknown
-import io.github.eslamasabry.oc.ui.words.res.chatModelReplacedNotice
 import io.github.eslamasabry.oc.ui.words.res.kitSheetClose
 import io.github.eslamasabry.oc.ui.words.res.chatFeelLinkRefused
 import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
@@ -1255,33 +1253,28 @@ public fun ChatScreen(
                                             reply =
                                                 rememberReplyActions(
                                                     actions,
-                                                    state,
-                                                    modelChoices,
-                                                    ReplyCallbacks(
-                                                        onChooseModel = {
-                                                            modelPicker = (modelPicker ?: 0L) + 1L
-                                                        },
-                                                        onOpenCode = { codeReader = it },
-                                                        onChoice = { text ->
-                                                            // An agent choice goes after the person's words
-                                                            // (negative ids, never equal to the chat's own).
-                                                            commandInsertId -= 1
-                                                            commandInsert =
-                                                                io.github.eslamasabry.oc.feature.chat.composer
-                                                                    .InsertRequest(
-                                                                        commandInsertId,
-                                                                        text,
-                                                                    )
-                                                        },
-                                                        onRerunCommand =
-                                                            if (
-                                                                workModel != null &&
-                                                                    state.capabilities.shell &&
-                                                                    !demoMode
+                                                    state.confirmedPaths,
+                                                    models = modelChoices,
+                                                    canCompact =
+                                                        state.capabilities.compact && state.live == null,
+                                                    onChooseModel = {
+                                                        modelPicker = (modelPicker ?: 0L) + 1L
+                                                    },
+                                                    onOpenCode = { codeReader = it },
+                                                    onChoice = { text ->
+                                                        // An agent choice goes after the person's words (negative ids,
+                                                        // never equal to the chat's or the prompts' own).
+                                                        commandInsertId -= 1
+                                                        commandInsert =
+                                                            io.github.eslamasabry.oc.feature.chat.composer.InsertRequest(
+                                                                commandInsertId,
+                                                                text,
                                                             )
-                                                                workModel::openShellDialog
-                                                            else null,
-                                                    ),
+                                                    },
+                                                    onRerunCommand =
+                                                        if (workModel != null && state.capabilities.shell && !demoMode)
+                                                            workModel::openShellDialog
+                                                        else null,
                                                 ),
                                             onOpenFile = { file ->
                                                 if (io.github.eslamasabry.oc.feature.chat.world.isInlineFile(file.url) && file.path == null)
@@ -1929,163 +1922,135 @@ private fun statusLine(
                         icon = KitIcons.restore,
                     ),
             )
-        ChatStatusKind.ModelReplaced ->
-            KitStatus(
-                KitStatusKind.Info,
-                stringResource(
-                    Res.string.chatModelReplacedNotice,
-                    line.oldModel.orEmpty(),
-                    line.newModel.orEmpty(),
-                ),
-                id = "chat-status-${line.id}",
-                tone = StatusTone.Neutral,
-                onDismiss = { actions.dismissStatus(line.id) },
-                dismissLabel = stringResource(Res.string.kitSheetDismiss),
-            )
     }
 
 /**
  * P12-CHAT-FEEL: what a reply's parts do. Links and web pictures go to [ChatActions.openLink] (the
  * link policy, then the one external opener); a code block's Copy copies its whole source verbatim.
  */
-@androidx.compose.runtime.Immutable
-internal data class ReplyCallbacks(
-    val onChooseModel: () -> Unit = {},
-    val onOpenCode: (KitMdBlock.Code) -> Unit = {},
-    val onChoice: ((String) -> Unit)? = null,
-    val onRerunCommand: ((String) -> Unit)? = null,
-)
-
-@androidx.compose.runtime.Immutable
-private data class AgentSignInCopy(
-    val again: ((String) -> String?)?,
-    val past: ((String) -> String?)?,
-    val label: String,
-)
-
-private fun phoneAgentLabel(provider: String): String? =
-    when (provider) {
-        "claude" -> "Claude Code"
-        "codex" -> "Codex"
-        else -> null
-    }
-
-@Composable
-private fun rememberAgentSignInCopy(phoneAgentSignIn: Boolean): AgentSignInCopy {
-    // B-AGENT-189 (#137): a lapsed sign-in of an agent on this phone says "sign in again" and offers Sign in.
-    val againTemplate = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
-    val label = stringResource(Res.string.agentsSignInAgain)
-    val pastTemplate = stringResource(Res.string.chatSendFailureSignedInPast, "\u0000")
-    return remember(phoneAgentSignIn, againTemplate, pastTemplate, label) {
-        AgentSignInCopy(
-            again =
-                if (phoneAgentSignIn) { p -> phoneAgentLabel(p)?.let { againTemplate.replace("\u0000", it) } }
-                else null,
-            past =
-                if (phoneAgentSignIn) { p -> phoneAgentLabel(p)?.let { pastTemplate.replace("\u0000", it) } }
-                else null,
-            label = label,
-        )
-    }
-}
-
-@Composable
-private fun rememberReplyMarkdownActions(
-    actions: ChatActions,
-    confirmedPaths: kotlinx.collections.immutable.ImmutableSet<String>,
-    phoneAgentWords: Boolean,
-    callbacks: ReplyCallbacks,
-): KitMarkdownActions {
-    val chooseTemplate = stringResource(Res.string.chatUiChooseOption, "\u0000")
-    val doneWord = stringResource(Res.string.modelChoiceDone)
-    val todoWord = stringResource(Res.string.chatUiTodo)
-    val runOnComputer =
-        stringResource(if (phoneAgentWords) Res.string.chatUiRunOnThisPhone else Res.string.chatUiRunOnYourComputer)
-    val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
-    val copy = stringResource(Res.string.kitCopy)
-    val picture = stringResource(Res.string.chatFeelPicture)
-    val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
-    val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
-    return remember(
-        actions,
-        confirmedPaths,
-        callbacks,
-        chooseTemplate,
-        doneWord,
-        todoWord,
-        runOnComputer,
-        openFullCode,
-        copy,
-        picture,
-        onServer,
-        onWeb,
-    ) {
-        KitMarkdownActions(
-            onLink = actions::openLink,
-            onPath = actions::openPath,
-            confirmedPaths = confirmedPaths,
-            copyCodeLabel = copy,
-            onCopyCode = actions::copyText,
-            moreCodeLabel = { hidden -> openFullCode.replace("\u0000", hidden.toString()) },
-            onOpenCode = callbacks.onOpenCode,
-            onChoice = callbacks.onChoice,
-            chooseLabel = { text -> chooseTemplate.replace("\u0000", text) },
-            doneWord = doneWord,
-            todoWord = todoWord,
-            runOnComputerLabel = runOnComputer,
-            onPicture = { p ->
-                val url = p.url
-                val path = p.path
-                when {
-                    url != null -> actions.openLink(url)
-                    path != null -> actions.openPicture(path, p.label ?: path.substringAfterLast('/'))
-                }
-            },
-            openFilePictures = true,
-            readPicture = actions::readPicture,
-            pictureScope = actions.pictureScope,
-            pictureLabel = { p ->
-                p.label
-                    ?: p.path?.let { onServer.replace("\u0000", it) }
-                    ?: p.host?.let { onWeb.replace("\u0000", it) }
-                    ?: picture
-            },
-        )
-    }
-}
-
 @Composable
 internal fun rememberReplyActions(
     actions: ChatActions,
-    state: ChatUi,
+    confirmedPaths: kotlinx.collections.immutable.ImmutableSet<String> =
+        kotlinx.collections.immutable.persistentSetOf(),
     models: List<io.github.eslamasabry.oc.feature.chat.world.ComposerModel> = emptyList(),
-    callbacks: ReplyCallbacks = ReplyCallbacks(),
+    canCompact: Boolean = false,
+    onChooseModel: () -> Unit = {},
+    onOpenCode: (KitMdBlock.Code) -> Unit = {},
+    onChoice: ((String) -> Unit)? = null,
+    onRerunCommand: ((String) -> Unit)? = null,
 ): ReplyActions {
-    val latestRows by rememberUpdatedState(state.rows)
-    val phoneAgentSignIn = remember(actions) { actions.phoneAgentSignIn() }
-    val markdown = rememberReplyMarkdownActions(actions, state.confirmedPaths, phoneAgentSignIn, callbacks)
-    val signIn = rememberAgentSignInCopy(phoneAgentSignIn)
+    val chooseTemplate = stringResource(Res.string.chatUiChooseOption, "\u0000")
+    val doneWord = stringResource(Res.string.modelChoiceDone)
+    val todoWord = stringResource(Res.string.chatUiTodo)
+    val phoneAgentWords = remember(actions) { actions.phoneAgentSignIn() }
+    val runOnComputer =
+        stringResource(if (phoneAgentWords) Res.string.chatUiRunOnThisPhone else Res.string.chatUiRunOnYourComputer)
+    val openFullCode = stringResource(Res.string.terminalOpenFull, "\u0000")
     val chooseModel = stringResource(Res.string.chatUiChooseAnotherModel)
     val useModelTemplate = stringResource(Res.string.chatUiUseModelAndResend, "\u0000")
-    val modelGoneTemplate = stringResource(Res.string.chatErrorModelNotFoundNamed, "\u0000", "\u0001")
     val openProviders = stringResource(Res.string.chatUiOpenProviders)
     val openAccount = stringResource(Res.string.chatSendFailureAccountAction)
     val compactLabel = stringResource(Res.string.chatUiCompactSession)
     val copy = stringResource(Res.string.kitCopy)
     val copied = stringResource(Res.string.kitCopied)
+    val picture = stringResource(Res.string.chatFeelPicture)
+    val onServer = stringResource(Res.string.chatFeelPictureOnServer, "\u0000")
+    val onWeb = stringResource(Res.string.chatFeelPictureOnWeb, "\u0000")
     val continueLabel = stringResource(Res.string.returnBriefContinue)
     val signInSettings =
         stringResource(io.github.eslamasabry.oc.ui.words.res.Res.string.agentErrorOpenSettings)
-    val canCompact = state.capabilities.compact && state.live == null
-    val copyKeys =
-        listOf(
-            chooseModel, useModelTemplate, modelGoneTemplate, openProviders, openAccount,
-            compactLabel, copy, copied, continueLabel, signInSettings,
-        )
-    return remember(actions, markdown, signIn, phoneAgentSignIn, models, canCompact, callbacks, copyKeys) {
+    // B-AGENT-189 (#137): a lapsed sign-in of an agent on this phone says "sign in again" and offers Sign in.
+    val signInAgainTemplate = stringResource(Res.string.chatSendFailureSignInAgain, "\u0000")
+    val signInAgainLabel = stringResource(Res.string.agentsSignInAgain)
+    val signInPastTemplate = stringResource(Res.string.chatSendFailureSignedInPast, "\u0000")
+    val phoneAgentSignIn = remember(actions) { actions.phoneAgentSignIn() }
+    val signInAgainWords: (String) -> String? = remember(signInAgainTemplate) {
+        { provider ->
+            when (provider) {
+                "claude" -> "Claude Code"
+                "codex" -> "Codex"
+                else -> null
+            }?.let { signInAgainTemplate.replace("\u0000", it) }
+        }
+    }
+    val signInPastWords: (String) -> String? = remember(signInPastTemplate) {
+        { provider ->
+            when (provider) {
+                "claude" -> "Claude Code"
+                "codex" -> "Codex"
+                else -> null
+            }?.let { signInPastTemplate.replace("\u0000", it) }
+        }
+    }
+    return remember(
+        actions,
+        copy,
+        copied,
+        picture,
+        onServer,
+        onWeb,
+        confirmedPaths,
+        continueLabel,
+        signInSettings,
+        signInAgainWords,
+        signInPastWords,
+        signInAgainLabel,
+        phoneAgentSignIn,
+        models,
+        canCompact,
+        onChooseModel,
+        chooseModel,
+        useModelTemplate,
+        openProviders,
+        openAccount,
+        compactLabel,
+        openFullCode,
+        onOpenCode,
+        onChoice,
+        chooseTemplate,
+        doneWord,
+        todoWord,
+        runOnComputer,
+        onRerunCommand,
+    ) {
         ReplyActions(
             copiedLabel = copied,
-            markdown = markdown,
+            markdown =
+                KitMarkdownActions(
+                    onLink = actions::openLink,
+                    // B-CHAT-064: a path the server confirmed opens its file (a picture in the
+                    // viewer).
+                    onPath = actions::openPath,
+                    confirmedPaths = confirmedPaths,
+                    copyCodeLabel = copy,
+                    onCopyCode = actions::copyText,
+                    moreCodeLabel = { hidden -> openFullCode.replace("\u0000", hidden.toString()) },
+                    onOpenCode = onOpenCode,
+                    onChoice = onChoice,
+                    chooseLabel = { text -> chooseTemplate.replace("\u0000", text) },
+                    doneWord = doneWord,
+                    todoWord = todoWord,
+                    runOnComputerLabel = runOnComputer,
+                    onPicture = { p ->
+                        val url = p.url
+                        val path = p.path
+                        when {
+                            url != null -> actions.openLink(url)
+                            path != null ->
+                                actions.openPicture(path, p.label ?: path.substringAfterLast('/'))
+                        }
+                    },
+                    openFilePictures = true,
+                    readPicture = actions::readPicture,
+                    pictureScope = actions.pictureScope,
+                    pictureLabel = { p ->
+                        p.label
+                            ?: p.path?.let { onServer.replace("\u0000", it) }
+                            ?: p.host?.let { onWeb.replace("\u0000", it) }
+                            ?: picture
+                    },
+                ),
             copyLabel = copy,
             copy = actions::copyText,
             checkPaths = actions::checkPaths,
@@ -2093,28 +2058,24 @@ internal fun rememberReplyActions(
             onContinue = actions::continueReply,
             signInSettingsLabel = signInSettings,
             onSignInSettings = actions::openSignInSettings,
-            signInAgainWords = signIn.again,
-            signInAgainLabel = signIn.label,
+            signInAgainWords = if (phoneAgentSignIn) signInAgainWords else null,
+            signInAgainLabel = signInAgainLabel,
             onAgentSignIn = actions::openAgentSignIn,
-            signInPastWords = signIn.past,
+            signInPastWords = if (phoneAgentSignIn) signInPastWords else null,
             onThisPhone = phoneAgentSignIn,
             models = models,
             canCompact = canCompact,
             onCompact = actions::compactAgain,
             chooseModelLabel = chooseModel,
-            onChooseModel = callbacks.onChooseModel,
+            onChooseModel = onChooseModel,
             useModelLabel = { name -> useModelTemplate.replace("\u0000", name) },
             onUseModel = actions::useModelAndResend,
             openProvidersLabel = openProviders,
             openAccountLabel = openAccount,
             compactLabel = compactLabel,
             onOpenProviders = actions::openProviders,
-            onRerunCommand = callbacks.onRerunCommand,
+            onRerunCommand = onRerunCommand,
             onOpenChanges = actions::openChanges,
-            answered = { io.github.eslamasabry.oc.feature.chat.world.ModelFallback.answered(latestRows) },
-            modelGoneLabel = { model, provider ->
-                modelGoneTemplate.replace("\u0000", model).replace("\u0001", provider)
-            },
         )
     }
 }

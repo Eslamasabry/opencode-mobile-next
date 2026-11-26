@@ -1568,7 +1568,6 @@ chatDraftRestoring	8ba4e369e5
 chatErrorContentFilter	c7dee03ffd
 chatErrorContextOverflow	562eeededc
 chatErrorModelNotFound	b0a04babb6
-chatErrorModelNotFoundNamed	be78fb5120
 chatErrorOutputLength	e1f663ed6c
 chatErrorProviderAuth	4993b43cdc
 chatErrorUnknown	79c8523231
@@ -1649,7 +1648,6 @@ chatModelFailRateLimit	6eb28d21dd
 chatModelFailSignIn	bb602cb0c5
 chatModelFailSignInAction	a22eaaaa49
 chatModelFailSwitch	06d9c5a92b
-chatModelReplacedNotice	7e4e04bacb
 chatModelsCurrent	64e05b6a1d
 chatModelsNoMatch	80efe437d4
 chatModelsRecent	48d674def0
