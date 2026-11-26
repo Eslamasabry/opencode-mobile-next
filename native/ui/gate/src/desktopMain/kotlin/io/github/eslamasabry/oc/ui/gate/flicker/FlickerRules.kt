@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.ui.gate.flicker
 
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -7,7 +8,8 @@ import kotlin.math.min
  * The rules over a run of frames. Pure: frames in, findings out, so the planted cases can feed it pictures directly.
  * Motion is told apart from a fault by what surrounds it: a node that moves on the frames before or after a big step is
  * in motion (an animation), a node whose scroll container scrolled is being scrolled; neither is a jump, a blink or a
- * return. Findings of one rule that start on the same frame are one finding (a block of lines that leaves together).
+ * return. A button's label swapped in place (same control, same line, short words) is neither a jump nor a return.
+ * Findings of one rule that start on the same frame are one finding (a block of lines that leaves together).
  */
 public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
     /**
@@ -90,7 +92,8 @@ public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
                 .firstOrNull { (frames[it].picture.keys[key] ?: 0) >= n }
                 ?.takeIf { !scrolled(frames, k - 1, it, node.scrollers) }
         return back?.let {
-            Hit(FlickerRule.ABA, k, node, "gone at ${frames[k]} and back at ${frames[it]} (was at ${node.box})")
+            val what = "gone at ${frames[k]} and back at ${frames[it]} (was at ${node.box})"
+            Hit(FlickerRule.ABA, k, node, what, swapsBack(frames, k, it, node, limits))
         }
     }
 
@@ -109,16 +112,24 @@ public class FlickerRules(private val limits: FlickerLimits = FlickerLimits()) {
             val before = frames[k - 1].picture.byId
             frames[k].nodes.mapNotNull { now ->
                 before[now.id]?.takeIf { isJump(frames, k, it, now, limits) }?.let { was ->
-                    Hit(FlickerRule.JUMP, k, now, "moved from ${was.box} to ${now.box} in one frame (${frames[k]})")
+                    val what = "moved from ${was.box} to ${now.box} in one frame (${frames[k]})"
+                    Hit(FlickerRule.JUMP, k, now, what, swapped(was, now, limits))
                 }
             }
         }
 }
 
 /** One rule's hit before grouping: the list position it starts at, the node, and how it reads. */
-private data class Hit(val rule: FlickerRule, val at: Int, val node: FrameNode, val what: String)
+private data class Hit(
+    val rule: FlickerRule,
+    val at: Int,
+    val node: FrameNode,
+    val what: String,
+    val swap: Boolean = false,
+)
 
 private const val SHOWN = 60
+private const val SWAP_CHARS = 40
 private const val MORE = 3
 private const val MIN_DOUBLE = 2
 
@@ -153,8 +164,35 @@ private fun moveBack(
         end?.takeIf { frames[it].picture.byId[was.id] != null && !scrolled(frames, k - 1, it, was.scrollers) }
     return back?.let {
         val path = "moved from ${was.box} to ${away.box} at ${frames[k]} and back at ${frames[it]}"
-        Hit(FlickerRule.ABA, k, was, path)
+        Hit(FlickerRule.ABA, k, was, path, swapped(was, away, limits))
     }
+}
+
+/** [new] took [old]'s place on one control. */
+private fun swapped(old: FrameNode, new: FrameNode, limits: FlickerLimits): Boolean =
+    old.control != null && old.control == new.control &&
+        shortSwap(old, new) && sameSlot(old.box, new.box, limits.stillDp)
+
+/** Text to other text, both short. */
+private fun shortSwap(old: FrameNode, new: FrameNode): Boolean =
+    old.isText && new.isText && old.label != new.label && max(old.label.length, new.label.length) <= SWAP_CHARS
+
+/** Same line (top and bottom within [still]) and overlapping across: the box stayed in its slot. */
+private fun sameSlot(a: DpBox, b: DpBox, still: Float): Boolean =
+    abs(a.top - b.top) <= still && abs(a.bottom - b.bottom) <= still && a.left < b.right && b.left < a.right
+
+/** [node]'s words gave way to a label swap on frame [k] and came back to its control and slot on [back]. */
+private fun swapsBack(
+    frames: List<RecordedFrame>,
+    k: Int,
+    back: Int,
+    node: FrameNode,
+    limits: FlickerLimits,
+): Boolean {
+    val key = flickerKey(node.label)
+    val returned = frames[back].nodes.firstOrNull { flickerKey(it.label) == key } ?: return false
+    return frames[k].nodes.any { swapped(node, it, limits) } &&
+        returned.control == node.control && sameSlot(node.box, returned.box, limits.stillDp)
 }
 
 /** A step over the jump distance between k-1 and k, the node still on the frames around it, nothing scrolled. */
@@ -177,7 +215,7 @@ private fun still(frames: List<RecordedFrame>, a: Int, b: Int, id: Int, limits: 
 }
 
 private fun grouped(frames: List<RecordedFrame>, hits: List<Hit>): List<Finding> =
-    hits.groupBy { it.rule to it.at }.map { (_, group) ->
+    hits.groupBy { it.rule to it.at }.filterValues { group -> !group.all { it.swap } }.map { (_, group) ->
         val hit = group.first()
         val others = group.drop(1).take(MORE).joinToString { "\"${it.node.label.take(SHOWN)}\"" }
         val more = if (group.size > 1) " (+${group.size - 1} more: $others)" else ""
