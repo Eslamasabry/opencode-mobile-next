@@ -66,6 +66,7 @@ class ReplyWatchFlag {
     private val mutable = MutableStateFlow(false)
     val active: StateFlow<Boolean> = mutable
     private val pending = MutableStateFlow(false)
+    private val rearming = MutableStateFlow(false)
     private val watchingState = MutableStateFlow(false)
 
     /** True while reply watch is active OR handing off on activity stop before start/skip settles. */
@@ -80,6 +81,10 @@ class ReplyWatchFlag {
     internal fun setPending(on: Boolean) {
         pending.value = on
         watchingState.value = mutable.value || pending.value
+    }
+
+    internal fun setRearming(on: Boolean) {
+        rearming.value = on
     }
 }
 

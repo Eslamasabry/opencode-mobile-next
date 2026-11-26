@@ -168,9 +168,17 @@ class StreamVisibilityBackgroundAlertsTest {
                 server.sendEvent("started")
                 withTimeout(5_000) { gotFirst.await() }
 
-                fixture.replyWatch.set(true)
+                fixture.replyWatch.setPending(true)
                 activity.stop()
                 awaitVisibility(fixture.streamVisibility, Visibility.HiddenWatching)
+                assertEquals(
+                    Visibility.HiddenWatching,
+                    fixture.streamVisibility.value,
+                    "pending ReplyWatch handoff must report HiddenWatching while hidden",
+                )
+                delay(50)
+                fixture.replyWatch.set(true)
+                delay(50)
                 assertEquals(
                     Visibility.HiddenWatching,
                     fixture.streamVisibility.value,
@@ -276,6 +284,73 @@ class StreamVisibilityBackgroundAlertsTest {
                     "SSE socket stayed open after transitioning to HiddenIdle",
                 )
                 assertEquals(0, liveCallsCount(net), "LiveCalls retained SSE call after HiddenIdle")
+            } finally {
+                collector?.cancel()
+                net.close()
+                server.close()
+                fixture.job.cancel()
+            }
+        }
+
+    @Test
+    fun `B-617 armed rearm keeps HiddenWatching after watch ends until rearm ends`() =
+        runBlocking {
+            val fixture = createFixture()
+            val server = PushSseServer()
+            val net = createClient(server.port)
+            val statuses = CopyOnWriteArrayList<StreamStatus>()
+            val gotFirst = CompletableDeferred<Unit>()
+            val gotRearmFrame = CompletableDeferred<Unit>()
+            val suspended = CompletableDeferred<Unit>()
+            var collector: Job? = null
+            try {
+                val activity = Robolectric.buildActivity(Activity::class.java).create().start()
+                awaitVisibility(fixture.streamVisibility, Visibility.Foreground)
+                collector =
+                    launch(Dispatchers.Default) {
+                        buildLoop(net, server.port, fixture.streamVisibility).signals().collect { signal ->
+                            when (signal) {
+                                is StreamSignal.Status -> {
+                                    statuses += signal.status
+                                    if (signal.status == StreamStatus.Suspended) suspended.complete(Unit)
+                                }
+                                is StreamSignal.Frame -> {
+                                    if (signal.frame.data == "started") gotFirst.complete(Unit)
+                                    if (signal.frame.data == "rearm-wake") gotRearmFrame.complete(Unit)
+                                }
+                            }
+                        }
+                    }
+                server.sendEvent("started")
+                withTimeout(5_000) { gotFirst.await() }
+
+                fixture.replyWatch.set(true)
+                activity.stop()
+                awaitVisibility(fixture.streamVisibility, Visibility.HiddenWatching)
+
+                fixture.replyWatch.setRearming(true)
+                fixture.replyWatch.set(false)
+                delay(100)
+                assertEquals(
+                    Visibility.HiddenWatching,
+                    fixture.streamVisibility.value,
+                    "armed re-arm must keep stream HiddenWatching after watch ends",
+                )
+                assertFalse(
+                    statuses.any { it == StreamStatus.Suspended },
+                    "stream suspended while re-arm was armed: $statuses",
+                )
+                server.sendEvent("rearm-wake")
+                withTimeout(3_000) { gotRearmFrame.await() }
+
+                fixture.replyWatch.setRearming(false)
+                awaitVisibility(fixture.streamVisibility, Visibility.HiddenIdle)
+                withTimeout(3_000) { suspended.await() }
+                assertTrue(
+                    server.clientClosed.await(3, TimeUnit.SECONDS),
+                    "SSE socket stayed open after re-arm cleared",
+                )
+                assertEquals(0, liveCallsCount(net), "LiveCalls retained SSE call after re-arm cleared")
             } finally {
                 collector?.cancel()
                 net.close()
