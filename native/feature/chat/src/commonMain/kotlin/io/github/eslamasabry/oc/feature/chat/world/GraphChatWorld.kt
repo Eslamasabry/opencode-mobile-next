@@ -2634,7 +2634,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         }
     }
 
-    private fun recordWaitingOutboxBubble(
+    private suspend fun recordWaitingOutboxBubble(
         entryId: String,
         localId: Long,
         text: String,
@@ -2701,7 +2701,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 entry.model?.let { ModelSelection(it, entry.variant) },
             )
         baselines[localId] =
-            currentAttached()?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
+            mutableTranscript.value.rows.filterIsInstance<PromptRow>().mapTo(HashSet()) { it.key }
         mutablePending.update {
             (it +
                     PendingSend(
