@@ -64,4 +64,7 @@
     <string name="agentToolsMonitorCount">有数据的服务商：%1$d</string>
     <string name="agentToolsMonitorRefresh">立即读取用量</string>
     <string name="agentToolsMonitorEnableFirst">读取前请先开启用量监控。</string>
+    <string name="agentToolsTerminalsSection">终端</string>
+    <string name="agentToolsUsageMonitorSection">用量监控</string>
+    <string name="agentToolsMaintenanceSection">维护</string>
 </resources>

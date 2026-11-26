@@ -64,4 +64,7 @@
     <string name="agentToolsMonitorCount">Провайдеров с данными: %1$d</string>
     <string name="agentToolsMonitorRefresh">Считать расход сейчас</string>
     <string name="agentToolsMonitorEnableFirst">Прежде чем считывать, включите слежение за расходом.</string>
+    <string name="agentToolsTerminalsSection">Терминалы</string>
+    <string name="agentToolsUsageMonitorSection">Слежение за расходом</string>
+    <string name="agentToolsMaintenanceSection">Обслуживание</string>
 </resources>

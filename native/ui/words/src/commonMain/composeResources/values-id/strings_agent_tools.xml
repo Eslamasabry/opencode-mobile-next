@@ -64,4 +64,7 @@
     <string name="agentToolsMonitorCount">Penyedia dengan angka: %1$d</string>
     <string name="agentToolsMonitorRefresh">Baca penggunaan sekarang</string>
     <string name="agentToolsMonitorEnableFirst">Aktifkan pemantau penggunaan sebelum membaca.</string>
+    <string name="agentToolsTerminalsSection">Terminal</string>
+    <string name="agentToolsUsageMonitorSection">Pemantau penggunaan</string>
+    <string name="agentToolsMaintenanceSection">Pemeliharaan</string>
 </resources>

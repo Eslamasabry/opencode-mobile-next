@@ -64,4 +64,7 @@
     <string name="agentToolsMonitorCount">数値を取得したプロバイダー：%1$d</string>
     <string name="agentToolsMonitorRefresh">今すぐ使用状況を読み取る</string>
     <string name="agentToolsMonitorEnableFirst">読み取る前に使用状況の監視をオンにしてください。</string>
+    <string name="agentToolsTerminalsSection">ターミナル</string>
+    <string name="agentToolsUsageMonitorSection">使用状況の監視</string>
+    <string name="agentToolsMaintenanceSection">メンテナンス</string>
 </resources>

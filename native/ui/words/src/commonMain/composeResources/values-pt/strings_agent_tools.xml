@@ -64,4 +64,7 @@
     <string name="agentToolsMonitorCount">Provedores com números: %1$d</string>
     <string name="agentToolsMonitorRefresh">Ler o uso agora</string>
     <string name="agentToolsMonitorEnableFirst">Ative o monitor de uso antes de ler.</string>
+    <string name="agentToolsTerminalsSection">Terminais</string>
+    <string name="agentToolsUsageMonitorSection">Monitor de uso</string>
+    <string name="agentToolsMaintenanceSection">Manutenção</string>
 </resources>

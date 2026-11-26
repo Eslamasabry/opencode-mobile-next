@@ -469,6 +469,7 @@ agentToolsCloseTerminalQuestion	858eee7503
 agentToolsFailed	a32f4929ac
 agentToolsImport	096d266834
 agentToolsImportTitle	fb7955d1c6
+agentToolsMaintenanceSection	84c436d893
 agentToolsModel	da24c15840
 agentToolsMonitorChecking	09f93e1b67
 agentToolsMonitorCount	3b5406bf3c
@@ -507,6 +508,7 @@ agentToolsTerminalSendTo	1c80cd0e7e
 agentToolsTerminalTab	06073b3d0d
 agentToolsTerminalTranscript	74daa4fb4c
 agentToolsTerminalViewBody	2b8957ee24
+agentToolsTerminalsSection	863c66ac83
 agentToolsTitle	b188c449ea
 agentToolsUnavailable	a6321d6f26
 agentToolsUnavailableBody	9604adb752
@@ -524,6 +526,7 @@ agentToolsUpdateStarting	458b73f7bf
 agentToolsUpdated	4ca95e6002
 agentToolsUsageMonitor	61ab369c50
 agentToolsUsageMonitorBody	c08a7ff9c9
+agentToolsUsageMonitorSection	e3a32438d6
 agentToolsWorking	be449ee779
 agentUpdateSendBlocked	63110aa026
 agentUpdateSendBlockedNoPercent	4ecdb44de1

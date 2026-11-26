@@ -62,4 +62,7 @@
     <string name="agentToolsMonitorCount">عدد المزوّدين الذين لديهم أرقام: %1$d</string>
     <string name="agentToolsMonitorRefresh">قراءة الاستخدام الآن</string>
     <string name="agentToolsMonitorEnableFirst">شغّل مراقبة الاستخدام قبل القراءة.</string>
+    <string name="agentToolsTerminalsSection">الطرفيات</string>
+    <string name="agentToolsUsageMonitorSection">مراقبة الاستخدام</string>
+    <string name="agentToolsMaintenanceSection">الصيانة</string>
 </resources>
