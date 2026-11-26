@@ -131,7 +131,12 @@ private fun QuestionBody(shown: AgentUpdateSheetUi, actions: AgentUpdateActions)
         stringResource(Res.string.agentUpdatesAgentsLine),
         action = KitAction(stringResource(Res.string.agentUpdatesAgentsAction), actions::openAgentsFromUpdates),
     )
-    if (shown.optional.isNotEmpty() && shown.optional.all { it.keepBlock == null }) {
+    val canSkip =
+        shown.updating == 0 &&
+            shown.removing == 0 &&
+            shown.optional.isNotEmpty() &&
+            shown.optional.all { it.keepBlock == null }
+    KitReveal(visible = canSkip) {
         KitButton(
             KitAction(
                 stringResource(Res.string.agentUpdatesSkipVersions),
@@ -226,24 +231,23 @@ private fun OptionalRow(row: AgentUpdateRowUi, actions: AgentUpdateActions) {
 
 @Composable
 private fun NeededRows(shown: AgentUpdateSheetUi) {
-    // Every needed row seen stays listed, in offer order, so a part that leaves folds away over the kit's fold even
-    // while another stays; each keeps the need line it showed last. A new row goes after its neighbour in the offer (a
-    // new first row before the first later row already seen, or at the end); a row still shown is refreshed.
+    // Every needed row in the offer stays composed in offer order so parts fold in and out over KitReveal even when
+    // the sheet opens with every agent switch off or when one part leaves while another stays.
     val seen = remember { mutableListOf<Pair<AgentNeededRowUi, AgentNeedRule>>() }
-    val needed = shown.needed
-    needed.forEachIndexed { index, row ->
+    val source = shown.allNeeded.ifEmpty { shown.needed }
+    source.forEachIndexed { index, row ->
         val at = seen.indexOfFirst { it.first.id == row.id }
         val entry = row to shown.neededWhy
         when {
             at >= 0 -> seen[at] = entry
-            index > 0 -> seen.add(seen.indexOfFirst { it.first.id == needed[index - 1].id } + 1, entry)
+            index > 0 -> seen.add(seen.indexOfFirst { it.first.id == source[index - 1].id } + 1, entry)
             else -> {
-                val later = needed.drop(1).mapTo(mutableSetOf()) { it.id }
+                val later = source.drop(1).mapTo(mutableSetOf()) { it.id }
                 seen.add(seen.indexOfFirst { it.first.id in later }.takeIf { it >= 0 } ?: seen.size, entry)
             }
         }
     }
-    val shownNow = needed.mapTo(mutableSetOf()) { it.id }
+    val shownNow = shown.needed.mapTo(mutableSetOf()) { it.id }
     seen.toList().forEach { (row, why) ->
         key(row.id) { KitReveal(visible = row.id in shownNow) { NeededRow(row, why) } }
     }

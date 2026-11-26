@@ -76,6 +76,8 @@ public data class AgentUpdateSheetUi(
     val optional: ImmutableList<AgentUpdateRowUi> = persistentListOf(),
     /** The Needed parts shown now: Always ones, and WithAnyUpdate ones while at least one agent is set to Update. */
     val needed: ImmutableList<AgentNeededRowUi> = persistentListOf(),
+    /** Every Needed part in the offer, in offer order, so a sheet opened with all off unfolds them over KitReveal. */
+    val allNeeded: ImmutableList<AgentNeededRowUi> = persistentListOf(),
     /** Which sentence says why the Needed parts come: they come with the updates, or they must move regardless. */
     val neededWhy: AgentNeedRule = AgentNeedRule.WithAnyUpdate,
     val downloadBytes: Long = 0,
@@ -172,13 +174,16 @@ public object AgentUpdateSheetRules {
                     )
                 }
         val anyUpdate = optional.any { it.choice == AgentUpdateChoice.Update }
+        val allNeededItems = offer.items.filter { it.group == AgentUpdateGroup.Needed }
         val neededItems =
-            offer.items.filter { it.group == AgentUpdateGroup.Needed }.filter {
+            allNeededItems.filter {
                 // A Needed part without a rule comes with the updates, as every one does today (contract §4).
                 it.neededWhen == AgentNeedRule.Always || anyUpdate
             }
         val needed =
             neededItems.map { AgentNeededRowUi(it.id, it.name, it.fromVersion, it.toVersion, it.downloadBytes) }
+        val allNeeded =
+            allNeededItems.map { AgentNeededRowUi(it.id, it.name, it.fromVersion, it.toVersion, it.downloadBytes) }
         val updates = optional.filter { it.choice == AgentUpdateChoice.Update }
         val removes = optional.filter { it.choice == AgentUpdateChoice.Remove }
         val downloads = updates.map { it.downloadBytes } + needed.map { it.downloadBytes }
@@ -190,8 +195,9 @@ public object AgentUpdateSheetRules {
             visible = visible,
             optional = optional.toImmutableList(),
             needed = needed.toImmutableList(),
+            allNeeded = allNeeded.toImmutableList(),
             neededWhy =
-                if (neededItems.any { it.neededWhen != AgentNeedRule.Always }) AgentNeedRule.WithAnyUpdate
+                if (allNeededItems.any { it.neededWhen != AgentNeedRule.Always }) AgentNeedRule.WithAnyUpdate
                 else AgentNeedRule.Always,
             downloadBytes = download,
             downloadKnown = downloads.all { it != null },
