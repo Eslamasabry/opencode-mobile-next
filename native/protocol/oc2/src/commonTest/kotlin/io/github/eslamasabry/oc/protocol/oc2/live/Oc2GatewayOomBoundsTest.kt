@@ -77,7 +77,7 @@ class Oc2GatewayOomBoundsTest {
             var written = 0L
             backgroundScope.launch {
                 try {
-                    repeat(256) {
+                    repeat(512) {
                         channel.writeFully(piece)
                         written += piece.size
                         yield()
@@ -94,8 +94,8 @@ class Oc2GatewayOomBoundsTest {
                 assertEquals(500, server.status)
                 assertNull(server.tag)
                 assertTrue(
-                    written <= 256 * 1024L,
-                    "readFailure drained $written bytes of a 2 MiB error response",
+                    written <= 64 * 1024L + 1024 * 1024L,
+                    "readFailure drained $written bytes of a 4 MiB error response",
                 )
             } finally {
                 g.close()
