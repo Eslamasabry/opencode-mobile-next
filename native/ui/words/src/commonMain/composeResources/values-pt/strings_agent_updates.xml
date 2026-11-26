@@ -52,4 +52,10 @@
     <string name="agentUpdatesNoSpace">Não há espaço suficiente neste celular para estas atualizações. Mantenha ou remova um agente, ou libere espaço.</string>
     <string name="agentUpdatesReviewAction">Revisar atualizações</string>
     <string name="agentUpdatesButtonUpdateAll">Atualizar tudo · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="one">Atualizar %1$s selecionado · %2$s</item>
+        <item quantity="many">Atualizar %1$s selecionados · %2$s</item>
+        <item quantity="other">Atualizar %1$s selecionados · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">Ignorar estas versões</string>
 </resources>

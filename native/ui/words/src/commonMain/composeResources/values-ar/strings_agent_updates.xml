@@ -61,4 +61,13 @@
     <string name="agentUpdatesNoSpace">لا توجد مساحة كافية في هذا الهاتف لهذه التحديثات. أبقِ وكيلًا أو أزله، أو حرّر مساحة.</string>
     <string name="agentUpdatesReviewAction">راجع التحديثات</string>
     <string name="agentUpdatesButtonUpdateAll">حدّث الكل · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="zero">حدّث %1$s محدَّدة · %2$s</item>
+        <item quantity="one">حدّث %1$s محدَّدًا · %2$s</item>
+        <item quantity="two">حدّث %1$s محدَّدَين · %2$s</item>
+        <item quantity="few">حدّث %1$s محدَّدة · %2$s</item>
+        <item quantity="many">حدّث %1$s محدَّدًا · %2$s</item>
+        <item quantity="other">حدّث %1$s محدَّد · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">تخطَّ هذه الإصدارات</string>
 </resources>

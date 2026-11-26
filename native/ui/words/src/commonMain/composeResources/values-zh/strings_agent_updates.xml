@@ -46,4 +46,8 @@
     <string name="agentUpdatesNoSpace">这部手机没有足够空间进行这些更新。请保留或移除一个智能体，或腾出空间。</string>
     <string name="agentUpdatesReviewAction">查看更新</string>
     <string name="agentUpdatesButtonUpdateAll">全部更新 · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="other">更新已选 %1$s 项 · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">跳过这些版本</string>
 </resources>

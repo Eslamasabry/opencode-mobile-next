@@ -46,4 +46,8 @@
     <string name="agentUpdatesNoSpace">Điện thoại này không đủ dung lượng cho các cập nhật này. Hãy giữ hoặc gỡ một tác nhân, hoặc giải phóng dung lượng.</string>
     <string name="agentUpdatesReviewAction">Xem các cập nhật</string>
     <string name="agentUpdatesButtonUpdateAll">Cập nhật tất cả · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="other">Cập nhật %1$s đã chọn · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">Bỏ qua các phiên bản này</string>
 </resources>

@@ -55,4 +55,11 @@
     <string name="agentUpdatesNoSpace">На этом телефоне не хватает места для этих обновлений. Оставьте или удалите агента либо освободите место.</string>
     <string name="agentUpdatesReviewAction">Просмотреть обновления</string>
     <string name="agentUpdatesButtonUpdateAll">Обновить всё · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="one">Обновить %1$s выбранный · %2$s</item>
+        <item quantity="few">Обновить %1$s выбранных · %2$s</item>
+        <item quantity="many">Обновить %1$s выбранных · %2$s</item>
+        <item quantity="other">Обновить %1$s выбранных · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">Пропустить эти версии</string>
 </resources>

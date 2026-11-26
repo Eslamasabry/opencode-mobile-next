@@ -46,4 +46,8 @@
     <string name="agentUpdatesNoSpace">Ruang di ponsel ini tidak cukup untuk pembaruan ini. Pertahankan atau hapus satu agen, atau kosongkan ruang.</string>
     <string name="agentUpdatesReviewAction">Tinjau pembaruan</string>
     <string name="agentUpdatesButtonUpdateAll">Perbarui semua · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="other">Perbarui %1$s dipilih · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">Lewati versi ini</string>
 </resources>

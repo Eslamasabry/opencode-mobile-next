@@ -46,4 +46,8 @@
     <string name="agentUpdatesNoSpace">このスマートフォンには、このアップデートに必要な空きがありません。エージェントを維持または削除するか、空きを増やしてください。</string>
     <string name="agentUpdatesReviewAction">アップデートを確認</string>
     <string name="agentUpdatesButtonUpdateAll">すべてアップデート · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="other">選択した%1$s件をアップデート · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">このバージョンをスキップ</string>
 </resources>

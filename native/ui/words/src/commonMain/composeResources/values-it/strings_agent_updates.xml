@@ -52,4 +52,10 @@
     <string name="agentUpdatesNotRemoved">%1$s non è stato rimosso.</string>
     <string name="agentUpdatesReviewAction">Rivedi aggiornamenti</string>
     <string name="agentUpdatesButtonUpdateAll">Aggiorna tutto · %1$s</string>
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="one">Aggiorna %1$s selezionato · %2$s</item>
+        <item quantity="many">Aggiorna %1$s selezionati · %2$s</item>
+        <item quantity="other">Aggiorna %1$s selezionati · %2$s</item>
+    </plurals>
+    <string name="agentUpdatesSkipVersions">Salta queste versioni</string>
 </resources>

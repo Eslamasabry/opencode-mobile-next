@@ -51,8 +51,15 @@
         <item quantity="other">Update %1$d and remove %2$d agents</item>
     </plurals>
     <string name="agentUpdatesButtonKeep">Keep these versions</string>
-    <!-- The sheet's main button when every agent switch is off: turns all on and starts; %1$s is the total size. -->
+    <!-- The sheet's main button when every agent switch is off or all are on: %1$s is the total size. -->
     <string name="agentUpdatesButtonUpdateAll">Update all · %1$s</string>
+    <!-- The sheet's main button when some agents are switched on: %1$s is the formatted count, %2$s is the total download size. -->
+    <plurals name="agentUpdatesButtonUpdateSelected">
+        <item quantity="one">Update %1$s selected · %2$s</item>
+        <item quantity="other">Update %1$s selected · %2$s</item>
+    </plurals>
+    <!-- Quiet text action under the list when every agent can be kept: marks these versions as kept so they are not offered again. -->
+    <string name="agentUpdatesSkipVersions">Skip these versions</string>
     <string name="agentUpdatesAgentsLine">Don't use an agent any more?</string>
     <string name="agentUpdatesAgentsAction">Remove it in Agents</string>
     <string name="agentUpdatesLinuxLine">Git and Python come from Ubuntu.</string>
