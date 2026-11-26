@@ -12,51 +12,57 @@ import org.junit.Test
 class OsOpenFdCloseTest {
     @Test
     fun `B-LINUX-617 every Os open wrapped in FileInputStream or FileOutputStream closes its FileDescriptor`() {
-        val nativeRoot =
-            generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }
-                .first { File(it, "settings.gradle.kts").isFile }
-        val scanRoots = listOf(File(nativeRoot, "android"), File(nativeRoot, "androidApp"))
-        val leaks = mutableListOf<String>()
-
-        for (root in scanRoots) {
-            root.walkTopDown()
-                .filter {
-                    it.isFile &&
-                        it.extension == "kt" &&
-                        !it.path.contains("/build/") &&
-                        (it.path.contains("/src/main/") || it.path.contains("/src/androidTest/"))
-                }
-                .forEach { file ->
-                    val lines = file.readLines()
-                    for (index in lines.indices) {
-                        val line = lines[index]
-                        if (!line.contains("Os.open(")) continue
-                        if (line.trimStart().startsWith("//") || line.trimStart().startsWith("*")) continue
-                        val windowStart = maxOf(0, index - 3)
-                        val maxEnd = minOf(lines.lastIndex, index + 25)
-                        val nextOpen =
-                            ((index + 1)..maxEnd).firstOrNull { lines[it].contains("Os.open(") }
-                        val windowEnd = if (nextOpen != null) nextOpen - 1 else maxEnd
-                        val window = lines.subList(windowStart, windowEnd + 1).joinToString("\n")
-                        val wrapsStream =
-                            window.contains("FileInputStream(") || window.contains("FileOutputStream(")
-                        if (!wrapsStream) continue
-                        val closesFd =
-                            window.contains("Os.close(") ||
-                                window.contains("OsFileDescriptors.") ||
-                                window.contains("closeQuietly(")
-                        if (!closesFd) {
-                            val rel = file.relativeTo(nativeRoot).path
-                            leaks += "$rel:${index + 1}"
-                        }
-                    }
-                }
-        }
+        val root = nativeRoot()
+        val leaks =
+            listOf(File(root, "android"), File(root, "androidApp"))
+                .flatMap { scanDir(it, root) }
 
         assertTrue(
             "Found Os.open() wrapped in FileInputStream/FileOutputStream without closing the FD:\n" +
                 leaks.joinToString("\n"),
             leaks.isEmpty(),
         )
+    }
+
+    private fun nativeRoot(): File =
+        generateSequence(File(requireNotNull(System.getProperty("user.dir")))) { it.parentFile }
+            .first { File(it, "settings.gradle.kts").isFile }
+
+    private fun scanDir(dir: File, nativeRoot: File): List<String> =
+        dir.walkTopDown()
+            .filter(::isScannedSource)
+            .flatMap { file -> scanFile(file, nativeRoot) }
+            .toList()
+
+    private fun isScannedSource(file: File): Boolean =
+        file.isFile &&
+            file.extension == "kt" &&
+            !file.path.contains("/build/") &&
+            (file.path.contains("/src/main/") || file.path.contains("/src/androidTest/"))
+
+    private fun scanFile(file: File, nativeRoot: File): List<String> {
+        val lines = file.readLines()
+        val rel = file.relativeTo(nativeRoot).path
+        return lines.indices
+            .filter { index -> isLeakingOpen(lines, index) }
+            .map { index -> "$rel:${index + 1}" }
+    }
+
+    private fun isLeakingOpen(lines: List<String>, index: Int): Boolean {
+        val trimmed = lines[index].trimStart()
+        if (!trimmed.contains("Os.open(") || trimmed.startsWith("//") || trimmed.startsWith("*")) {
+            return false
+        }
+        val windowStart = maxOf(0, index - 3)
+        val maxEnd = minOf(lines.lastIndex, index + 25)
+        val nextOpen = ((index + 1)..maxEnd).firstOrNull { lines[it].contains("Os.open(") }
+        val windowEnd = if (nextOpen != null) nextOpen - 1 else maxEnd
+        val window = lines.subList(windowStart, windowEnd + 1).joinToString("\n")
+        val wrapsStream = window.contains("FileInputStream(") || window.contains("FileOutputStream(")
+        val closesFd =
+            window.contains("Os.close(") ||
+                window.contains("OsFileDescriptors.") ||
+                window.contains("closeQuietly(")
+        return wrapsStream && !closesFd
     }
 }

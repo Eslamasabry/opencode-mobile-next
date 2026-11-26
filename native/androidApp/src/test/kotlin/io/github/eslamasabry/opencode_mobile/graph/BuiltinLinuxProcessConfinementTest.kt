@@ -1,15 +1,21 @@
 package io.github.eslamasabry.opencode_mobile.graph
 
 import android.app.Application
+import android.system.ErrnoException
+import android.system.OsConstants
 import io.github.eslamasabry.opencode_mobile.BuiltinLinux
+import io.github.eslamasabry.opencode_mobile.OsFileDescriptors
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileDescriptor
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.IdentityHashMap
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.runner.RunWith
@@ -54,6 +60,38 @@ class BuiltinLinuxProcessConfinementTest {
             "exited process must be pruned from processConfinement",
         )
         assertEquals(false, confinement[live], "live process confinement state must remain intact")
+    }
+
+    @Test
+    fun `B-LINUX-617 OsFileDescriptors swallows ErrnoException on close without masking caller error`() {
+        val fd = FileDescriptor()
+        var closeCalls = 0
+        val value =
+            OsFileDescriptors.useFd(
+                fd = fd,
+                close = {
+                    closeCalls++
+                    throw ErrnoException("close", OsConstants.EBADF)
+                },
+            ) { "done" }
+        assertEquals("done", value)
+        assertEquals(1, closeCalls)
+
+        var errorCloseCalls = 0
+        val failure =
+            assertFailsWith<IOException> {
+                OsFileDescriptors.useFd(
+                    fd = fd,
+                    close = {
+                        errorCloseCalls++
+                        throw ErrnoException("close", OsConstants.EBADF)
+                    },
+                ) {
+                    throw IOException("primary failure")
+                }
+            }
+        assertEquals("primary failure", failure.message)
+        assertEquals(1, errorCloseCalls)
     }
 
     private class FakeProcess(private val alive: Boolean) : Process() {
