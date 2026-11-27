@@ -117,6 +117,12 @@ class OfflineOutboxTest {
             url = "data:image/png;base64," + Base64.encode(byteArrayOf(1, 2, 3, 4)),
         )
 
+    /** One prompt went out in all and no second waiting bubble appeared after [what]. */
+    private fun assertNoReadoptedManualSend(f: Fixture, world: ChatWorld, what: String) {
+        assertEquals(1, f.gateway.promptAttempts.size, "$what must never resend an unconfirmed prompt")
+        assertEquals(null, world.pending.value.waitingBubble(), "$what must not adopt a second waiting bubble")
+    }
+
     private class Stores(
         val prefsBackend: InMemoryPrefsBackend = InMemoryPrefsBackend(),
         val composerPrefs: MemoryComposerPrefs = MemoryComposerPrefs(),
@@ -539,31 +545,13 @@ class OfflineOutboxTest {
             f.registry.open(profile)
             advanceTimeBy(1_000)
             runCurrent()
-            assertEquals(
-                1,
-                f.gateway.promptAttempts.size,
-                "replacing connection graph must never resend an unconfirmed prompt",
-            )
-            assertEquals(
-                null,
-                f.world.pending.value.waitingBubble(),
-                "replacing connection graph must not adopt a second waiting bubble",
-            )
+            assertNoReadoptedManualSend(f, f.world, "replacing connection graph")
 
             f.worlds.release(f.world)
             val reopenedWorld = f.worlds.open(ref)
             advanceTimeBy(1_000)
             runCurrent()
-            assertEquals(
-                1,
-                f.gateway.promptAttempts.size,
-                "reopening the world must never resend an unconfirmed prompt",
-            )
-            assertEquals(
-                null,
-                reopenedWorld.pending.value.waitingBubble(),
-                "reopening the world must not adopt a second waiting bubble",
-            )
+            assertNoReadoptedManualSend(f, reopenedWorld, "reopening the world")
 
             val fresh = Fixture(this, stores = stores, offlineQueueCapable = false)
             fresh.openOnline()

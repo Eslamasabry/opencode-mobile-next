@@ -2802,12 +2802,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     }
 
     private fun adoptWaitingEntry(entry: QueuedPrompt) {
-        if (
-            entry.id in outboxIds ||
-                entry.id in recoveryIds ||
-                entry.id in cancellingOutbox ||
-                entry.id in unconfirmedOutboxIds
-        ) return
+        val tracked = entry.id in outboxIds || entry.id in recoveryIds
+        val blocked = entry.id in cancellingOutbox || entry.id in unconfirmedOutboxIds
+        if (tracked || blocked) return
         val localId = nextLocalId++
         outboxIds[entry.id] = localId
         sentSnapshots[localId] =
@@ -2992,18 +2989,20 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
             it.graph === graph && gateway.events.status.value == StreamStatus.Connected
         }
 
+    /** A held entry that is neither being cancelled, nor unconfirmed, nor already on its way. */
+    private fun canFlushManualOutboxEntry(entryId: String, localId: Long): Boolean {
+        val held = entryId in outboxIds && localId !in flushingOutbox
+        val blocked = entryId in cancellingOutbox || entryId in unconfirmedOutboxIds
+        return held && !blocked
+    }
+
     private suspend fun flushManualOutboxEntry(
         entryId: String,
         localId: Long,
         attachedNow: Attached,
     ) {
         val bubble =
-            if (
-                entryId in outboxIds &&
-                    entryId !in cancellingOutbox &&
-                    entryId !in unconfirmedOutboxIds &&
-                    localId !in flushingOutbox
-            ) {
+            if (canFlushManualOutboxEntry(entryId, localId)) {
                 mutablePending.value.firstOrNull {
                     it.localId == localId && it.state == PendingState.WaitingForConnection
                 }

@@ -258,13 +258,7 @@ public class ChatPresenter(
             .distinctUntilChanged()
             .onEach { live -> if (live) loadBackgroundSupport() }
             .launchIn(scope)
-        // S28 story 3: the undone line follows the session as well.
-        val extra =
-            feed
-                .combine(world.undone) { f, u -> f to u }
-                .combine(world.parent) { x, _ -> x }
-                .combine(world.models.map { it.replaced }.distinctUntilChanged()) { x, _ -> x }
-                .combine(world.outboxEviction) { x, _ -> x }
+        val extra = extras()
         // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
         // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
         // after the first frame is drawn), and again on every return.
@@ -282,6 +276,14 @@ public class ChatPresenter(
         }.launchIn(scope)
         return out.asStateFlow()
     }
+
+    /** S28 story 3: the undone line follows the session as well; so do the parent, a replaced model, an eviction. */
+    private fun extras(): Flow<Unit> =
+        feed
+            .combine(world.undone) { _, _ -> Unit }
+            .combine(world.parent) { x, _ -> x }
+            .combine(world.models.map { it.replaced }.distinctUntilChanged()) { x, _ -> x }
+            .combine(world.outboxEviction) { x, _ -> x }
 
     /**
      * The one-time star ask (app-wide, see [ChatStarPrompt]): a turn that starts here is a prompt sent; a turn that ends
