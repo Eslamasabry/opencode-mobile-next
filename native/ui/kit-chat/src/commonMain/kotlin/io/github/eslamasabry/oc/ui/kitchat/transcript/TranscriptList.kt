@@ -303,46 +303,7 @@ public fun KitTranscriptList(
     // Owned by the list, not the docked row: tapping the row turns following on and unmounts it on the next frame,
     // so a scope inside the row would cancel the glide after scrollToItem(2).
     val scope = rememberCoroutineScope()
-    val latestMotion = rememberUpdatedState(motion)
-    val promptLift = LocalKitPromptLift.current
-    val snapFollow =
-        !smoothFollow || motion == KitMotionLevel.Off || KitMotion.state.reduced ||
-            promptLift?.hasPendingOffer == true
-    val lastKey = remember { arrayOfNulls<String>(1) }
-    SideEffect {
-        if (newestKey != lastKey[0]) {
-            val hadPrevious = lastKey[0] != null
-            lastKey[0] = newestKey
-            if (newestKey != null) {
-                state.onNewestKeyChanged(hadPrevious, snapFollow, scope) { latestMotion.value }
-            }
-        }
-    }
-    LaunchedEffect(state) {
-        state.lazy.interactionSource.interactions.collect {
-            if (it is DragInteraction.Start) {
-                state.following = false
-                state.cancelFollowScroll()
-            }
-        }
-    }
-    // Back at the newest message, the list follows again once the scroll has stopped. Audit 1 (2026-11-14, k6: "Jump
-    // to latest" right after a send with the newest message in view): read on the edge alone, a drag that ended there
-    // never resumed following (the edge was reached mid-drag and did not change after it), so the next send landed
-    // below the rows in view and the list stood "away".
-    LaunchedEffect(state) {
-        snapshotFlow { state.atLiveEdge && !state.lazy.isScrollInProgress }
-            .collect { if (it) state.following = true }
-    }
-    val reachOldest = rememberUpdatedState(onReachOldest)
-    LaunchedEffect(state) {
-        snapshotFlow {
-                val info = state.lazy.layoutInfo
-                val top = info.visibleItemsInfo.lastOrNull()
-                !state.following && top != null && top.index == info.totalItemsCount - 1
-            }
-            .collect { if (it) reachOldest.value?.invoke() }
-    }
+    TranscriptFollowEffects(state, newestKey, motion, smoothFollow, scope, onReachOldest)
     // Chat edge A (owner 2026-11-09): the frame shows its scrolled-container ground only while older rows lie under the
     // header (the list is reversed: older rows are forward, above).
     KitReportScrolledUnder { state.lazy.canScrollForward }
@@ -381,6 +342,58 @@ public fun KitTranscriptList(
         KitJumpDock(state, jumpLabel, { state.jumpToLatest(scope, motion) }, dockLive) {
             chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()
         }
+    }
+}
+
+/**
+ * Follow-scroll, drag cancellation, live-edge resume, and oldest-row pagination effects for [KitTranscriptList].
+ */
+@Composable
+@Suppress("LongParameterList")
+private fun TranscriptFollowEffects(
+    state: TranscriptListState,
+    newestKey: String?,
+    motion: KitMotionLevel,
+    smoothFollow: Boolean,
+    scope: CoroutineScope,
+    onReachOldest: (() -> Unit)?,
+) {
+    val latestMotion = rememberUpdatedState(motion)
+    val promptLift = LocalKitPromptLift.current
+    val snapFollow =
+        !smoothFollow || motion == KitMotionLevel.Off || KitMotion.state.reduced ||
+            promptLift?.hasPendingOffer == true
+    val lastKey = remember { arrayOfNulls<String>(1) }
+    SideEffect {
+        if (newestKey != lastKey[0]) {
+            val hadPrevious = lastKey[0] != null
+            lastKey[0] = newestKey
+            if (newestKey != null) {
+                state.onNewestKeyChanged(hadPrevious, snapFollow, scope) { latestMotion.value }
+            }
+        }
+    }
+    LaunchedEffect(state) {
+        state.lazy.interactionSource.interactions.collect {
+            if (it is DragInteraction.Start) {
+                state.following = false
+                state.cancelFollowScroll()
+            }
+        }
+    }
+    // Back at the newest message, the list follows again once the scroll has stopped (Audit 1, k6).
+    LaunchedEffect(state) {
+        snapshotFlow { state.atLiveEdge && !state.lazy.isScrollInProgress }
+            .collect { if (it) state.following = true }
+    }
+    val reachOldest = rememberUpdatedState(onReachOldest)
+    LaunchedEffect(state) {
+        snapshotFlow {
+                val info = state.lazy.layoutInfo
+                val top = info.visibleItemsInfo.lastOrNull()
+                !state.following && top != null && top.index == info.totalItemsCount - 1
+            }
+            .collect { if (it) reachOldest.value?.invoke() }
     }
 }
 
