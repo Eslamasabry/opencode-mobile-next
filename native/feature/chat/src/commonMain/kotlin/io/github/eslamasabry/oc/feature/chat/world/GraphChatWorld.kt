@@ -80,6 +80,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** The chat reads its conversation's gateways from that conversation's own graph (ADR §9.1). */
 @ContributesTo(ConnectionScope::class)
@@ -1071,11 +1072,12 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         loadWaiting.value = false
     }
 
-    private fun bind(graph: ConnectionGraph?) {
+    private fun bind(graph: ConnectionGraph?, revertGate: CompletableDeferred<Unit>? = null) {
         cancelFailedSettle()
         voiceGeneration++
         voiceLiveUsers.clear()
         unbind()
+        if (revertGate == null) releaseUndoGate()
         ownDirectory = null
         ownWorkspace = null
         mutableCaps.value = ServerCapabilities()
@@ -1096,6 +1098,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         mutableOlder.value = false
         knownUserPrompts.clear()
         if (graph == null) {
+            revertGate?.let(::finishUndoGate)
             mutableLink.value = ChatLink.Offline
             // This phone's server: the app opens its connection by itself (after a start or an update), so the page
             // waits for it instead of failing. A computer's lost connection says so at once, as before.
@@ -1186,12 +1189,13 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         if (!quiet) mutableLoad.value = ChatLoad.Loading
         if (connects > 0) handle.submit(GatewayEvent.Connected)
         val stops = ArrayList<() -> Unit>()
-        attached =
+        val binding =
             Attached(graph, gateway, handle) {
                 receiptRefreshJob?.cancel()
                 receiptRefreshJob = null
                 stops.forEach { it() }
             }
+        attached = binding
         val jobs =
             listOf(
                 scope.launch(registry.mainContext) {
@@ -1322,8 +1326,10 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                             if (!titleChangedSeen)
                                 event.session.title?.takeIf { it.isNotBlank() }?.let { mutableTitle.value = it }
                         }
-                        if (event is CoreEvent.RevertChanged && event.sessionId == sid)
-                            (gateway.session(sid) as? Outcome.Ok)?.value?.let { adoptUndone(gateway, it) }
+                        val pendingRevertGate =
+                            if (event is CoreEvent.RevertChanged && event.sessionId == sid) {
+                                beginRevertChanged(gateway)
+                            } else null
                         if (event is CoreEvent.SessionChanged && event.sessionId == sid)
                             refreshReadOnly(gateway)
                         if (
@@ -1400,12 +1406,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                             // them, and putting it back shows them again. A read only adds what it finds, so the
                             // conversation is opened again from scratch, as after Delete message and Undo from
                             // here. Done from a coroutine of its own: reopening ends the collector this code runs in.
-                            if (event.kind == io.github.eslamasabry.oc.core.domain.events.RevertKind.Unknown)
-                                readHistory(gateway, handle, bridge)
-                            else
-                                scope.launch(registry.mainContext) {
-                                    if (currentAttached()?.graph === graph) bind(graph)
-                                }
+                            handleRevertChanged(event, binding, bridge, pendingRevertGate ?: startUndoGate())
                         }
                     }
                 },
@@ -1446,22 +1447,27 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                         loadModels()
                 },
                 scope.launch(registry.mainContext) {
-                    val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
-                    session?.title?.let { mutableTitle.value = it }
-                    ownDirectory = session?.directory
-                    ownWorkspace = session?.workspaceId?.raw
-                    // Issue 147: a folder in the phone's storage the agent cannot reach is said as the page opens.
-                    checkPhoneFolder()
-                    refreshReadOnly(gateway, session)
-                    val statuses = gateway.sessionStatuses()
-                    adoptOtherRuns(statuses)
-                    if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
-                        handle.submit(GatewayEvent.RunStarted(sid.raw))
-                        feedKeeper.running(null)
+                    try {
+                        val session = (graph.session.reads.session(sid) as? Outcome.Ok)?.value
+                        session?.title?.let { mutableTitle.value = it }
+                        ownDirectory = session?.directory
+                        ownWorkspace = session?.workspaceId?.raw
+                        // Issue 147: a folder in the phone's storage the agent cannot reach is said as the page opens.
+                        checkPhoneFolder()
+                        refreshReadOnly(gateway, session)
+                        val statuses = gateway.sessionStatuses()
+                        adoptOtherRuns(statuses)
+                        if (statuses is Outcome.Ok && statuses.value[sid] == SessionStatus.Busy) {
+                            handle.submit(GatewayEvent.RunStarted(sid.raw))
+                            feedKeeper.running(null)
+                        }
+                        readHistory(gateway, handle, bridge)
+                        revertGate?.let(::finishUndoGate)
+                        feedKeeper.loadWindows { services.chatOperations.catalog() }
+                        publishVoiceConversation()
+                    } finally {
+                        revertGate?.let(::finishUndoGate)
                     }
-                    readHistory(gateway, handle, bridge)
-                    feedKeeper.loadWindows { services.chatOperations.catalog() }
-                    publishVoiceConversation()
                 },
             )
         jobs.forEach { job -> stops += { job.cancel() } }
@@ -1478,6 +1484,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         mutableRetryAt.value = null
         endWait()
         mutableServerWait.value = null
+        releaseUndoGate()
         attached?.handle?.let(::keepLastKnown)
         closeKept()
         unbind(flushHeld = true)
@@ -3488,30 +3495,90 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         if (readOnlyNow()) return readOnlyFailure()
         val graph =
             currentAttached()?.graph ?: return Outcome.Failed(Failure.Network(NetworkWhy.Offline))
-        activeUndo?.await()
-        val gate = CompletableDeferred<Unit>()
-        activeUndo = gate
-        mutableUndoing.value = true
+        awaitActiveUndo()
+        val gate = startUndoGate()
+        var handedOff = false
         return try {
             val r = (graph as ChatGraphAccessors).chatOperations.revertSession(sid, from)
             if (r is Outcome.Ok && registry.graphFor(ref) === graph) {
                 lastRows = lastRows?.withoutUndoneFrom(from.raw)
                 publishShown()
-                bind(graph)
+                handedOff = true
+                bind(graph, revertGate = gate)
             }
             r
         } finally {
+            if (!handedOff) finishUndoGate(gate)
+        }
+    }
+
+    private fun startUndoGate(): CompletableDeferred<Unit> {
+        val previous = activeUndo
+        val gate = CompletableDeferred<Unit>()
+        activeUndo = gate
+        mutableUndoing.value = true
+        previous?.complete(Unit)
+        return gate
+    }
+
+    private fun finishUndoGate(gate: CompletableDeferred<Unit>) {
+        if (activeUndo === gate) {
+            activeUndo = null
             mutableUndoing.value = false
-            if (activeUndo === gate) activeUndo = null
-            gate.complete(Unit)
+        }
+        gate.complete(Unit)
+    }
+
+    private fun releaseUndoGate() {
+        val gate = activeUndo
+        activeUndo = null
+        mutableUndoing.value = false
+        gate?.complete(Unit)
+    }
+
+    private suspend fun beginRevertChanged(gateway: ServerGateway): CompletableDeferred<Unit> {
+        val gate = startUndoGate()
+        try {
+            (gateway.session(sid) as? Outcome.Ok)?.value?.let { adoptUndone(gateway, it) }
+        } catch (c: kotlinx.coroutines.CancellationException) {
+            finishUndoGate(gate)
+            throw c
+        }
+        return gate
+    }
+
+    private suspend fun handleRevertChanged(
+        event: CoreEvent.RevertChanged,
+        binding: Attached,
+        bridge: P3Bridge,
+        gate: CompletableDeferred<Unit>,
+    ) {
+        if (event.kind == io.github.eslamasabry.oc.core.domain.events.RevertKind.Unknown) {
+            try {
+                readHistory(binding.gateway, binding.handle, bridge)
+            } finally {
+                finishUndoGate(gate)
+            }
+        } else {
+            val rebind =
+                binding.graph.scope.launch(registry.mainContext) {
+                    if (currentAttached()?.graph === binding.graph) bind(binding.graph, revertGate = gate)
+                    else finishUndoGate(gate)
+                }
+            rebind.invokeOnCompletion { cause -> if (cause != null) finishUndoGate(gate) }
         }
     }
 
     private suspend fun awaitActiveUndo() {
-        val gate = activeUndo ?: return
-        gate.await()
+        var gate = activeUndo
+        while (gate != null) {
+            val finished = withTimeoutOrNull(UNDO_WAIT_TIMEOUT_MS) { gate.await() } != null
+            gate = if (finished && activeUndo !== gate) activeUndo else null
+        }
         if (mutableLoad.value is ChatLoad.Loading) {
-            mutableLoad.first { it !is ChatLoad.Loading }
+            withTimeoutOrNull(UNDO_WAIT_TIMEOUT_MS) {
+                mutableLoad.first { it !is ChatLoad.Loading }
+            }
         }
     }
 
@@ -3711,6 +3778,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
 
         /** Steady-state interval after [AUTO_REOPEN_WAITS_MS] is spent. */
         const val AUTO_REOPEN_EVERY_MS = 10_000L
+
+        /** Bound for waiting on an in-flight undo reread or stuck Loading before a send proceeds. */
+        const val UNDO_WAIT_TIMEOUT_MS = 15_000L
     }
 }
 
