@@ -144,14 +144,14 @@ class KitStepListTest {
                 val what = if (rtl) "rtl" else "ltr"
                 for (i in 0 until 2) {
                     val x = (n[i].left.value + n[i].right.value) / 2f
+                    assertTrue(ink(x, n[i].bottom.value + 1f) > LINE_INK, "$what: the rail leaves glyph $i at its bottom")
                     assertTrue(ink(x, (n[i].bottom.value + n[i + 1].top.value) / 2f) > LINE_INK, "$what: the rail between glyph $i and ${i + 1}")
-                    // B-568: the rail stops RAIL_NODE_GAP (2 dp) clear of each node's box edge.
-                    var y = n[i].bottom.value + 2.5f
-                    while (y <= n[i + 1].top.value - 2.5f) {
-                        assertTrue(
-                            ink(x, y) > LINE_INK,
-                            "$what: rail runs clear between glyph $i and ${i + 1} (gap at $y)",
-                        )
+                    assertTrue(ink(x, n[i + 1].top.value - 1f) > LINE_INK, "$what: the rail meets glyph ${i + 1} at its top")
+                    // Owner 2026-11-15 ("the rail between two glyph rows reads as dashes"): one line from the glyph's
+                    // ink to the next one's, not an 8 dp piece between the empty edges of their boxes.
+                    var y = n[i].bottom.value - 2f
+                    while (y <= n[i + 1].top.value + 2f) {
+                        assertTrue(ink(x, y) > LINE_INK, "$what: one line from glyph $i to ${i + 1} (gap at $y)")
                         y += .5f
                     }
                 }

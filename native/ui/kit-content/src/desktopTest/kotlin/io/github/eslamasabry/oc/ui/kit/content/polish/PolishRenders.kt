@@ -122,15 +122,17 @@ class PolishRenders {
             val lastLine = onNodeWithTag("${KIT_VIEWER_LINE_TAG}24", useUnmergedTree = true).getBoundsInRoot()
             val action = onNodeWithTag("viewer-bottom-action", useUnmergedTree = true).getBoundsInRoot()
             val clearance = (action.top - lastLine.bottom).value
-            assertTrue(
-                clearance >= 8f,
-                "last code line must clear bottom action by >= 8 dp, was $clearance dp ($lastLine vs $action)",
-            )
             ImageIO.write(
                 onRoot().captureToImage().toAwtImage(),
                 "png",
                 File(dir, "580-$PHASE-viewer-bottom-clearance-360-1.0-dark.png"),
             )
+            if (PHASE == "after") {
+                assertTrue(
+                    clearance >= 8f,
+                    "last code line must clear bottom action by >= 8 dp, was $clearance dp ($lastLine vs $action)",
+                )
+            }
         }
     }
 }

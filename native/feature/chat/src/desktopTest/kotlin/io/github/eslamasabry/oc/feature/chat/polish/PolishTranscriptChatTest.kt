@@ -2,20 +2,25 @@
 
 package io.github.eslamasabry.oc.feature.chat.polish
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.common.ids.RequestId
@@ -52,6 +57,7 @@ import io.github.eslamasabry.oc.ui.design.style.Style
 import io.github.eslamasabry.oc.ui.gate.flicker.kitUiTest
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolKind
@@ -368,4 +374,31 @@ class PolishTranscriptChatTest {
             }
         }
     }
+
+    @Test
+    fun `B-580 TurnChangedFiles draws no forced panel box in Solid`() =
+        kitUiTest(360, 240) {
+            var ground = Color.Unspecified
+            setContent {
+                E20Scene(dark = true, style = Style.Solid) {
+                    ground = LocalKitColors.current.ground
+                    Box(Modifier.width(360.dp).background(ground)) {
+                        TurnChangedFiles(
+                            files = listOf(ChangedFile("src/app.kt", 3, 1)),
+                            onOpenFile = {},
+                            onAllFiles = {},
+                        )
+                    }
+                }
+            }
+            waitForIdle()
+            val pixels = onRoot().captureToImage().toPixelMap()
+            val sample = pixels[10, 24]
+            val diff = maxOf(
+                abs(sample.red - ground.red),
+                abs(sample.green - ground.green),
+                abs(sample.blue - ground.blue),
+            )
+            assertTrue(diff < 0.01f, "Solid TurnChangedFiles must not force a panel box (Owner #2), got $sample")
+        }
 }

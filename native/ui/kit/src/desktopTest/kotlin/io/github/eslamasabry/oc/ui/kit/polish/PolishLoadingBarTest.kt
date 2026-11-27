@@ -15,8 +15,10 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
@@ -143,51 +145,114 @@ class PolishLoadingBarTest {
     }
 
     @Test
-    fun `B-561 usable title width is equal in Solid and Glass`() {
-        fun measureTitleWidth(style: Style): Float {
-            var width = 0f
-            runDesktopComposeUiTest(360, 240) {
-                setContent {
-                    CompositionLocalProvider(LocalDensity provides Density(1f)) {
-                        KitTheme(
-                            KitAppearance(style = style, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
-                            if (style == Style.Glass) LensPlatform() else FakeKitPlatform(),
-                            "en",
-                            stillFrame = true,
-                        ) {
-                            CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 240f)) {
-                                Box(Modifier.size(360.dp, 240.dp)) {
-                                    KitScreen(
-                                        page = true,
-                                        overlayChrome = true,
-                                        floating = true,
-                                        frost = rememberKitFrostState(),
-                                        edges = KitScreenEdges.Bleed,
-                                        topBar = {
-                                            KitTopBar(
-                                                title = "A very long conversation title that trims identically",
-                                                exit = KitTopBarExit.Back,
-                                                exitLabel = "Back",
-                                                onExit = {},
-                                                backBesideTitle = true,
-                                            )
-                                        },
-                                    ) {
-                                        Box(Modifier.fillMaxSize())
-                                    }
+    fun `B-561 KitTopBar without Back preserves Owner 8 layout`() =
+        runDesktopComposeUiTest(360, 160) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    KitTheme(
+                        KitAppearance(style = Style.Glass, mode = AppearanceMode.Light, motion = MotionLevel.Off),
+                        FakeKitPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 160f)) {
+                            KitTopBar(
+                                title = "Conversations",
+                                subtitle = "This phone",
+                                exit = KitTopBarExit.None,
+                                backBesideTitle = true,
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            onAllNodesWithTag("kit-top-bar-compact", useUnmergedTree = true).assertCountEquals(0)
+        }
+
+    @Test
+    fun `B-561 Glass floatChrome keeps base bar width`() =
+        runDesktopComposeUiTest(360, 240) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    KitTheme(
+                        KitAppearance(style = Style.Glass, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                        LensPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 240f)) {
+                            Box(Modifier.size(360.dp, 240.dp)) {
+                                KitScreen(
+                                    page = true,
+                                    overlayChrome = true,
+                                    floating = true,
+                                    frost = rememberKitFrostState(),
+                                    edges = KitScreenEdges.Bleed,
+                                    topBar = {
+                                        KitTopBar(
+                                            title = "Chat",
+                                            exit = KitTopBarExit.Back,
+                                            exitLabel = "Back",
+                                            onExit = {},
+                                            backBesideTitle = true,
+                                        )
+                                    },
+                                ) {
+                                    Box(Modifier.fillMaxSize())
                                 }
                             }
                         }
                     }
                 }
-                waitForIdle()
-                val bounds = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).getBoundsInRoot()
-                width = (bounds.right - bounds.left).value
             }
-            return width
+            waitForIdle()
+            val bar = onNodeWithTag("kit-top-bar", useUnmergedTree = true).getBoundsInRoot()
+            assertTrue(bar.left <= 1.dp, "Glass floatChrome must keep base bar width (no 14 dp pad), left=${bar.left}")
         }
-        val solid = measureTitleWidth(Style.Solid)
-        val glass = measureTitleWidth(Style.Glass)
-        assertTrue(abs(solid - glass) <= 1f, "title width must match in Solid ($solid) and Glass ($glass)")
-    }
+
+    @Test
+    fun `B-584 Glass light bar has no crisp 1 dp hairline`() =
+        runDesktopComposeUiTest(360, 160) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    KitTheme(
+                        KitAppearance(style = Style.Glass, mode = AppearanceMode.Light, motion = MotionLevel.Off),
+                        LensPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 160f)) {
+                            Box(Modifier.size(360.dp, 160.dp).background(LocalKitColors.current.ground)) {
+                                KitScreen(
+                                    page = true,
+                                    overlayChrome = true,
+                                    floating = true,
+                                    frost = rememberKitFrostState(),
+                                    edges = KitScreenEdges.Bleed,
+                                    topBar = {
+                                        KitTopBar(
+                                            title = "Chat",
+                                            exit = KitTopBarExit.Back,
+                                            exitLabel = "Back",
+                                            onExit = {},
+                                            backBesideTitle = true,
+                                        )
+                                    },
+                                ) {
+                                    Box(Modifier.fillMaxSize())
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val bar = onNodeWithTag("kit-liquid-bar", useUnmergedTree = true).getBoundsInRoot()
+            val pixels = onRoot().captureToImage().toPixelMap()
+            val x = ((bar.left + bar.right).value / 2f).toInt()
+            val topY = bar.top.value.toInt()
+            val diff = colorDiff(pixels[x, topY], pixels[x, topY + 4])
+            assertTrue(diff < 0.01f, "Glass light bar must have no 1 dp crisp hairline (Owner #62), diff=$diff")
+        }
 }

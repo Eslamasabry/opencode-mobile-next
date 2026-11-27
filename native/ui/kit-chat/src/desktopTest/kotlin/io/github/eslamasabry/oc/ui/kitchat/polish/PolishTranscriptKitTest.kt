@@ -63,6 +63,7 @@ import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolRow
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolStatus
 import io.github.eslamasabry.oc.ui.kitchat.tool.KitToolView
 import io.github.eslamasabry.oc.ui.kitchat.tool.RailMeasures
+import io.github.eslamasabry.oc.ui.kitchat.tool.StillOutline
 import io.github.eslamasabry.oc.ui.kitchat.tool.railGlyphHalf
 import io.github.eslamasabry.oc.ui.kitchat.transcript.KitPromptBubble
 import kotlin.math.abs
@@ -71,7 +72,7 @@ import kotlin.test.assertTrue
 
 class PolishTranscriptKitTest {
     @Test
-    fun `B-551 InPlace ask sits in the amber card`() =
+    fun `B-551 InPlace ask has no bordered card`() =
         kitUiTest(360, 480) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(1f)) {
@@ -98,7 +99,7 @@ class PolishTranscriptKitTest {
             val face = onNodeWithTag("kit-request-face", useUnmergedTree = true).getBoundsInRoot()
             val title = onNodeWithText("Run npm test?", useUnmergedTree = true).getBoundsInRoot()
             val inset = (title.left - face.left).value
-            assertTrue(inset >= 15.5f, "InPlace title sits >= 16 dp inside kit-request-face, was $inset dp")
+            assertTrue(inset <= 0.5f, "InPlace ask must have no card padding/border (Owner #2), was $inset dp")
         }
 
     @Test
@@ -315,15 +316,38 @@ class PolishTranscriptKitTest {
         }
 
     @Test
-    fun `B-568 rail stops outside the node`() {
+    fun `B-568 continuous rail and running outline stroke`() {
         val m = RailMeasures(glyph = 24.dp, first = 20.dp, stepLine = 32.dp, scale = 1f)
         val half = railGlyphHalf(m)
-        assertTrue(half >= m.glyph / 2 + 2.dp, "railGlyphHalf must be >= glyph/2 + 2 dp, was $half")
+        assertTrue(half < m.glyph / 2, "railGlyphHalf must preserve continuous glyph rail (< 12 dp), was $half")
         assertTrue(
             KitStepLightLap.FILL_STROKE <= 1.5f,
-            "running outline stroke must be <= 1.5 dp, was ${KitStepLightLap.FILL_STROKE}",
+            "running outline stroke must be <= 1.5, was ${KitStepLightLap.FILL_STROKE}",
         )
     }
+
+    @Test
+    fun `B-568 StillOutline stroke stays equivalent to base at 3x`() =
+        kitUiTest(72, 72) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(3f)) {
+                    ChatTestTheme(dark = true) {
+                        Box(Modifier.size(24.dp).background(Color.Black)) {
+                            StillOutline(Color.White, 24.dp)
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val img = onRoot().captureToImage().toAwtImage()
+            val midY = img.height / 2
+            var litPx = 0
+            for (x in 0 until img.width / 2) {
+                val r = (img.getRGB(x, midY) shr 16) and 0xFF
+                if (r >= 128) litPx++
+            }
+            assertTrue(litPx in 1..2, "StillOutline stroke at 3x must stay ~1.5 px (base 1.8 px), was $litPx px")
+        }
 
     private fun stepView(
         id: String,
