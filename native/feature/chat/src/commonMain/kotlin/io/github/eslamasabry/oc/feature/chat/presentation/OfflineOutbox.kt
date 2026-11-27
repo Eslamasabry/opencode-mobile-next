@@ -12,6 +12,7 @@ import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.delivery.DeliveryStorage
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueue
 import io.github.eslamasabry.oc.engine.delivery.queue.OfflineQueueStore
+import io.github.eslamasabry.oc.engine.delivery.queue.QueueEviction
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRead
 import io.github.eslamasabry.oc.engine.delivery.queue.QueueRefusal
 import io.github.eslamasabry.oc.engine.delivery.queue.QueuedPrompt
@@ -46,8 +47,9 @@ internal sealed interface AutomationPrefRead {
  *
  * Never writes directly to `oc.offlineQueue`: every enqueue and cancel runs through a real
  * [OfflineQueue] instance (preferring the active connection's queue, then any live connection's
- * queue, then the app-scoped detached [OfflineQueue] over [DeliveryStorage.journals]), preserving
- * the engine queue lock, closed-profile checks, tombstone checks, and B-STATE-046 eviction notices.
+ * queue, then the app-scoped detached [OfflineQueue] over [DeliveryStorage.journals] with
+ * compare-and-commit writes on [DeliveryStorage.lanes.app]). Callers read [takeDetachedEviction]
+ * so evictions decided while no connection is live still reach the chat once.
  */
 internal class OfflineOutbox(
     storage: DeliveryStorage,
@@ -108,6 +110,9 @@ internal class OfflineOutbox(
         val target = queueFor(queue) ?: return Outcome.Failed(Failure.StorageRefused())
         return target.remove(entryId)
     }
+
+    /** Reads and clears any eviction recorded by the detached no-connection queue (shown once). */
+    fun takeDetachedEviction(): QueueEviction? = detachedQueue?.takeEviction()
 
     private fun queueFor(preferred: OfflineQueue?): OfflineQueue? =
         preferred

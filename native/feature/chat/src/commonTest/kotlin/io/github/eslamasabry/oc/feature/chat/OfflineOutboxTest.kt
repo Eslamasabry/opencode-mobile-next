@@ -69,6 +69,7 @@ import io.github.eslamasabry.oc.feature.chat.inbox.presentation.PendingNotice
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
 import io.github.eslamasabry.oc.feature.chat.world.ChatWorld
 import io.github.eslamasabry.oc.feature.chat.world.GraphChatWorlds
+import io.github.eslamasabry.oc.feature.chat.world.OutboxEviction
 import io.github.eslamasabry.oc.feature.chat.world.PendingSend
 import io.github.eslamasabry.oc.feature.chat.world.PendingState
 import kotlin.io.encoding.Base64
@@ -814,4 +815,39 @@ class OfflineOutboxTest {
             "waiting line must not repeat words already shown on a held offline bubble",
         )
     }
+
+    @Test
+    fun `B-500 no-connection 51st entry evicts oldest and eviction notice can be read once`() =
+        runTest {
+            val f = Fixture(this)
+            seedQueue(
+                f,
+                count = QueueLimits.MAX_ENTRIES,
+                startCreatedAt = f.clock.now().toEpochMilliseconds() - 10_000L,
+            )
+            f.world
+            runCurrent()
+            f.world.draftChanged("51st evicts oldest")
+            assertIs<Outcome.Ok<Unit>>(f.world.send("51st evicts oldest"))
+            runCurrent()
+
+            val stored =
+                assertIs<QueueRead.Readable>(OfflineQueueStore(f.kv, f.storage.lanes.app).load())
+            assertEquals(QueueLimits.MAX_ENTRIES, stored.entries.size)
+            assertTrue(stored.entries.none { it.id == "seed-0" }, "oldest entry must be evicted")
+            assertTrue(stored.entries.any { it.text == "51st evicts oldest" })
+
+            val expected = OutboxEviction(tooOld = 0, overLimit = 1)
+            assertEquals(expected, f.world.outboxEviction.value, "detached eviction must be readable")
+            val presenter =
+                io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter(
+                    f.world,
+                    RecordingNavigator(),
+                    Immediate,
+                )
+            assertEquals(expected, presenter.current().outboxEviction)
+            presenter.dismissOutboxEviction()
+            assertEquals(null, f.world.outboxEviction.value, "eviction notice must clear once dismissed")
+            assertEquals(null, presenter.current().outboxEviction)
+        }
 }

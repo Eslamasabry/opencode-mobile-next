@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.feature.chat.ui
 import io.github.eslamasabry.oc.ui.design.effects.KitSurfaceStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitAppearance
 import io.github.eslamasabry.oc.feature.chat.world.ChatServerWait
+import io.github.eslamasabry.oc.feature.chat.world.OutboxEviction
 import io.github.eslamasabry.oc.ui.kit.wait.KitWaitKind
 import androidx.compose.runtime.saveable.rememberSaveable
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenEdges
@@ -307,6 +308,10 @@ import io.github.eslamasabry.oc.ui.words.res.phoneServerCardStopping
 import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessBody
 import io.github.eslamasabry.oc.ui.words.res.phoneSharedAccessTitle
 import io.github.eslamasabry.oc.ui.words.res.promptStashTitle
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedJoin
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedOverLimit
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedSummary
+import io.github.eslamasabry.oc.ui.words.res.queueEvictedTooOld
 import io.github.eslamasabry.oc.ui.words.res.queuedDiscardUnconfirmedMessage
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptConfirmed
 import io.github.eslamasabry.oc.ui.words.res.queuedReceiptStillUncertain
@@ -833,6 +838,7 @@ public fun ChatScreen(
                                             agentName = header?.state?.takeIf { h -> h.agentKnown }?.agentName,
                                         )
                                     },
+                                outboxEvictionStatus(state.outboxEviction, actions::dismissOutboxEviction),
                                 appStatus,
                             )
                         )
@@ -1944,6 +1950,33 @@ private fun statusLine(
                 dismissLabel = stringResource(Res.string.kitSheetDismiss),
             )
     }
+
+@Composable
+private fun outboxEvictionStatus(evicted: OutboxEviction?, onDismiss: () -> Unit): KitStatus? {
+    if (evicted == null || evicted.total <= 0) return null
+    val reasons =
+        listOfNotNull(
+            evicted.tooOld
+                .takeIf { it > 0 }
+                ?.let { pluralStringResource(Res.plurals.queueEvictedTooOld, it, it.toString()) },
+            evicted.overLimit
+                .takeIf { it > 0 }
+                ?.let { pluralStringResource(Res.plurals.queueEvictedOverLimit, it, it.toString()) },
+        )
+    return KitStatus(
+        KitStatusKind.Info,
+        pluralStringResource(
+            Res.plurals.queueEvictedSummary,
+            evicted.total,
+            evicted.total.toString(),
+            reasons.joinToString(stringResource(Res.string.queueEvictedJoin)),
+        ),
+        id = "chat-outbox-evicted",
+        tone = StatusTone.Attention,
+        onDismiss = onDismiss,
+        dismissLabel = stringResource(Res.string.kitSheetDismiss),
+    )
+}
 
 /**
  * P12-CHAT-FEEL: what a reply's parts do. Links and web pictures go to [ChatActions.openLink] (the

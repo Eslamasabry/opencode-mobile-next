@@ -385,6 +385,8 @@ public class ChatViewModel(
 
     override fun cancelWaitingSend(localId: Long): Unit = presenter.cancelWaitingSend(localId)
 
+    override fun dismissOutboxEviction(): Unit = presenter.dismissOutboxEviction()
+
     override fun dismissStatus(id: String): Unit = presenter.dismissStatus(id)
 
     override fun replyAskYes(): Unit = presenter.replyAskYes()

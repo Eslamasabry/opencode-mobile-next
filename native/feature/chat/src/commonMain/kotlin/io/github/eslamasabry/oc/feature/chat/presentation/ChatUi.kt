@@ -101,6 +101,8 @@ public data class ChatUi(
      * CURRENT sign-in ([ChatOutside.agentSignIns]). A turn missing here keeps today's words.
      */
     val signInTurns: ImmutableMap<String, SignInTurn> = persistentMapOf(),
+    /** B-STATE-046: drafts evicted by the offline queue while no connection was live (shown once). */
+    val outboxEviction: io.github.eslamasabry.oc.feature.chat.world.OutboxEviction? = null,
 ) {
     public companion object {
         public fun loading(ref: ConversationRef): ChatUi =
@@ -783,6 +785,9 @@ public interface ChatActions {
 
     /** B-169 §4.4: Send on "The stopped reply already ran {N} steps…". */
     public fun confirmSwitch() {}
+
+    /** B-STATE-046: marks the detached offline-outbox eviction notice as seen. */
+    public fun dismissOutboxEviction() {}
 }
 
 /** B-458: what a stopped turn whose agent's sign-in ran out offers, from the agent's sign-in as it is now. */

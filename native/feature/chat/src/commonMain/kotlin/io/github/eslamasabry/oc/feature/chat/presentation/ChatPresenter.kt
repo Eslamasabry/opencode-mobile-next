@@ -264,6 +264,7 @@ public class ChatPresenter(
                 .combine(world.undone) { f, u -> f to u }
                 .combine(world.parent) { x, _ -> x }
                 .combine(world.models.map { it.replaced }.distinctUntilChanged()) { x, _ -> x }
+                .combine(world.outboxEviction) { x, _ -> x }
         // The page's first frame shows what the world already holds (kept rows, a message on its way, the title),
         // never a loading state it would leave a frame later (open-transitions: the combine's first value arrives
         // after the first frame is drawn), and again on every return.
@@ -655,6 +656,7 @@ public class ChatPresenter(
                 },
             setUpReplies = setUpReplies(t.rows),
             signInTurns = signInTurns(t.rows, waiting = i.pending.isNotEmpty()),
+            outboxEviction = world.outboxEviction.value,
         )
     }
 
@@ -1475,6 +1477,10 @@ public class ChatPresenter(
 
     override fun cancelWaitingSend(localId: Long) {
         launcher.launch { world.cancelWaitingSend(localId) }
+    }
+
+    override fun dismissOutboxEviction() {
+        world.dismissOutboxEviction()
     }
 
     /** Set up at first use: the same set-up terminal the Agents page opens, for this conversation's phone owner. */

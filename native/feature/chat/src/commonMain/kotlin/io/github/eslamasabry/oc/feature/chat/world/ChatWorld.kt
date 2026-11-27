@@ -305,6 +305,13 @@ public interface ChatWorld {
     /** B-500: cancels a message waiting for connection so reconnect sends nothing. */
     public suspend fun cancelWaitingSend(localId: Long): Outcome<Unit> = Outcome.Ok(Unit)
 
+    /** B-STATE-046: eviction decided while no connection was live; cleared once dismissed. */
+    public val outboxEviction: StateFlow<OutboxEviction?>
+        get() = NoOutboxEviction
+
+    /** B-STATE-046: marks the detached offline-outbox eviction notice as seen. */
+    public fun dismissOutboxEviction() {}
+
     /** Asks the server to stop the running reply. */
     public suspend fun stop(): Outcome<Unit>
 
@@ -656,5 +663,14 @@ public enum class ChatUndone {
         }
     }
 }
+
+/** B-STATE-046: drafts dropped by the offline queue while no connection was live (shown once). */
+public data class OutboxEviction(val tooOld: Int, val overLimit: Int) {
+    public val total: Int
+        get() = tooOld + overLimit
+}
+
+private val NoOutboxEviction: StateFlow<OutboxEviction?> =
+    kotlinx.coroutines.flow.MutableStateFlow(null)
 
 private val NoUndone: StateFlow<ChatUndone> = kotlinx.coroutines.flow.MutableStateFlow(ChatUndone.None)
