@@ -284,4 +284,179 @@ class SetupStepSilenceTest {
             ) { null }
         assertEquals("cancelled", cancelledResult)
     }
+
+    @Test
+    fun `B-SETUP-034 watchdog stays active after stdout EOF until waitFor completes`() {
+        val guardMethod =
+            SetupSilenceWatchdog::class.java.declaredMethods.firstOrNull { it.name == "guardUntilExit" }
+        assertTrue(
+            "SetupSilenceWatchdog must provide guardUntilExit to stay active until waitFor completes",
+            guardMethod != null,
+        )
+        val clock = java.util.concurrent.atomic.AtomicLong(0L)
+        val silence = SetupStepSilence(timeoutMs = 50L, nowMs = { clock.get() })
+        val stops = java.util.concurrent.atomic.AtomicInteger(0)
+        val exitUnblock = java.util.concurrent.CountDownLatch(1)
+        val watchdog =
+            SetupSilenceWatchdog(
+                silence = silence,
+                isCancelled = { false },
+                stopProcess = {
+                    stops.incrementAndGet()
+                    exitUnblock.countDown()
+                },
+                pollMs = 5L,
+            )
+        var readDone = false
+        val readOutput: () -> Unit = { readDone = true }
+        val waitForExit: () -> Int = {
+            clock.set(60L)
+            assertTrue(
+                "watchdog must stop hung process after EOF",
+                exitUnblock.await(2, java.util.concurrent.TimeUnit.SECONDS),
+            )
+            143
+        }
+        val code = guardMethod!!.invoke(watchdog, readOutput, waitForExit) as Int
+        assertTrue(readDone)
+        assertEquals(143, code)
+        assertTrue(watchdog.isStalled)
+        assertEquals(1, stops.get())
+    }
+
+    @Test
+    fun `B-SETUP-035 progress arriving during CPU sample cancels stall stop`() {
+        val clock = java.util.concurrent.atomic.AtomicLong(0L)
+        val silence = SetupStepSilence(timeoutMs = 50L, nowMs = { clock.get() })
+        val stops = java.util.concurrent.atomic.AtomicInteger(0)
+        val stopped = java.util.concurrent.CountDownLatch(1)
+        val firstSampleDone = java.util.concurrent.CountDownLatch(1)
+        val samples = java.util.concurrent.atomic.AtomicInteger(0)
+        val watchdog =
+            SetupSilenceWatchdog(
+                silence = silence,
+                isCancelled = { false },
+                stopProcess = {
+                    stops.incrementAndGet()
+                    stopped.countDown()
+                },
+                pollMs = 5L,
+                isBusy = {
+                    if (samples.incrementAndGet() == 1) {
+                        silence.recordOutput("package line arrived during cpu sample")
+                        firstSampleDone.countDown()
+                    }
+                    false
+                },
+            )
+        watchdog.start()
+        try {
+            clock.set(60L)
+            assertTrue(firstSampleDone.await(2, java.util.concurrent.TimeUnit.SECONDS))
+            Thread.sleep(40L)
+            assertEquals("progress during CPU sample must prevent false stall", 0, stops.get())
+            assertFalse(watchdog.isStalled)
+
+            clock.set(120L)
+            assertTrue(stopped.await(2, java.util.concurrent.TimeUnit.SECONDS))
+            assertTrue(watchdog.isStalled)
+            assertEquals(1, stops.get())
+        } finally {
+            watchdog.stop()
+        }
+    }
+
+    @Test
+    fun `B-SETUP-036 outer interrupt retries never trigger a second compatible fallback cycle`() {
+        val runRetrying =
+            SetupCompatFallback::class.java.declaredMethods.firstOrNull { it.name == "runRetrying" }
+        assertTrue(
+            "SetupCompatFallback must track compat fallback across outer interrupt retries",
+            runRetrying != null,
+        )
+        var serverCompat = false
+        val modes = mutableListOf<Boolean>()
+        var compatRetries = 0
+        var interruptRetries = 0
+        val hooks =
+            SetupCompatFallback.hooks(
+                isCancelled = { false },
+                persistCompat = { serverCompat = true },
+                clearCompat = { serverCompat = false },
+                onCompatRetry = { compatRetries++ },
+                runOnce = { compat ->
+                    modes += compat
+                    when (modes.size) {
+                        1 -> SetupCompatFallback.StepAttempt("Segmentation fault", SetupStepRetry.SEGFAULT_EXIT, false)
+                        2 ->
+                            SetupCompatFallback.StepAttempt(
+                                "proot info: vpid 1: terminated with signal 15",
+                                143,
+                                stalled = false,
+                            )
+                        else ->
+                            SetupCompatFallback.StepAttempt(
+                                "Segmentation fault",
+                                SetupStepRetry.SEGFAULT_EXIT,
+                                stalled = false,
+                            )
+                    }
+                },
+            )
+        val logged = mutableListOf<String>()
+        val failure =
+            runRetrying!!.invoke(
+                SetupCompatFallback,
+                "node",
+                { serverCompat },
+                hooks,
+                { line: String -> logged += line },
+                { _: Int -> interruptRetries++ },
+            ) as String?
+        assertEquals("Segmentation fault", failure)
+        assertEquals("compat fallback must run at most once across outer retries", 1, compatRetries)
+        assertEquals(1, interruptRetries)
+        assertEquals(listOf(false, true, false), modes)
+    }
+
+    @Test
+    fun `B-SETUP-037 compat retry after stall exiting with error or signal preserves stalled StepTimedOut failure`() {
+        val errorHooks =
+            FakeHooks { compatible ->
+                if (!compatible) SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
+                else SetupCompatFallback.StepAttempt("apt-get returned exit 100", exitCode = 100, stalled = false)
+            }
+        val errorOutcome = SetupCompatFallback.run("essentials", initialCompat = false, hooks = errorHooks)
+        assertTrue(
+            "stall retry failure must stay mapped as stalled",
+            SetupCompatFallback.isStalled(errorOutcome.failure),
+        )
+        assertFalse(SetupStepRetry.interrupted(errorOutcome.failure))
+        assertTrue(errorOutcome.failure?.contains("Linux mode: compatible") == true)
+        assertTrue(errorOutcome.terminalDetail?.contains("Linux mode: compatible") == true)
+        assertTrue(errorOutcome.terminalDetail?.contains("apt-get returned exit 100") == true)
+
+        val signalHooks =
+            FakeHooks { compatible ->
+                if (!compatible) SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
+                else {
+                    SetupCompatFallback.StepAttempt(
+                        "proot info: vpid 1: terminated with signal 15",
+                        exitCode = 143,
+                        stalled = false,
+                    )
+                }
+            }
+        val signalOutcome = SetupCompatFallback.run("essentials", initialCompat = false, hooks = signalHooks)
+        assertTrue(
+            "stall retry signal must stay mapped as stalled",
+            SetupCompatFallback.isStalled(signalOutcome.failure),
+        )
+        assertFalse(
+            "stall retry signal must not re-enter interrupt loop",
+            SetupStepRetry.interrupted(signalOutcome.failure),
+        )
+        assertTrue(signalOutcome.terminalDetail?.contains("Linux mode: compatible") == true)
+        assertTrue(signalOutcome.terminalDetail?.contains("terminated with signal 15") == true)
+    }
 }

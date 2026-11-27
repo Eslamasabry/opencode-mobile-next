@@ -93,4 +93,56 @@ class SetupStuckSilentTest {
         val progress = SetupPlanning.progressFromRecord(record, components, nowMillis = 5_000L, redact = { it })
         assertEquals(SetupActivity.Downloading, progress.activity)
     }
+
+    @Test
+    fun `B-SETUP-038 activity stays anchored to active step stage despite stale prior log or unrecognized lines`() {
+        val stalePriorLog =
+            SetupJobRecord(
+                jobId = "setup-488-3",
+                state = "running",
+                current = "essentials",
+                components =
+                    listOf(
+                        SetupJobComponent("linux", "done"),
+                        SetupJobComponent(
+                            id = "essentials",
+                            state = "running",
+                            stage = "Updating package lists",
+                            startedAt = 5_000L,
+                        ),
+                    ),
+                startedAt = 1_000L,
+                updatedAt = 6_000L,
+                logTail = "==> Unpacking Linux base\nExtracting ./usr/bin/sh\n",
+            )
+        val staleProgress =
+            SetupPlanning.progressFromRecord(stalePriorLog, components, nowMillis = 7_000L, redact = { it })
+        assertEquals(SetupActivity.Downloading, staleProgress.activity)
+
+        val unrecognizedLine =
+            stalePriorLog.copy(
+                components =
+                    listOf(
+                        SetupJobComponent("linux", "done"),
+                        SetupJobComponent(
+                            id = "essentials",
+                            state = "running",
+                            stage = "Installing packages",
+                            startedAt = 5_000L,
+                        ),
+                    ),
+                logTail = "==> Installing packages\ndebconf: delaying package configuration\n",
+            )
+        val unrecognizedProgress =
+            SetupPlanning.progressFromRecord(unrecognizedLine, components, nowMillis = 8_000L, redact = { it })
+        assertEquals(SetupActivity.Configuring, unrecognizedProgress.activity)
+
+        val refinedLine =
+            unrecognizedLine.copy(
+                logTail = "==> Installing packages\nUnpacking git (1:2.43) ...\n",
+            )
+        val refinedProgress =
+            SetupPlanning.progressFromRecord(refinedLine, components, nowMillis = 9_000L, redact = { it })
+        assertEquals(SetupActivity.Unpacking, refinedProgress.activity)
+    }
 }
