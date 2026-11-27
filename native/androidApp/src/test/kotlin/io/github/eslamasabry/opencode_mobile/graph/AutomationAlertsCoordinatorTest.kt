@@ -69,11 +69,14 @@ class AutomationAlertsCoordinatorTest {
 
         override suspend fun pauseAutomation(profile: ProfileId, id: String): Outcome<ServerAutomation> {
             pauseRequests += profile to id
-            failPause?.let { return Outcome.Failed(it) }
-            val current = items[id] ?: return Outcome.Failed(Failure.NotFound())
-            val paused = current.copy(status = AutomationStatus.Paused)
-            items[id] = paused
-            return paused.ok()
+            val failure = failPause
+            val current = items[id]
+            // A failing server changes nothing, as a missing automation changes nothing.
+            return when {
+                failure != null -> Outcome.Failed(failure)
+                current == null -> Outcome.Failed(Failure.NotFound())
+                else -> current.copy(status = AutomationStatus.Paused).also { items[id] = it }.ok()
+            }
         }
     }
 

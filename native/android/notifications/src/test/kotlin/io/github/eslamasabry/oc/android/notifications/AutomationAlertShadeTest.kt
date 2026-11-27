@@ -43,34 +43,23 @@ class AutomationAlertShadeTest {
         wifiOnly = false,
     )
 
-    private fun automationAlert(
-        kind: AlertKind = AlertKind.AutomationMessage,
-        automationId: String = "aut_1",
-        name: String = "Nightly check",
-        sessionId: String = "ses_1",
-        slot: Int = 0,
-        detail: String = "Found 2 failing tests",
-        coveredRuns: Int = 1,
-        silentUpdate: Boolean = false,
-        token: String = "tok_1",
-    ): CodingAlert {
-        val group = AlertGroups.automation("p1", automationId)
-        return CodingAlert(
-            kind = kind,
-            sessionId = sessionId,
+    /** One posted automation alert as the shade sees it; a test adds what it varies with [saying] or `copy`. */
+    private fun automationAlert(automationId: String = "aut_1", slot: Int = 0, token: String = "tok_1"): CodingAlert =
+        CodingAlert(
+            kind = AlertKind.AutomationMessage,
+            sessionId = "ses_1",
             key = AlertKeys.automation("p1", automationId, slot),
             requestId = automationId,
             profileId = "p1",
             subtext = "Home server",
-            chatTitle = name,
-            detail = NotificationText.redact(detail),
+            chatTitle = "Nightly check",
             allowActions = automationId.isNotBlank(),
             actionToken = token,
-            automationGroup = group,
-            automationCoveredRuns = coveredRuns,
-            automationSilentUpdate = silentUpdate,
+            automationGroup = AlertGroups.automation("p1", automationId),
         )
-    }
+
+    /** The same alert, carrying a masked first line of the run's reply. */
+    private fun CodingAlert.saying(detail: String): CodingAlert = copy(detail = NotificationText.redact(detail))
 
     @AfterTest
     fun noTrampoline() {
@@ -79,7 +68,7 @@ class AutomationAlertShadeTest {
 
     @Test
     fun `B-620 automation alert names automation and what happened with Open and Pause this automation actions`() {
-        val alert = automationAlert(detail = "Found issue with token=sk-secret99999999")
+        val alert = automationAlert().saying("Found issue with token=sk-secret99999999")
         val route = AlertPolicy.route(alert, baseFacts) as AlertRoute.Post
         assertEquals(AlertGroups.automation("p1", "aut_1"), route.group)
         assertEquals(AlertShown.Shown, shade.show(alert, route))
@@ -114,7 +103,7 @@ class AutomationAlertShadeTest {
 
     @Test
     fun `B-620 failed and paused automation alerts name automation and what happened`() {
-        val failed = automationAlert(kind = AlertKind.AutomationFailed, detail = "")
+        val failed = automationAlert().copy(kind = AlertKind.AutomationFailed)
         val failRoute = AlertPolicy.route(failed, baseFacts) as AlertRoute.Post
         assertEquals(NotifyChannel.CodingAction, failRoute.channel)
         assertEquals(AlertShown.Shown, shade.show(failed, failRoute))
@@ -122,7 +111,7 @@ class AutomationAlertShadeTest {
         assertEquals("Nightly check failed", failN.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
         assertEquals("The automation run failed.", failN.extras.getCharSequence(Notification.EXTRA_TEXT).toString())
 
-        val paused = automationAlert(kind = AlertKind.AutomationPaused, slot = 1, detail = "")
+        val paused = automationAlert(slot = 1).copy(kind = AlertKind.AutomationPaused)
         val pauseRoute = AlertPolicy.route(paused, baseFacts) as AlertRoute.Post
         assertEquals(AlertShown.Shown, shade.show(paused, pauseRoute))
         val pauseN = shadowOf(manager).getNotification(NotificationIds.alert(paused.key))
@@ -135,15 +124,10 @@ class AutomationAlertShadeTest {
         val group1 = AlertGroups.automation("p1", "aut_1")
         for (run in 1..6) {
             val slot = (run - 1).coerceAtMost(2)
-            val alert = automationAlert(
-                automationId = "aut_1",
-                name = "Nightly check",
-                slot = slot,
-                detail = "Finding #$run",
-                coveredRuns = run,
-                silentUpdate = run > 3,
-                token = "tok_$run",
-            )
+            val alert =
+                automationAlert(slot = slot, token = "tok_$run")
+                    .saying("Finding #$run")
+                    .copy(automationCoveredRuns = run, automationSilentUpdate = run > 3)
             val route = AlertPolicy.route(alert, baseFacts) as AlertRoute.Post
             assertEquals(AlertShown.Shown, shade.show(alert, route))
         }
@@ -158,7 +142,7 @@ class AutomationAlertShadeTest {
         assertEquals("Nightly check · 6 runs", summary.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
 
         // Another automation has its own separate group.
-        val other = automationAlert(automationId = "aut_2", name = "PR triage", slot = 0, coveredRuns = 1)
+        val other = automationAlert(automationId = "aut_2").copy(chatTitle = "PR triage")
         val otherRoute = AlertPolicy.route(other, baseFacts) as AlertRoute.Post
         assertEquals(AlertShown.Shown, shade.show(other, otherRoute))
         assertTrue(otherRoute.group != group1)
@@ -166,8 +150,8 @@ class AutomationAlertShadeTest {
 
     @Test
     fun `B-620 Pause this automation calls pause API without opening app and dismisses group`() = runTest {
-        val alert = automationAlert(automationId = "aut_1", coveredRuns = 2, slot = 0)
-        val alert2 = automationAlert(automationId = "aut_1", coveredRuns = 2, slot = 1, token = "tok_2")
+        val alert = automationAlert().copy(automationCoveredRuns = 2)
+        val alert2 = automationAlert(slot = 1, token = "tok_2").copy(automationCoveredRuns = 2)
         shade.show(alert, AlertPolicy.route(alert, baseFacts) as AlertRoute.Post)
         shade.show(alert2, AlertPolicy.route(alert2, baseFacts) as AlertRoute.Post)
 

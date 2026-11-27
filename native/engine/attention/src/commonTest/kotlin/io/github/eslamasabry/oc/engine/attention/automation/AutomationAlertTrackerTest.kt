@@ -15,22 +15,20 @@ import kotlin.test.assertTrue
 class AutomationAlertTrackerTest {
     private fun automation(
         id: String = "aut_1",
-        name: String = "Nightly check",
         status: AutomationStatus = AutomationStatus.Active,
         runCount: Int = 1,
         lastRunAtMs: Long? = 1_000L,
         lastOutcome: AutomationOutcome? = AutomationOutcome.Fired,
-        sessionId: String? = "ses_1",
     ) = ServerAutomation(
         id = id,
-        name = name,
+        name = "Nightly check",
         status = status,
         trigger = AutomationTrigger.Every("1h"),
         action = AutomationAction.Prompt("Check nightly status"),
         runCount = runCount,
         lastRunAtMs = lastRunAtMs,
         lastOutcome = lastOutcome,
-        sessionId = sessionId,
+        sessionId = "ses_1",
     )
 
     @Test
@@ -145,8 +143,8 @@ class AutomationAlertTrackerTest {
         tracker.setConnected(true)
         tracker.observeAutomations(
             listOf(
-                automation(id = "aut_1", name = "Nightly check", runCount = 0),
-                automation(id = "aut_2", name = "PR triage", runCount = 0),
+                automation(id = "aut_1", runCount = 0),
+                automation(id = "aut_2", runCount = 0),
             ),
         )
 
@@ -157,12 +155,11 @@ class AutomationAlertTrackerTest {
                 listOf(
                     automation(
                         id = "aut_1",
-                        name = "Nightly check",
                         runCount = run,
                         lastRunAtMs = run * 1_000L,
                         lastOutcome = AutomationOutcome.Failed,
                     ),
-                    automation(id = "aut_2", name = "PR triage", runCount = 0),
+                    automation(id = "aut_2", runCount = 0),
                 ),
             )
             val posted = diff.post.single()
@@ -179,14 +176,12 @@ class AutomationAlertTrackerTest {
             listOf(
                 automation(
                     id = "aut_1",
-                    name = "Nightly check",
                     runCount = 7,
                     lastRunAtMs = 7_000L,
                     lastOutcome = AutomationOutcome.Failed,
                 ),
                 automation(
                     id = "aut_2",
-                    name = "PR triage",
                     runCount = 1,
                     lastRunAtMs = 8_000L,
                     lastOutcome = AutomationOutcome.Failed,
