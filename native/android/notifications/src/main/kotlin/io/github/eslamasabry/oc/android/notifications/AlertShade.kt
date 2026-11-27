@@ -176,7 +176,7 @@ public class AndroidAlertShade(
             // The last alert of a group takes its summary with it.
             refreshSummary(AlertGroups.NEEDS_YOU)
             refreshSummary(AlertGroups.FINISHED)
-            group?.takeIf(AlertGroups::isAutomation)?.let(::refreshAutomationSummary)
+            group?.takeIf { AlertGroups.isAutomation(it) }?.let { refreshAutomationSummary(it) }
         }
     }
 
@@ -220,11 +220,9 @@ public class AndroidAlertShade(
     override fun isShowing(key: String): Boolean = ownNotification(NotificationIds.alert(key)) != null
 
     /** This app's notification with [id], if it is showing. */
-    private fun ownNotification(id: Int): NotificationManager.ActiveNotification? =
-        ownRows().firstOrNull { it.id == id }
+    private fun ownNotification(id: Int) = ownRows().firstOrNull { it.id == id }
 
-    private fun ownRows(): List<NotificationManager.ActiveNotification> =
-        manager.activeNotifications.filter { it.packageName == context.packageName }
+    private fun ownRows() = manager.activeNotifications.filter { it.packageName == context.packageName }
 
     /** The summaries an alert belongs to, after it was posted, replaced or reposted. */
     private fun refreshSummaries(alert: CodingAlert, group: String?) {
@@ -249,7 +247,7 @@ public class AndroidAlertShade(
         val posted = children.map { it.notification.extras }
         val name =
             posted.firstNotNullOfOrNull {
-                it.getString(FrozenExtras.EXTRA_AUTOMATION_NAME)?.takeIf(String::isNotBlank)
+                it.getString(FrozenExtras.EXTRA_AUTOMATION_NAME)?.takeIf { named -> named.isNotBlank() }
             } ?: posted.first().getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
         val runs = posted.maxOf { it.getInt(FrozenExtras.EXTRA_AUTOMATION_RUNS, 1) }
         val channel = NotifyChannel.CodingAction
