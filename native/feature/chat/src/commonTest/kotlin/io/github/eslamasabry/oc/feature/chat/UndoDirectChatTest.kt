@@ -346,4 +346,63 @@ class UndoDirectChatTest {
             assertTrue(base.sentPrompts.any { it.second.text == "follow up after undo" })
             world.detach()
         }
+
+    @Test
+    fun `B-473 sending during external undo RevertChanged reread waits cleanly and shows Finishing undo`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
+                capabilities.value = capabilities.value.copy(sessionRevert = true)
+            }
+            val history =
+                listOf(
+                    userMsg("u1", 1, "first"),
+                    replyMsg("a1", 2, "one"),
+                    userMsg("u2", 3, "second"),
+                    replyMsg("a2", 4, "two"),
+                )
+            val gateway = Oc2UndoGateway(base, history)
+            val (reg, world) = worldFixture(gateway, FakeOperationsGateway())
+            val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
+            val worlds =
+                object : ChatWorlds {
+                    override fun open(ref: ConversationRef): ChatWorld = world
+
+                    override fun release(world: ChatWorld) = Unit
+                }
+            val vm = BasicComposerViewModel(ComposerTarget(ref.profileId.raw, ref.sessionId.raw), worlds)
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+
+            world.attach()
+            base.events.connect()
+            reg.open(profile)
+            runCurrent()
+            assertEquals(ChatLoad.Live, world.load.value)
+
+            // Real undo runs outside ChatWorld (via engine/review), then RevertChanged arrives while reread is held.
+            gateway.stageSessionRevert(ref.sessionId, MessageId("u2"), applyFiles = true)
+            gateway.undoInProgress = true
+            val reloadGate = CompletableDeferred<Unit>()
+            gateway.holdNextHistory = reloadGate
+            base.events.emit(GatewayEvent.RevertChanged(ref.sessionId, RevertKind.Staged))
+            runCurrent()
+
+            assertEquals(
+                "FinishingUndo",
+                presenter.current().status?.kind?.name,
+                "status line must show FinishingUndo while undo reread is held",
+            )
+            val sendJob = async { vm.send("follow up after external undo") }
+            runCurrent()
+            assertFalse(gateway.sentMidUndo, "send must wait instead of racing mid-undo into the server")
+            assertTrue(world.pending.value.none { it.state == PendingState.Failed }, "no cryptic send failure")
+
+            gateway.undoInProgress = false
+            reloadGate.complete(Unit)
+            runCurrent()
+            assertTrue(sendJob.await(), "send should complete cleanly once undo reread settles")
+            assertFalse(gateway.sentMidUndo, "send must never hit the server while undo reread is held")
+            assertTrue(base.sentPrompts.any { it.second.text == "follow up after external undo" })
+            assertFalse(world.undoing.value, "undoing must clear once undo reread settles")
+            world.detach()
+        }
 }

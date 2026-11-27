@@ -435,7 +435,7 @@ class UndoDirectTruthTest {
     }
 
     @Test
-    fun `B-473 Undo from here on no-rollback agent never promises file rollback`() {
+    fun `B-473 one-step server without diff view never says files stay as they are`() {
         val history = listOf(prompt("u1", 1), reply("a1", 2, "src/a.kt"))
         val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
             capabilities.value = capabilities.value.copy(sessionRevert = true, sessionDiff = false)
@@ -462,8 +462,33 @@ class UndoDirectTruthTest {
         }
         runComposeUiTest {
             setContent { Themed { UndoFromHereScreen(ui!!, idleUndo) } }
+            onNodeWithText("stay as they are", substring = true, ignoreCase = true).assertDoesNotExist()
+            onNodeWithText("files go back", substring = true, ignoreCase = true).assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun `B-473 server with sessionRevert false is unavailable and makes no file claim`() {
+        val base = FakeServerGateway(listOf(Session(ref.sessionId))).apply {
+            capabilities.value = capabilities.value.copy(sessionRevert = false, sessionDiff = false)
+        }
+        val gateways = MutableStateFlow<ReviewGateways?>(ReviewGateways(base, FakeOperationsGateway()))
+        var ui: UndoFromHereUi? = null
+        runTest(UnconfinedTestDispatcher()) {
+            val p =
+                UndoFromHerePresenter(
+                    ConversationReview(ref.sessionId, gateways, backgroundScope),
+                    "u1",
+                    Nav(),
+                    backgroundScope,
+                )
+            ui = p.state.value
+            assertFalse(ui!!.available, "sessionRevert=false must mark UndoFromHereUi unavailable")
+        }
+        runComposeUiTest {
+            setContent { Themed { UndoFromHereScreen(ui!!, idleUndo) } }
             onNodeWithText("files go back", substring = true, ignoreCase = true).assertDoesNotExist()
-            onNodeWithText("can't put files back", substring = true, ignoreCase = true).assertIsDisplayed()
+            onNodeWithText("stay as they are", substring = true, ignoreCase = true).assertDoesNotExist()
         }
     }
 
