@@ -6,7 +6,7 @@ import kotlin.time.Instant
 
 private const val HISTORY_FORMAT_VERSION: Long = 1L
 private const val HISTORY_MAX_JSON_BYTES: Int = 524_288
-private const val HISTORY_MAX_WINDOWS: Int = 64
+private const val HISTORY_MAX_WINDOWS: Int = UsageHistory.MAX_WINDOWS_PER_CONNECTION
 private const val HISTORY_MAX_SUB_KEY_LENGTH: Int = 192
 private const val HISTORY_MAX_WINDOW_ID_LENGTH: Int = 64
 private const val HISTORY_TUPLE_SIZE: Int = 3
@@ -14,6 +14,72 @@ private const val HISTORY_MIN_PERCENT: Double = 0.0
 private const val HISTORY_MAX_PERCENT: Double = 100.0
 private const val FIVE_HOUR_SECONDS: Long = 18_000L
 private const val WEEKLY_SECONDS: Long = 604_800L
+private const val CONNECTION_ACCOUNT_PREFIX: String = "conn:"
+private const val OPAQUE_ACCOUNT_PREFIX: String = "acct:"
+private const val OPAQUE_ACCOUNT_DOMAIN: String = "oc.usageHistory.acct.v1"
+private const val OPAQUE_ACCOUNT_HEX_LENGTH: Int = 32
+
+internal fun sameResetWindow(
+    previous: Instant?,
+    current: Instant?,
+    resetJitter: Duration,
+): Boolean =
+    when {
+        previous == null && current == null -> true
+        previous == null || current == null -> false
+        else -> (current - previous).absoluteValue <= resetJitter
+    }
+
+internal fun opaqueUsageSubscriptionKey(subscriptionKey: String): String {
+    val sep = subscriptionKey.indexOf('|')
+    val result =
+        if (sep <= 0 || sep == subscriptionKey.lastIndex) {
+            if (isOpaqueAccountSegment(subscriptionKey)) {
+                subscriptionKey
+            } else {
+                "$OPAQUE_ACCOUNT_PREFIX${hashAccountSegment("", subscriptionKey)}"
+            }
+        } else {
+            val provider = subscriptionKey.substring(0, sep)
+            val account = subscriptionKey.substring(sep + 1)
+            val safe =
+                when {
+                    isOpaqueAccountSegment(account) -> account
+                    account.startsWith(CONNECTION_ACCOUNT_PREFIX) && '@' !in account -> account
+                    else -> "$OPAQUE_ACCOUNT_PREFIX${hashAccountSegment(provider, account)}"
+                }
+            "$provider|$safe"
+        }
+    return result
+}
+
+private fun isOpaqueAccountSegment(segment: String): Boolean =
+    segment.length == OPAQUE_ACCOUNT_PREFIX.length + OPAQUE_ACCOUNT_HEX_LENGTH &&
+        segment.startsWith(OPAQUE_ACCOUNT_PREFIX) &&
+        segment.drop(OPAQUE_ACCOUNT_PREFIX.length).all { it in '0'..'9' || it in 'a'..'f' }
+
+private fun hashAccountSegment(provider: String, account: String): String =
+    DartJson.sha256Hex(DartJson.encode(listOf(OPAQUE_ACCOUNT_DOMAIN, provider, account)))
+        .take(OPAQUE_ACCOUNT_HEX_LENGTH)
+
+internal fun trimConnectionWindows(
+    slot: MutableMap<WindowKey, List<UsageSample>>,
+    maxWindows: Int = HISTORY_MAX_WINDOWS,
+): Boolean {
+    if (slot.size <= maxWindows) return false
+    val keep =
+        slot.entries
+            .withIndex()
+            .sortedWith(
+                compareByDescending<IndexedValue<MutableMap.MutableEntry<WindowKey, List<UsageSample>>>> {
+                        it.value.value.lastOrNull()?.fetchedAt ?: Instant.DISTANT_PAST
+                    }
+                    .thenByDescending { it.index }
+            )
+            .take(maxWindows)
+            .mapTo(HashSet(maxWindows)) { it.value.key }
+    return slot.keys.retainAll(keep)
+}
 
 internal fun providerWindowId(window: ProviderUsageWindowReading): String =
     when (window.durationSeconds) {
@@ -32,7 +98,7 @@ internal fun collectReadingSamples(
             val updates = grouped.getOrPut(reading.connectionId) { ArrayList() }
             for (window in reading.windows) {
                 updates +=
-                    WindowKey(subKey, window.id) to
+                    UsageHistory.windowKey(subKey, window.id) to
                         UsageSample(reading.fetchedAt, window.usedPercent, window.resetsAt)
             }
         }
@@ -53,7 +119,7 @@ internal fun collectProviderSamples(
                     (HISTORY_MAX_PERCENT - window.remainingPercent)
                         .coerceIn(HISTORY_MIN_PERCENT, HISTORY_MAX_PERCENT)
                 updates +=
-                    WindowKey(subKey, providerWindowId(window)) to
+                    UsageHistory.windowKey(subKey, providerWindowId(window)) to
                         UsageSample(reading.fetchedAt, used, window.resetsAt)
             }
         }
@@ -76,7 +142,7 @@ internal fun collectSnapshotSamples(
             val updates = grouped.getOrPut(connection.id) { ArrayList() }
             for (window in sub.windows) {
                 updates +=
-                    WindowKey(sub.key, window.id) to
+                    UsageHistory.windowKey(sub.key, window.id) to
                         UsageSample(fetchedAt, window.usedPercent, window.resetsAt)
             }
         }
@@ -85,10 +151,16 @@ internal fun collectSnapshotSamples(
 }
 
 internal fun encodeUsageHistoryConnection(windows: Map<WindowKey, List<UsageSample>>): String {
+    val bounded =
+        if (windows.size <= HISTORY_MAX_WINDOWS) {
+            windows
+        } else {
+            LinkedHashMap(windows).also { trimConnectionWindows(it, HISTORY_MAX_WINDOWS) }
+        }
     val entries =
-        windows.entries.take(HISTORY_MAX_WINDOWS).map { (key, list) ->
+        bounded.entries.map { (key, list) ->
             linkedMapOf<String, Any?>(
-                "s" to key.subscriptionKey,
+                "s" to UsageHistory.opaqueSubscriptionKey(key.subscriptionKey),
                 "i" to key.windowId,
                 "p" to
                     list.map { sample ->
@@ -111,8 +183,11 @@ internal fun decodeUsageHistoryConnection(
     val root = raw?.takeIf { it.length <= HISTORY_MAX_JSON_BYTES }?.let(DartJson::decodeOrNull) as? Map<*, *>
     val entries = if (root != null && toExactLong(root["v"]) == HISTORY_FORMAT_VERSION) root["w"] as? List<*> else null
     entries?.take(HISTORY_MAX_WINDOWS)?.forEach { item ->
-        decodeHistoryEntry(item, maxSamples)?.let { (key, list) -> result[key] = list }
+        decodeHistoryEntry(item, maxSamples)?.let { (key, list) ->
+            result[UsageHistory.canonicalWindowKey(key)] = list
+        }
     }
+    trimConnectionWindows(result, HISTORY_MAX_WINDOWS)
     return result
 }
 
@@ -154,6 +229,7 @@ internal fun mergeUsageHistory(
     byConnection: Map<String, Map<WindowKey, List<UsageSample>>>,
     maxSamples: Int,
     dedupeInterval: Duration,
+    resetJitter: Duration = UsageHistory.RESET_JITTER_TOLERANCE,
 ): Map<WindowKey, List<UsageSample>> {
     val merged = LinkedHashMap<WindowKey, List<UsageSample>>()
     for (slot in byConnection.values) {
@@ -164,7 +240,7 @@ internal fun mergeUsageHistory(
                     samples.toList()
                 } else {
                     (existing + samples).sortedBy { it.fetchedAt }.fold(emptyList()) { acc, sample ->
-                        UsageHistory.appendSample(acc, sample, maxSamples, dedupeInterval)
+                        UsageHistory.appendSample(acc, sample, maxSamples, dedupeInterval, resetJitter)
                     }
                 }
         }

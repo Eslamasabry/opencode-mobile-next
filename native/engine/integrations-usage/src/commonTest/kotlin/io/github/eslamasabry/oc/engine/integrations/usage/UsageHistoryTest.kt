@@ -516,11 +516,11 @@ class UsageHistoryTest {
         val job = async { monitor.refresh() }
         started.await()
         monitor.removeProfile("paseo1")
-        history.removeProfile("paseo1")
         gate.complete(Unit)
         job.await()
 
         assertNull(kv.str(UsageHistory.key("paseo1")))
+        assertNull(kv.str(UsageWidgetFeed.key("paseo1")))
         assertTrue(history.samples.value.isEmpty())
     }
 

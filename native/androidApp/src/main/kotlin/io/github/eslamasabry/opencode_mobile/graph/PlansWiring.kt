@@ -610,23 +610,18 @@ class AndroidPlansSource(
     }
 
     override suspend fun setCollector(target: CollectorTarget, enabled: Boolean): Boolean {
-        engine() ?: return false
-        val changed =
-            if (target.provider == AndroidPlansPaseoSource.PROVIDER)
-                paseo?.setEnabled(target, enabled) == true
-            else quota?.setEnabled(target, enabled) == true
-        return if (changed && !enabled) {
-            if (
-                target.provider == AndroidPlansPaseoSource.PROVIDER ||
-                    target.provider == PlansQuotaSource.BUILTIN
-            ) {
-                engine?.removeProfile(target.profile.raw, deleted = false) == true
-            } else {
-                engine?.removeProvider(target.profile.raw, target.provider) == true
-            }
-        } else {
-            changed
-        }
+        val owner = engine() ?: return false
+        return applyCollectorChange(
+            target = target,
+            enabled = enabled,
+            setEnabled = {
+                if (target.provider == AndroidPlansPaseoSource.PROVIDER)
+                    paseo?.setEnabled(target, enabled) == true
+                else quota?.setEnabled(target, enabled) == true
+            },
+            removeProfile = { owner.removeProfile(it, deleted = false) },
+            removeProvider = { profileId, provider -> owner.removeProvider(profileId, provider) },
+        )
     }
 
     override fun supported(profile: ProfileId): Boolean {
@@ -877,3 +872,28 @@ class AndroidUsageBudgets(private val stores: PreviewStores) :
 @Inject
 class AndroidProviderUsageMonitorSettings(private val plans: AndroidPlansSource) :
     ProviderUsageMonitorSettings by plans
+
+/**
+ * Applies a collector toggle and triggers best-effort cleanup when turning consent off without
+ * failing the off-switch if cache, history, or widget cleanup fails.
+ */
+internal suspend fun applyCollectorChange(
+    target: CollectorTarget,
+    enabled: Boolean,
+    setEnabled: suspend () -> Boolean,
+    removeProfile: suspend (String) -> Boolean,
+    removeProvider: suspend (String, String) -> Boolean,
+): Boolean {
+    val changed = setEnabled()
+    if (changed && !enabled) {
+        if (
+            target.provider == AndroidPlansPaseoSource.PROVIDER ||
+                target.provider == PlansQuotaSource.BUILTIN
+        ) {
+            removeProfile(target.profile.raw)
+        } else {
+            removeProvider(target.profile.raw, target.provider)
+        }
+    }
+    return changed
+}

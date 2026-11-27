@@ -234,67 +234,26 @@ class UsageHistoryWiringTest {
 
         var profileRemoved = 0
         var providerRemoved = 0
-        val paseoOff =
-            applyCollectorChange(
-                target = paseoTarget,
-                enabled = false,
-                setEnabled = { true },
-                removeProfile = {
-                    profileRemoved++
-                    false
-                },
-                removeProvider = { _, _ ->
-                    providerRemoved++
-                    false
-                },
-            )
-        assertTrue(paseoOff)
+        val failProfile: suspend (String) -> Boolean = {
+            profileRemoved++
+            false
+        }
+        val failProvider: suspend (String, String) -> Boolean = { _, _ ->
+            providerRemoved++
+            false
+        }
+
+        assertTrue(applyCollectorChange(paseoTarget, false, { true }, failProfile, failProvider))
         assertEquals(1, profileRemoved)
         assertEquals(0, providerRemoved)
 
-        val builtinOff =
-            applyCollectorChange(
-                target = builtinTarget,
-                enabled = false,
-                setEnabled = { true },
-                removeProfile = {
-                    profileRemoved++
-                    false
-                },
-                removeProvider = { _, _ -> false },
-            )
-        assertTrue(builtinOff)
+        assertTrue(applyCollectorChange(builtinTarget, false, { true }, failProfile, failProvider))
         assertEquals(2, profileRemoved)
 
-        val codexOff =
-            applyCollectorChange(
-                target = codexTarget,
-                enabled = false,
-                setEnabled = { true },
-                removeProfile = { false },
-                removeProvider = { _, _ ->
-                    providerRemoved++
-                    false
-                },
-            )
-        assertTrue(codexOff)
+        assertTrue(applyCollectorChange(codexTarget, false, { true }, failProfile, failProvider))
         assertEquals(1, providerRemoved)
 
-        val refusedOff =
-            applyCollectorChange(
-                target = codexTarget,
-                enabled = false,
-                setEnabled = { false },
-                removeProfile = {
-                    profileRemoved++
-                    true
-                },
-                removeProvider = { _, _ ->
-                    providerRemoved++
-                    true
-                },
-            )
-        assertFalse(refusedOff)
+        assertFalse(applyCollectorChange(codexTarget, false, { false }, failProfile, failProvider))
         assertEquals(2, profileRemoved)
         assertEquals(1, providerRemoved)
     }

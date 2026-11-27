@@ -170,9 +170,14 @@ public class PaseoUsageMonitor(
         status[id] = PaseoUsageStatus.Current
         readAt[id] = clock()
         last[id] = readings
-        history?.recordProviderReadings(id, readings)
         widget?.recordReadings(id, profile?.name ?: "", readings, thisPhone = isPhone)
-        if (!current()) widget?.clearForProfile(id)
+        if (!current()) {
+            widget?.clearForProfile(id)
+            if (id in blocked || (!disposed && !enabled(id))) history?.removeProfile(id)
+        } else {
+            history?.recordProviderReadings(id, readings)
+            if (id in blocked || (!disposed && !enabled(id))) history?.removeProfile(id)
+        }
     }
 
     /** A saved server is being removed: stop reading it and clear its widget rows; the sweep removes the opt-in. */

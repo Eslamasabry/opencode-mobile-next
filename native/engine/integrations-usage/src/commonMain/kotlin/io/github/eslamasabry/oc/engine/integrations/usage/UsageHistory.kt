@@ -64,9 +64,16 @@ public class UsageHistory(
         if (connectionId.isEmpty() || !loadedConnections.add(connectionId)) return
         val decoded = decodeUsageHistoryConnection(store.string(key(connectionId)), MAX_SAMPLES_PER_WINDOW)
         pruneConnectionSlot(decoded, clock())
+        trimConnectionWindows(decoded, MAX_WINDOWS_PER_CONNECTION)
         if (decoded.isNotEmpty()) {
             byConnection[connectionId] = decoded
-            _samples.value = mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
+            _samples.value =
+                mergeUsageHistory(
+                    byConnection,
+                    MAX_SAMPLES_PER_WINDOW,
+                    DEDUPE_REFRESH_INTERVAL,
+                    RESET_JITTER_TOLERANCE,
+                )
         }
     }
 
@@ -109,7 +116,13 @@ public class UsageHistory(
         byConnection.remove(connectionId)
         loadedConnections -= connectionId
         val ok = store.commit(lane) { remove(key(connectionId)) } is Outcome.Ok
-        _samples.value = mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
+        _samples.value =
+            mergeUsageHistory(
+                byConnection,
+                MAX_SAMPLES_PER_WINDOW,
+                DEDUPE_REFRESH_INTERVAL,
+                RESET_JITTER_TOLERANCE,
+            )
         ok
     }
 
@@ -127,7 +140,13 @@ public class UsageHistory(
             if (!ok && previous != null) {
                 byConnection[connectionId] = LinkedHashMap(previous)
             }
-            _samples.value = mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
+            _samples.value =
+                mergeUsageHistory(
+                    byConnection,
+                    MAX_SAMPLES_PER_WINDOW,
+                    DEDUPE_REFRESH_INTERVAL,
+                    RESET_JITTER_TOLERANCE,
+                )
             ok
         }
     }
@@ -143,7 +162,12 @@ public class UsageHistory(
             if (applyWindowUpdates(slot, updates, clock())) {
                 result = persistConnection(store, lane, byConnection, connectionId)
                 _samples.value =
-                    mergeUsageHistory(byConnection, MAX_SAMPLES_PER_WINDOW, DEDUPE_REFRESH_INTERVAL)
+                    mergeUsageHistory(
+                        byConnection,
+                        MAX_SAMPLES_PER_WINDOW,
+                        DEDUPE_REFRESH_INTERVAL,
+                        RESET_JITTER_TOLERANCE,
+                    )
             }
         }
         result
@@ -152,13 +176,30 @@ public class UsageHistory(
     public companion object {
         public const val KEY_PREFIX: String = "oc.usageHistory."
         public const val MAX_SAMPLES_PER_WINDOW: Int = 300
+        public const val MAX_WINDOWS_PER_CONNECTION: Int = 64
         public val MAX_SAMPLE_AGE: Duration = 90.days
         public val DEDUPE_REFRESH_INTERVAL: Duration = 15.minutes
+        public val RESET_JITTER_TOLERANCE: Duration = 5.minutes
         private const val MIN_PERCENT: Double = 0.0
         private const val MAX_PERCENT: Double = 100.0
         private const val VALUE_EPSILON: Double = 1e-6
 
         public fun key(connectionId: String): String = "$KEY_PREFIX$connectionId"
+
+        /**
+         * Replaces any raw account reference in [subscriptionKey] with a deterministic opaque id
+         * derived on the phone so email-shaped references are never stored or logged.
+         */
+        public fun opaqueSubscriptionKey(subscriptionKey: String): String =
+            opaqueUsageSubscriptionKey(subscriptionKey)
+
+        /** Returns [key] with its [WindowKey.subscriptionKey] canonicalized to the opaque form. */
+        public fun canonicalWindowKey(key: WindowKey): WindowKey =
+            WindowKey(opaqueSubscriptionKey(key.subscriptionKey), key.windowId)
+
+        /** Builds a canonical [WindowKey] from a subscription key and window id. */
+        public fun windowKey(subscriptionKey: String, windowId: String): WindowKey =
+            canonicalWindowKey(WindowKey(subscriptionKey, windowId))
 
         /** Drops samples strictly older than [maxAge] relative to [now]. */
         public fun pruneExpiredSamples(
@@ -202,10 +243,10 @@ public class UsageHistory(
         /**
          * Pure transition for one window's history:
          * - ignores non-finite or out-of-order (older) samples,
-         * - on a later [UsageSample.resetsAt], drops prior window samples except the old window's
-         *   last sample (kept for Details "Last week: ..."),
-         * - dedupes matching (usedPercent, resetsAt), updating only the last sample's fetchedAt
-         *   when strictly more than [dedupeInterval] later,
+         * - on a later [UsageSample.resetsAt] beyond [resetJitter], drops prior window samples
+         *   except the old window's last sample (kept for Details "Last week: ..."),
+         * - dedupes matching (usedPercent, resetsAt within [resetJitter]), updating only the last
+         *   sample's fetchedAt when strictly more than [dedupeInterval] later,
          * - caps each window at [maxSamples] newest samples.
          */
         public fun appendSample(
@@ -213,6 +254,7 @@ public class UsageHistory(
             sample: UsageSample,
             maxSamples: Int = MAX_SAMPLES_PER_WINDOW,
             dedupeInterval: Duration = DEDUPE_REFRESH_INTERVAL,
+            resetJitter: Duration = RESET_JITTER_TOLERANCE,
         ): List<UsageSample> {
             if (!sample.usedPercent.isFinite() || maxSamples <= 0) return existing
             val normalized =
@@ -222,8 +264,9 @@ public class UsageHistory(
                 when {
                     last == null -> listOf(normalized)
                     normalized.fetchedAt < last.fetchedAt -> existing
-                    isLaterReset(last.resetsAt, normalized.resetsAt) -> listOf(last, normalized)
-                    isSameReading(last, normalized) ->
+                    isLaterReset(last.resetsAt, normalized.resetsAt, resetJitter) ->
+                        listOf(last, normalized)
+                    isSameReading(last, normalized, resetJitter) ->
                         if (normalized.fetchedAt - last.fetchedAt > dedupeInterval) {
                             existing.dropLast(1) + last.copy(fetchedAt = normalized.fetchedAt)
                         } else {
@@ -234,17 +277,22 @@ public class UsageHistory(
             return if (next.size > maxSamples) next.takeLast(maxSamples) else next
         }
 
-        private fun isLaterReset(previous: Instant?, current: Instant?): Boolean =
-            previous != null && current != null && current > previous
+        private fun isLaterReset(previous: Instant?, current: Instant?, resetJitter: Duration): Boolean =
+            previous != null && current != null && (current - previous) > resetJitter
 
-        private fun isSameReading(previous: UsageSample, current: UsageSample): Boolean =
-            previous.resetsAt == current.resetsAt &&
+        private fun isSameReading(
+            previous: UsageSample,
+            current: UsageSample,
+            resetJitter: Duration,
+        ): Boolean =
+            sameResetWindow(previous.resetsAt, current.resetsAt, resetJitter) &&
                 abs(previous.usedPercent - current.usedPercent) <= VALUE_EPSILON
     }
 }
 
 /** Returns the current ordered samples for [key], or an empty list when none are recorded. */
-public fun UsageHistory.forWindow(key: WindowKey): List<UsageSample> = samples.value[key].orEmpty()
+public fun UsageHistory.forWindow(key: WindowKey): List<UsageSample> =
+    samples.value[UsageHistory.canonicalWindowKey(key)].orEmpty()
 
 private suspend fun persistConnection(
     store: KeyValueStore,
@@ -269,8 +317,11 @@ private fun applyWindowUpdates(
     updates: List<Pair<WindowKey, UsageSample>>,
     now: Instant,
 ): Boolean {
+    val before =
+        if (slot.size + updates.size > UsageHistory.MAX_WINDOWS_PER_CONNECTION) slot.toMap() else null
     var changed = UsageHistory.pruneConnectionSlot(slot, now)
-    for ((windowKey, sample) in updates) {
+    for ((rawKey, sample) in updates) {
+        val windowKey = UsageHistory.canonicalWindowKey(rawKey)
         val prior = slot[windowKey].orEmpty()
         val appended =
             UsageHistory.appendSample(
@@ -278,12 +329,15 @@ private fun applyWindowUpdates(
                 sample,
                 UsageHistory.MAX_SAMPLES_PER_WINDOW,
                 UsageHistory.DEDUPE_REFRESH_INTERVAL,
+                UsageHistory.RESET_JITTER_TOLERANCE,
             )
         val next = UsageHistory.pruneExpiredSamples(appended, now)
         if (next != prior) {
-            if (next.isEmpty()) slot.remove(windowKey) else slot[windowKey] = next
+            slot.remove(windowKey)
+            if (next.isNotEmpty()) slot[windowKey] = next
             changed = true
         }
     }
-    return changed
+    trimConnectionWindows(slot, UsageHistory.MAX_WINDOWS_PER_CONNECTION)
+    return if (before != null) slot != before else changed
 }
