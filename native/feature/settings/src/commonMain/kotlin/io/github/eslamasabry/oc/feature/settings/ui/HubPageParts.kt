@@ -1,12 +1,9 @@
 package io.github.eslamasabry.oc.feature.settings.ui
 
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode
 import io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedOutcome
@@ -15,7 +12,6 @@ import io.github.eslamasabry.oc.feature.settings.presentation.SettingsDoor
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsGroupId
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsPage
 import io.github.eslamasabry.oc.feature.settings.presentation.SettingsUi
-import io.github.eslamasabry.oc.ui.design.tokens.Space
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheet
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.dockModeTitle
@@ -119,8 +115,7 @@ internal fun GroupHiddenPhrases(state: SettingsUi, actions: SettingsActions, pag
 internal fun GroupLinuxSpeed(state: SettingsUi, actions: SettingsActions, page: SettingsPage.Group) {
     if (page.id != SettingsGroupId.Help) return
     val speed = state.linuxSpeed?.takeIf { it.installed } ?: return
-    Spacer(Modifier.height(Space.S3.dp))
-    KitRowGroup(leadingTiles = true) {
+    KitRowGroup(leadingTiles = true, afterGroup = true) {
         KitRow(
             title = stringResource(Res.string.helpLinuxSpeedTitle),
             modifier = Modifier.testTag("settings-help-linux-speed"),

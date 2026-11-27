@@ -28,7 +28,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -80,15 +79,17 @@ public class SettingsPresenter(
     private val lab: GlassLabPresenter? = glassLabPort?.let { GlassLabPresenter(scope, it) }
     override val glassLab: GlassLabActions? get() = lab
     private var linuxSpeed: LinuxSpeedSetting? = null
-    private var linuxSpeedJob: Job? = null
     private val linuxSpeedFacts = MutableStateFlow<LinuxSpeedFacts?>(null)
 
     /** B-486: attaches the phone Linux speed port (null off Android) without widening the constructor. */
     public fun bindLinuxSpeed(port: LinuxSpeedSetting) {
         linuxSpeed = port
-        linuxSpeedJob?.cancel()
         linuxSpeedFacts.value = port.facts.value
-        linuxSpeedJob = scope.launch { port.facts.collect { linuxSpeedFacts.value = it } }
+        scope.launch {
+            port.facts.collect { facts ->
+                if (linuxSpeed === port) linuxSpeedFacts.value = facts
+            }
+        }
     }
 
     private data class Local(
