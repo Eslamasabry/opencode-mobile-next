@@ -28,7 +28,9 @@ class InteractiveScheduleAdmission(
     override suspend fun check(profile: ServerProfile): Outcome<Unit> {
         val saved = profiles.profile(profile.id) ?: return stale("server removed")
         val current = saved.toServerProfile(profile.managedOnPhone) ?: return stale("server unreadable")
-        if (current != profile) return stale("server edited since it connected")
+        // B-399: the name is a label, never the connection (the phone's helper is saved under its phone's name at each
+        // start). A rename alone refused every send through a connection opened before it as a changed connection.
+        if (current.copy(name = profile.name) != profile) return stale("server edited since it connected")
         // Agent sockets and remote servers do not use the scheduled OpenCode phone runtime.
         val address = URI(profile.origin.toString())
         if (

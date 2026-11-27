@@ -78,11 +78,13 @@ internal fun parseAgentFeatures(raw: JsonElement?): List<AgentFeature> {
 
 /**
  * The model list's own id for [model] of [provider] (an alias or `<provider>/<id>` names it); null
- * when unknown.
+ * when unknown. While the list is away (dropped by a refresh push or a reconnect, not read again yet) the runtime's
+ * last listed models still name it (B-399, [PaseoGateway.listedModels]).
  */
 internal fun PaseoGateway.canonicalModelId(provider: String?, model: String?): String? {
     if (provider == null || model == null) return null
-    for (entry in providerEntries.orEmpty()) {
+    val listed = providerEntries?.filter { it.str("provider") == provider && it["models"].arrayOrNull() != null }
+    for (entry in listed?.takeIf { it.isNotEmpty() } ?: listOfNotNull(listedModels[provider])) {
         if (entry.str("provider") != provider) continue
         val models = entry["models"].arrayOrNull() ?: return null
         val items = models.mapNotNull { it.objectOrNull() }
