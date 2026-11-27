@@ -157,6 +157,76 @@ class KitAgentTilePolishTest {
     }
 
     @Test
+    fun `B-630 wide 928 dp bento grid spans full 960 dp list cap across four columns`() =
+        runDesktopComposeUiTest(928, 800) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    KitTheme(
+                        platform = DesktopKitPlatform(),
+                        appearance = KitAppearance(motion = MotionLevel.Off),
+                        stillFrame = true,
+                    ) {
+                        Box(Modifier.width(928.dp)) {
+                            KitAgentTiles(
+                                List(6) { i ->
+                                    {
+                                        KitAgentTile(
+                                            name = "Agent $i",
+                                            state = "Ready",
+                                            markId = "claude",
+                                            onClick = {},
+                                            ready = true,
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val tiles = onAllNodesWithTag("kit-agent-tile", useUnmergedTree = true).fetchSemanticsNodes()
+            assertEquals(6, tiles.size)
+            val row0 = tiles.filter { abs(it.boundsInRoot.top - tiles[0].boundsInRoot.top) <= 2f }
+            assertEquals(4, row0.size, "expected 4 columns at 928 dp, got ${row0.size}")
+            val left = row0.first().boundsInRoot.left
+            val right = row0.last().boundsInRoot.right
+            assertTrue(left <= 1f, "expected row start at 0, got $left")
+            assertTrue(right >= 927f, "expected row end at 928 dp, got $right")
+        }
+
+    @Test
+    fun `B-630 wide 928 dp single-column large-text tile spans full 960 dp list cap`() =
+        runDesktopComposeUiTest(928, 800) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f, 1.5f)) {
+                    KitTheme(
+                        platform = DesktopKitPlatform(),
+                        appearance = KitAppearance(motion = MotionLevel.Off),
+                        stillFrame = true,
+                    ) {
+                        Box(Modifier.width(928.dp)) {
+                            KitAgentTiles(
+                                listOf {
+                                    KitAgentTile(
+                                        name = "Claude Code",
+                                        state = "Ready",
+                                        markId = "claude",
+                                        onClick = {},
+                                        ready = true,
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val tile = onNodeWithTag("kit-agent-tile", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            assertTrue(tile.right >= 927f, "expected single-column tile to fill 928 dp, got ${tile.right}")
+        }
+
+    @Test
     fun `B-546 half-width tile action drops icon when needed and wraps whole words at full size`() {
         assertTileChipWrapsCleanly("New conversation", scale = 1f, expectIcon = true)
         assertTileChipWrapsCleanly("New conversation", scale = 1.3f, expectIcon = false)

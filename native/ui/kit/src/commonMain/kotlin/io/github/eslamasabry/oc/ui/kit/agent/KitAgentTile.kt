@@ -163,7 +163,7 @@ public fun KitAgentTile(
     KitTappable(
         onClick,
         modifier =
-            modifier.kitMaxWidth(CapRole.Reading).fillMaxWidth().semantics {
+            modifier.kitMaxWidth(CapRole.List).fillMaxWidth().semantics {
                 contentDescription = agentTileLabel(name, state)
                 testTag = "kit-agent-tile"
             },
