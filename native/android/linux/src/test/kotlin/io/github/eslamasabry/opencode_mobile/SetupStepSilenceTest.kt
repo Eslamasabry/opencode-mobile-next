@@ -185,7 +185,7 @@ class SetupStepSilenceTest {
         val stops = java.util.concurrent.atomic.AtomicInteger(0)
         val stopped = java.util.concurrent.CountDownLatch(1)
         val watchdog =
-            watchdogWithBusy(
+            SetupSilenceWatchdog(
                 silence = silence,
                 isCancelled = { false },
                 stopProcess = {
@@ -221,23 +221,67 @@ class SetupStepSilenceTest {
         }
     }
 
-    private fun watchdogWithBusy(
-        silence: SetupStepSilence,
-        isCancelled: () -> Boolean,
-        stopProcess: () -> Unit,
-        pollMs: Long,
-        isBusy: () -> Boolean,
-    ): SetupSilenceWatchdog {
-        val withBusy =
-            SetupSilenceWatchdog::class.java.declaredConstructors.firstOrNull { ctor ->
-                ctor.parameterTypes.size == 5 &&
-                    ctor.parameterTypes[4] == Function0::class.java
-            }
-        return if (withBusy != null) {
-            withBusy.isAccessible = true
-            withBusy.newInstance(silence, isCancelled, stopProcess, pollMs, isBusy) as SetupSilenceWatchdog
-        } else {
-            SetupSilenceWatchdog(silence, isCancelled, stopProcess, pollMs)
-        }
+    @Test
+    fun `B-SETUP-030 proc cpu sampler detects busy process tree and idle stalled tree`() {
+        fun fakeStat(pid: Int, comm: String, utime: Long, stime: Long, cutime: Long = 0, cstime: Long = 0): String =
+            "$pid ($comm) S 1 1 1 0 -1 0 0 0 0 0 $utime $stime $cutime $cstime 20 0 1 0 100 0 0"
+
+        assertEquals(35L, ProcessTreeCpu.cpuTicks(fakeStat(42, "node (main)", 10, 5, 15, 5)))
+        assertNull(ProcessTreeCpu.cpuTicks("not a stat line"))
+
+        var call = 0
+        val busy =
+            ProcessTreeCpu.sampleBusy(
+                pids = { listOf(10, 11) },
+                sampleMs = 1L,
+                readStat = { pid ->
+                    if (pid == 10) fakeStat(10, "proot", 5, 5)
+                    else fakeStat(11, "tar", if (call++ == 0) 20 else 25, 10)
+                },
+                sleep = {},
+            )
+        assertTrue(busy)
+
+        val idle =
+            ProcessTreeCpu.sampleBusy(
+                pids = { listOf(10, 11) },
+                sampleMs = 1L,
+                readStat = { pid -> fakeStat(pid, "proot", 5, 5) },
+                sleep = {},
+            )
+        assertFalse(idle)
+
+        val exited = ProcessTreeCpu.sampleBusy(pids = { emptyList() }, sampleMs = 1L, sleep = {})
+        assertFalse(exited)
+    }
+
+    @Test
+    fun `B-SETUP-031 completed script with exit zero succeeds even if silence watchdog raced teardown`() {
+        val result =
+            SetupCompatFallback.resolveScriptFailure(
+                cancelled = false,
+                completionExitCode = 0,
+                stalled = true,
+                compatible = false,
+            ) { "exit 143" }
+        assertNull(result)
+
+        val stalledResult =
+            SetupCompatFallback.resolveScriptFailure(
+                cancelled = false,
+                completionExitCode = null,
+                stalled = true,
+                compatible = true,
+            ) { "exit 143" }
+        assertEquals(SetupCompatFallback.stalledFailure(compatible = true), stalledResult)
+
+        val cancelledResult =
+            SetupCompatFallback.resolveScriptFailure(
+                cancelled = true,
+                completionExitCode = 0,
+                stalled = false,
+                compatible = false,
+            ) { null }
+        assertEquals("cancelled", cancelledResult)
     }
 }

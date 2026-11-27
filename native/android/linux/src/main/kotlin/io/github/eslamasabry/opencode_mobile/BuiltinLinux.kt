@@ -2846,6 +2846,12 @@ class BuiltinLinux(private val context: Context) {
 
     internal fun clearProotCompat() = NodeCompatState.clearProotCompat(rootfs)
 
+    /** Live PID of [process] plus its descendants (by parent or proot tracer), or empty when exited. */
+    internal fun processTreePids(process: Process): List<Int> {
+        val root = if (process.isAlive) pidOf(process) else null
+        return if (root == null) emptyList() else listOf(root) + descendants(root)
+    }
+
     private val prootProbeLock = Any()
     private var recentProotProbe: Pair<Long, LinuxProotProbe.Result>? = null
 

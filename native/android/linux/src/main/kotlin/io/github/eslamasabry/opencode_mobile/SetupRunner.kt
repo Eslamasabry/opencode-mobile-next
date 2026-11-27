@@ -552,7 +552,10 @@ class SetupRunner private constructor(private val context: Context) {
             return "cancelled"
         }
         val silence = SetupStepSilence(timeoutMs = SetupCompatFallback.timeoutForMode(compatible))
-        val watchdog = SetupSilenceWatchdog(silence, { cancelled }, { linux.stopInstaller(started) })
+        val watchdog = SetupSilenceWatchdog(
+            silence, { cancelled }, { linux.stopInstaller(started) },
+            isBusy = { isInstallerTreeBusy(linux, started) },
+        )
         val run = SetupScriptRun(completion, watchdog)
         watchdog.start()
         try {
@@ -571,11 +574,9 @@ class SetupRunner private constructor(private val context: Context) {
         val code = try { started.waitFor() } finally { synchronized(lock) { process = null } }
         lastExitCode = SetupStepRetry.crashExit(completion.exitCode ?: code, run.sawSegfault)
         lastStalled = watchdog.isStalled && completion.exitCode != 0
-        return when {
-            cancelled -> "cancelled"
-            lastStalled -> SetupCompatFallback.stalledFailure(compatible)
-            code == 0 && completion.exitCode != 0 -> SetupStepRetry.missingResult(run.last)
-            else -> installerFailure(spec, component, code, run.last)
+        return SetupCompatFallback.resolveScriptFailure(cancelled, completion.exitCode, lastStalled, compatible) {
+            if (code == 0 && completion.exitCode != 0) SetupStepRetry.missingResult(run.last)
+            else installerFailure(spec, component, code, run.last)
         }
     }
 
@@ -846,3 +847,6 @@ private fun setupComponentStates(job: SetupJobState): String =
 
 private fun setupJobJson(state: SetupJobState, params: JSONObject?): JSONObject =
     state.toJson().apply { put("params", params ?: JSONObject()) }
+
+private fun isInstallerTreeBusy(linux: BuiltinLinux, process: Process): Boolean =
+    ProcessTreeCpu.sampleBusy({ linux.processTreePids(process) }, SetupSilenceWatchdog.DEFAULT_POLL_MS)

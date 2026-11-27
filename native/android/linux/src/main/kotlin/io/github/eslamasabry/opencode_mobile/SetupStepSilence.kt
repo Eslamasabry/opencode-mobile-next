@@ -91,6 +91,7 @@ internal class SetupSilenceWatchdog(
     private val isCancelled: () -> Boolean,
     private val stopProcess: () -> Unit,
     private val pollMs: Long = DEFAULT_POLL_MS,
+    private val isBusy: () -> Boolean = { false },
 ) {
     private val stalled = java.util.concurrent.atomic.AtomicBoolean(false)
     private val finished = java.util.concurrent.atomic.AtomicBoolean(false)
@@ -118,8 +119,12 @@ internal class SetupSilenceWatchdog(
         while (running && !finished.get() && !isCancelled()) {
             val waitMs = silence.remainingMs()
             if (waitMs <= 0L) {
-                stopIfStillSilent()
-                running = false
+                if (isBusy()) {
+                    silence.touch()
+                } else {
+                    stopIfStillSilent()
+                    running = false
+                }
             } else {
                 running = sleepStep(waitMs)
             }
@@ -145,8 +150,69 @@ internal class SetupSilenceWatchdog(
     }
 
     companion object {
-        private const val DEFAULT_POLL_MS = 1_000L
+        const val DEFAULT_POLL_MS = 1_000L
     }
+}
+
+/**
+ * Measures whether a process and its descendants performed CPU work between two `/proc/<pid>/stat` samples
+ * (B-488). Prevents the silence watchdog from stopping silent-but-healthy steps like guest `tar` or `npm`.
+ */
+internal object ProcessTreeCpu {
+    private const val UTIME_INDEX = 11
+    private const val STIME_INDEX = 12
+    private const val CUTIME_INDEX = 13
+    private const val CSTIME_INDEX = 14
+
+    /** Total CPU ticks (utime + stime + cutime + cstime) from a `/proc/<pid>/stat` line, or null. */
+    fun cpuTicks(stat: String): Long? {
+        val close = stat.lastIndexOf(')')
+        val fields = if (close < 0) emptyList() else stat.substring(close + 1).trim().split(' ')
+        val ticks =
+            listOf(UTIME_INDEX, STIME_INDEX, CUTIME_INDEX, CSTIME_INDEX)
+                .map { idx -> fields.getOrNull(idx)?.toLongOrNull() }
+        return if (ticks.any { it == null }) null else ticks.sumOf { it ?: 0L }
+    }
+
+    /** True when any live process in the tree added CPU ticks or membership changed between samples. */
+    fun isBusy(first: Map<Int, Long>, second: Map<Int, Long>): Boolean =
+        second.isNotEmpty() &&
+            (second.keys != first.keys || second.any { (pid, ticks) -> ticks > (first[pid] ?: 0L) })
+
+    /** Samples CPU ticks for [pids] twice, [sampleMs] apart; returns true if the tree is busy. */
+    fun sampleBusy(
+        pids: () -> List<Int>,
+        sampleMs: Long,
+        readStat: (Int) -> String? = ::readProcStat,
+        sleep: (Long) -> Unit = { Thread.sleep(it) },
+    ): Boolean {
+        val first = snapshot(pids(), readStat)
+        return first.isNotEmpty() &&
+            try {
+                sleep(sampleMs)
+                isBusy(first, snapshot(pids(), readStat))
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+                false
+            }
+    }
+
+    private fun snapshot(pids: List<Int>, readStat: (Int) -> String?): Map<Int, Long> =
+        buildMap {
+            for (pid in pids) {
+                val ticks = readStat(pid)?.let(::cpuTicks)
+                if (ticks != null) put(pid, ticks)
+            }
+        }
+
+    private fun readProcStat(pid: Int): String? =
+        try {
+            java.io.File("/proc/$pid/stat").readText()
+        } catch (_: java.io.IOException) {
+            null
+        } catch (_: SecurityException) {
+            null
+        }
 }
 
 /**
@@ -181,6 +247,24 @@ internal object SetupCompatFallback {
 
     /** Whether [failure] came from a step stalling past its silence bound. */
     fun isStalled(failure: String?): Boolean = failure != null && failure.startsWith(STALLED_PREFIX)
+
+    /**
+     * Resolves a script run's terminal failure string: cancel wins, a verified exit 0 completion marker always
+     * succeeds (even if the silence watchdog fired during teardown), then stall, then [fallback].
+     */
+    fun resolveScriptFailure(
+        cancelled: Boolean,
+        completionExitCode: Int?,
+        stalled: Boolean,
+        compatible: Boolean,
+        fallback: () -> String?,
+    ): String? =
+        when {
+            cancelled -> "cancelled"
+            completionExitCode == 0 -> null
+            stalled -> stalledFailure(compatible)
+            else -> fallback()
+        }
 
     data class StepAttempt(
         val failure: String?,
