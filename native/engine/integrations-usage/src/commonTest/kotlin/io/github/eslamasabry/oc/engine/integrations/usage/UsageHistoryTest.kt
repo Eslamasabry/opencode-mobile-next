@@ -28,6 +28,7 @@ private class HistoryScriptedSource(var next: UsageSourceResult = UsageSourceRes
 private class StaticPaseoPorts(
     private val profiles: List<PaseoUsageProfile>,
     var readings: List<ProviderUsageReading> = emptyList(),
+    private val phone: Boolean = true,
 ) : PaseoUsagePorts {
     override fun paseoProfiles(): List<PaseoUsageProfile> = profiles
 
@@ -35,7 +36,7 @@ private class StaticPaseoPorts(
 
     override suspend fun readServer(profileId: String): Outcome<List<ProviderUsageReading>> = Outcome.Ok(readings)
 
-    override fun phoneSupported(): Boolean = true
+    override fun phoneSupported(): Boolean = phone
 
     override suspend fun readPhone(): Outcome<List<ProviderUsageReading>?> = Outcome.Ok(readings)
 }
@@ -501,7 +502,7 @@ class UsageHistoryTest {
                 windows = listOf(ProviderUsageWindowReading(18_000L, "5h", remainingPercent = 65, resetsAt = reset)),
                 accountRef = "user@corp.io",
             )
-        val ports = StaticPaseoPorts(listOf(PaseoUsageProfile("paseo1", "PC")), listOf(reading))
+        val ports = StaticPaseoPorts(listOf(PaseoUsageProfile("paseo1", "PC")), listOf(reading), phone = false)
         val history = UsageHistory(kv, LANE, clock = { now })
         val widget = UsageWidgetFeed(kv, LANE, isAndroid = true, clock = { now }).apply { attachHistory(history) }
         val monitor = PaseoUsageMonitor(kv, LANE, ports, widget = widget, clock = { now }, autoRead = true)
@@ -535,7 +536,7 @@ class UsageHistoryTest {
                 windows = listOf(ProviderUsageWindowReading(18_000L, "5h", remainingPercent = 65, resetsAt = reset)),
                 accountRef = "user@corp.io",
             )
-        val ports = StaticPaseoPorts(listOf(PaseoUsageProfile("paseo2", "PC")), listOf(reading))
+        val ports = StaticPaseoPorts(listOf(PaseoUsageProfile("paseo2", "PC")), listOf(reading), phone = false)
         val history = UsageHistory(kv, LANE, clock = { now })
         val monitor = PaseoUsageMonitor(kv, LANE, ports, widget = null, clock = { now }, autoRead = true)
         monitor.attachHistory(history)
