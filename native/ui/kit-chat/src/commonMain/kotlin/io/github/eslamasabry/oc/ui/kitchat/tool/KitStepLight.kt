@@ -37,8 +37,8 @@ public enum class KitStepLightState { Idle, Working, Background }
 public object KitStepLightLap {
     public const val LAP_MS: Int = 2000
     public const val CALM_LAP_MS: Int = 4000
-    public const val FILL_STROKE: Float = 1.8f
-    public const val HEAD_STROKE: Float = 2.6f
+    public const val FILL_STROKE: Float = 1.5f
+    public const val HEAD_STROKE: Float = 1.5f
     private const val LIGHT_LEN = 14f
     private const val HEAD_LEN = 8f
 
@@ -225,7 +225,7 @@ private fun DrawScope.drawOutline(size: Float, color: Color, fraction: Float, st
     }
 }
 
-/** The two bright heads at the filling ends (F: kit_step_light.dart:505-523): 8 dp long, 2.6 dp wide, round. */
+/** The two bright heads at the filling ends (B-568): 8 dp long, 1.5 dp wide, round. */
 private fun DrawScope.drawHeads(size: Float, color: Color, fraction: Float, dp: Float) {
     val stroke = KitStepLightLap.HEAD_STROKE * dp
     val measure = PathMeasure()

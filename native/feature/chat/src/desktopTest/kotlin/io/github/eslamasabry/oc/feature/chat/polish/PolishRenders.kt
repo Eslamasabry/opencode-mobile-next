@@ -14,8 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.getBoundsInRoot
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -76,7 +74,7 @@ import kotlin.test.Test
 
 class PolishRenders {
     companion object {
-        const val PHASE = "before"
+        const val PHASE = "after"
     }
 
     private val noReqActions =
@@ -321,24 +319,4 @@ class PolishRenders {
             waitForIdle()
             ImageIO.write(onRoot().captureToImage().toAwtImage(), "png", out("561", "plain-topbar", "1.0", "light"))
         }
-
-    @Test
-    fun `measure 561 solid vs glass title width`() {
-        fun titleWidth(style: Style): Float {
-            var w = 0f
-            kitUiTest(360, 780) {
-                val scene = ChatScene()
-                val state = scene.live().copy(title = "A very long conversation title that fills the usable header width cleanly")
-                setContent { E20Scene(dark = true, style = style) { scene.Screen(state, canGoBack = true) } }
-                waitForIdle()
-                val b = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).getBoundsInRoot()
-                w = (b.right - b.left).value
-            }
-            return w
-        }
-        val solid = titleWidth(Style.Solid)
-        val glass = titleWidth(Style.Glass)
-        println("TITLE_WIDTH_BASE Solid=$solid dp Glass=$glass dp")
-        kotlin.test.assertTrue(false, "TITLE_WIDTH_BASE Solid=$solid dp Glass=$glass dp")
-    }
 }

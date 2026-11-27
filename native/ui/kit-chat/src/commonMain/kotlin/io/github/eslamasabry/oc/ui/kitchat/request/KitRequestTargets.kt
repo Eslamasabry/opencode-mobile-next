@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,9 +20,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextDecoration
@@ -63,65 +66,74 @@ public fun KitRequestTargets(
     modifier: Modifier = Modifier,
     copyLabel: String? = null,
     copiedLabel: String? = null,
+    footer: (@Composable () -> Unit)? = null,
 ) {
     if (targets.isEmpty()) return
     var expanded by remember(targets) { mutableStateOf(false) }
     val colors = LocalKitColors.current
     val shape = KitShapeId.Code.toShape()
     val hidden = (targets.size - TARGET_LIMIT).coerceAtLeast(0)
-    // Brutal and Paper: the style's code face (its edge and corner, no shadow); null keeps the box's own.
     val dressed = kitDressedLook(KitSurfaceInput(role = SurfaceRole.Code, shape = KitShapeId.Code, color = colors.ground))
+    val boxStyle =
+        dressed?.let { Modifier.kitSurface(it) }
+            ?: Modifier.clip(shape).background(colors.ground).border(1.dp, colors.hairline, shape)
     Column(
-        modifier
-            .fillMaxWidth()
-            .then(dressed?.let { Modifier.kitSurface(it) } ?: Modifier.clip(shape).background(colors.ground).border(1.dp, colors.hairline, shape))
-            .padding(Space.S3.dp),
+        modifier.fillMaxWidth().testTag("kit-request-targets").then(boxStyle).padding(Space.S3.dp),
         verticalArrangement = Arrangement.spacedBy(Space.S2.dp),
     ) {
-        // Copies every command or path as asked (the full text, not the shown lines) with any key, token or password
-        // masked (Flutter KitCopy.copy, redact: true; E15-S04): a compact copy mark in the box's corner beside the first
-        // line, like a code block's, never a long button under the command.
         val copy =
-            if (copyLabel != null && copiedLabel != null)
+            if (copyLabel != null && copiedLabel != null) {
                 rememberKitRedactedCopyAction(copyLabel, copiedLabel, { targets.joinToString("\n") { it.text } })
-            else null
-        (if (expanded) targets else targets.take(TARGET_LIMIT)).forEachIndexed { index, target ->
+            } else null
+        val shown = if (expanded) targets else targets.take(TARGET_LIMIT)
+        shown.forEachIndexed { index, target ->
             if (index == 0 && copy != null) {
-                // One line sits level with the copy mark (it sat high, over an empty lower half); several lines keep
-                // the mark at the first line's corner.
-                val oneLine = '\n' !in target.text
-                Row(verticalAlignment = if (oneLine) Alignment.CenterVertically else Alignment.Top) {
-                    KitMonoLtr(
-                        target.text,
-                        Modifier.weight(1f).padding(top = if (oneLine) 0.dp else Space.S2.dp),
-                        TextTone.Primary,
-                    )
-                    KitIconButton(
-                        icon = if (copy.label != copyLabel) KitIcons.check else KitIcons.copy,
-                        label = copy.label,
-                        onClick = copy.onClick ?: {},
-                        // The copied name is announced once, saying when a password or key was masked.
-                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                        tone = TextTone.Secondary,
-                    )
-                }
+                FirstTargetRow(target.text, copy.label, copy.label != copyLabel, copy.onClick)
             } else KitMonoLtr(target.text, Modifier.fillMaxWidth(), TextTone.Primary)
             target.change?.let { KitText(it, role = TypeRole.Secondary, tone = TextTone.Secondary) }
         }
-        if (hidden > 0) {
-            if (!expanded)
-                KitText(
-                    pluralStringResource(Res.plurals.kitRequestMoreTargets, hidden, hidden),
-                    role = TypeRole.Secondary,
-                    tone = TextTone.Secondary,
-                )
-            KitButton(
-                stringResource(if (expanded) Res.string.kitDetailsHide else Res.string.kitDetails),
-                { expanded = !expanded },
-                role = KitButtonRole.Tertiary,
+        if (hidden > 0) TargetsOverflowFooter(hidden, expanded) { expanded = !expanded }
+        if (footer != null) {
+            KitDivider()
+            footer()
+        }
+    }
+}
+
+@Composable
+private fun FirstTargetRow(text: String, copyLabel: String, copied: Boolean, onCopy: (() -> Unit)?) {
+    val oneLine = '\n' !in text
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = if (oneLine) Alignment.CenterVertically else Alignment.Top,
+        ) {
+            KitMonoLtr(text, Modifier.weight(1f).padding(top = if (oneLine) 0.dp else Space.S2.dp), TextTone.Primary)
+            KitIconButton(
+                icon = if (copied) KitIcons.check else KitIcons.copy,
+                label = copyLabel,
+                onClick = onCopy ?: {},
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                tone = TextTone.Secondary,
             )
         }
     }
+}
+
+@Composable
+private fun TargetsOverflowFooter(hidden: Int, expanded: Boolean, onToggle: () -> Unit) {
+    if (!expanded) {
+        KitText(
+            pluralStringResource(Res.plurals.kitRequestMoreTargets, hidden, hidden),
+            role = TypeRole.Secondary,
+            tone = TextTone.Secondary,
+        )
+    }
+    KitButton(
+        stringResource(if (expanded) Res.string.kitDetailsHide else Res.string.kitDetails),
+        onToggle,
+        role = KitButtonRole.Tertiary,
+    )
 }
 
 private const val TARGET_LIMIT: Int = 3

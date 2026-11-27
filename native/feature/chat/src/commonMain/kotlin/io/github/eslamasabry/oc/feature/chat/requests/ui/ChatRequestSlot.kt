@@ -370,7 +370,16 @@ private fun cardTarget(card: RequestCardUi): String {
         is RequestCardUi.Permission -> {
             val what = askWhat(card.ask)
             val question = askQuestion(card.ask)
-            if (what != null && what !in question) "$question, ${KitBidi.ltr(mask(what))}" else question
+            if (what != null && what !in question) {
+                val trimmed = question.trimEnd()
+                val head =
+                    if (trimmed.isNotEmpty() && trimmed.last() in "?\u061F\uFF1F") {
+                        trimmed.dropLast(1).trimEnd()
+                    } else {
+                        trimmed
+                    }
+                "$head · ${KitBidi.ltr(mask(what))}"
+            } else question
         }
         is RequestCardUi.Question -> card.question.ifBlank { card.title }
     }

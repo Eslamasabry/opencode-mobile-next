@@ -465,6 +465,7 @@ public fun KitTopBar(
                 actions = if (barFit.tight) actionRow else stepped,
             )
         } else {
+        val inlineSubtitle = under != null && scope == null
         Row(
             Modifier.fillMaxWidth().heightIn(min = (if (hasLine) tokens.minTarget else tokens.rowHeightOne).dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -472,14 +473,27 @@ public fun KitTopBar(
         ) {
             // No exit: the title's words start on the gutter, like the page's first row (Flutter kit_top_bar.dart,
             // "the title starts on the gutter"); the bar's 4 dp and the title row's 8 dp leave 4 dp to add.
-            Row(Modifier.weight(1f).padding(start = titleStart), verticalAlignment = Alignment.CenterVertically) {
-                title()
+            if (inlineSubtitle) {
+                Column(
+                    Modifier.weight(1f).padding(start = titleStart),
+                    verticalArrangement = Arrangement.spacedBy(TITLE_LINE_GAP),
+                ) {
+                    Box(Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, 0.dp)) { title() }
+                    under()
+                }
+            } else {
+                Row(
+                    Modifier.weight(1f).padding(start = titleStart),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    title()
+                }
             }
             actionRow()
             if (exit == KitTopBarExit.Close && onExit != null)
                 ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
         }
-        if (under != null) {
+        if (under != null && !inlineSubtitle) {
             // Under the title's first letter; the scope's own words keep their 8 dp inset like the title's.
             val lead = titleStart + if (scope != null) Space.S1.dp else 0.dp
             // The line's words keep their 48 dp targets, but the targets overlap the bar's empty edges by 8 dp so the
@@ -914,7 +928,8 @@ private fun Modifier.endUnderText(line: androidx.compose.ui.unit.TextUnit, top: 
 
 /**
  * E20-S10: rises so the content's vertically centred words start [gap] under what is above it, and reports [bottom]
- * less height below (a target overlapping the empty edge under the bar). Unchanged without baselines.
+ * less height below (a target overlapping the empty edge under the bar). Falls back to [line] when a child subcompose
+ * layout (such as BoxWithConstraints in KitTopBarScope) does not forward baselines.
  */
 private fun Modifier.riseToText(
     line: androidx.compose.ui.unit.TextUnit,
@@ -923,7 +938,9 @@ private fun Modifier.riseToText(
 ): Modifier =
     layout { measurable, constraints ->
         val p = measurable.measure(constraints)
-        val words = wordsHeight(p, line)
+        val words =
+            wordsHeight(p, line)
+                ?: if (line.isSp) line.roundToPx().takeIf { it in 1 until p.height } else null
         val slack = if (words == null) 0 else ((p.height - words) / 2).coerceAtLeast(0)
         val rise = (slack - gap.roundToPx()).coerceAtLeast(-gap.roundToPx())
         val height = (p.height - rise - bottom.roundToPx()).coerceAtLeast(0)
