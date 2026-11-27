@@ -218,7 +218,7 @@ public object LimitPaceMath {
 
     private fun bestRoomWindow(account: LimitAccountUi): Pair<Double, Int>? {
         val windows = account.groups.flatMap { it.windows }
-        if (windows.any { it.forecast is PaceForecast.Out || it.forecast is PaceForecast.RunsOut }) {
+        if (windows.any { it.isUsedUp() }) {
             return null
         }
         val lasting =
@@ -371,3 +371,11 @@ public object LimitPaceMath {
         return listOfNotNull(divider, label)
     }
 }
+
+/** Out, running out before its reset, or nothing left with no forecast to say more: not a window to send work to. */
+private fun LimitWindowUi.isUsedUp(): Boolean =
+    when (forecast) {
+        is PaceForecast.Out, is PaceForecast.RunsOut -> true
+        null -> leftPercent <= 0
+        else -> false
+    }
