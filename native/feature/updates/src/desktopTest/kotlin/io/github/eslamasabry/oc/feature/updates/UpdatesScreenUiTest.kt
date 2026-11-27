@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
@@ -53,6 +55,7 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import java.io.File
 import java.util.Locale
 import kotlin.test.AfterTest
@@ -120,7 +123,10 @@ class UpdatesScreenUiTest {
             localeTag = "en",
             stillFrame = true,
         ) {
-            Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
+            // The app provides its one redactor above every screen; Details passes the signatures through it.
+            CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
+                Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
+            }
         }
     }
 

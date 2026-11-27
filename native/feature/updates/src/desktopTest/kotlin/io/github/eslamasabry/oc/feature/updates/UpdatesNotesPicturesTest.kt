@@ -23,6 +23,7 @@ import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
@@ -56,6 +57,7 @@ import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.appUpdateAvailableLine
 import io.github.eslamasabry.oc.ui.words.res.appUpdateBuildLabel
@@ -225,6 +227,7 @@ class UpdatesNotesPicturesTest {
                         CompositionLocalProvider(
                             LocalKitWindow provides
                                 KitWindowInfo(WIDTH_DP.toFloat(), HEIGHT_DP.toFloat()),
+                            LocalKitRedactor provides Redactor(),
                         ) {
                             Box(
                                 Modifier.fillMaxSize().background(LocalKitColors.current.ground),
