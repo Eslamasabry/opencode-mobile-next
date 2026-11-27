@@ -9,6 +9,8 @@ import io.github.eslamasabry.oc.engine.agents.catalog.AgentDescriptor
 import io.github.eslamasabry.oc.engine.agents.catalog.AgentPins
 import io.github.eslamasabry.oc.engine.agents.install.AgentKeepBlock
 import io.github.eslamasabry.oc.engine.agents.install.AgentNeedRule
+import io.github.eslamasabry.oc.engine.agents.install.AgentPinMove
+import io.github.eslamasabry.oc.engine.agents.install.AgentPinRule
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateGroup
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateInventory
 import io.github.eslamasabry.oc.engine.agents.install.AgentUpdateItem
@@ -49,7 +51,7 @@ internal class PhoneChoiceInventory(
             if (linux.installed) openCode()?.let(::add)
             for ((id, from) in versions) {
                 val agent = AgentCatalog.builtIn.byId(id) ?: continue
-                if (!agent.retired && (agent.recipe?.version != from || id in changed)) add(agentRow(agent, from))
+                if (PhoneChoiceRules.agentOffered(agent, from, id in changed)) add(agentRow(agent, from))
             }
         }
         val connection = when (network.current()) {
@@ -84,7 +86,7 @@ internal class PhoneChoiceInventory(
         val installed = File(linux.rootfs, binary.removePrefix("/")).isFile
         val from = if (installed) phones.choiceVersion("opencode2", pin) ?: runningVersion() else null
         openCodeOnDisk = from
-        return if (from == null || from == pin) null else AgentUpdateItem(
+        return if (!PhoneChoiceRules.openCodeOffered(from, pin)) null else AgentUpdateItem(
             AgentId.OPENCODE, "OpenCode", from, pin, HomeDownloadSizes.OPEN_CODE_MB * MB,
             diskBytes("/opt/opencode2"), AgentUpdateGroup.Optional, true, false, null, null, null,
         )
@@ -92,14 +94,16 @@ internal class PhoneChoiceInventory(
 
     private suspend fun sharedItems(): List<AgentUpdateItem> = buildList {
         val helper = phones.choiceVersion("paseo", pins.paseo.version)
-        val always = helper != null && helper != pins.paseo.version && helper !in pins.paseoTestedVersions
-        val rule = if (always) AgentNeedRule.Always else AgentNeedRule.WithAnyUpdate
-        if (helper != pins.paseo.version) add(rule.needed(
-            "agent-paseo", getString(Res.string.runningPhoneName__agentHelper), helper, pins.paseo.version,
-            HomeDownloadSizes.HELPER_MB * MB,
-        ))
         val node = phones.choiceVersion("node", pins.node.version)?.let { "v$it" }
-        if (node != pins.node.version) add(rule.needed("agent-node", "Node.js", node, pins.node.version, NODE_BYTES))
+        val needs =
+            PhoneChoiceRules.shared(helper, node, pins.paseo.version, pins.node.version, pins.paseoTestedVersions)
+        needs.helper?.let { rule ->
+            add(rule.needed(
+                "agent-paseo", getString(Res.string.runningPhoneName__agentHelper), helper, pins.paseo.version,
+                HomeDownloadSizes.HELPER_MB * MB,
+            ))
+        }
+        needs.node?.let { add(it.needed("agent-node", "Node.js", node, pins.node.version, NODE_BYTES)) }
     }
 
     private fun AgentNeedRule.needed(id: String, name: String, from: String?, pin: String, bytes: Long) =
@@ -120,5 +124,46 @@ internal class PhoneChoiceInventory(
         const val KIB = 1024L
         const val NODE_BYTES = 58_000_000L
         const val PROBE_SECONDS = 30L
+    }
+}
+
+/** The shared parts the offer lists, each with the rule that says when it comes; null: the part stays as it is. */
+internal data class SharedNeeds(val helper: AgentNeedRule?, val node: AgentNeedRule?)
+
+/**
+ * What the phone's inventory lists, by the order of the versions and never by their text: a copy newer than this
+ * app's pin was listed as "Version 0.172.0 → 0.171.0 · Update" (it was only "another version"). Only a copy older
+ * than the pin is an update; a newer one, or one whose version cannot be read, is left as it is.
+ */
+internal object PhoneChoiceRules {
+    /**
+     * An installed agent gets a row when its copy is older than the pin, or ([changed], issue 147) it is the pin's own
+     * version from another artifact. A newer copy never does, whatever its install record says.
+     */
+    fun agentOffered(agent: AgentDescriptor, from: String, changed: Boolean): Boolean =
+        !agent.retired && AgentPinRule.move(from, agent.recipe?.version, reinstall = changed) == AgentPinMove.Update
+
+    /** OpenCode at the launch path gets a row only when it is older than the pin. */
+    fun openCodeOffered(from: String?, pin: String): Boolean = AgentPinRule.move(from, pin) == AgentPinMove.Update
+
+    /**
+     * The agent helper and Node.js. A part that is not there, or older than its pin, comes with the updates. The helper
+     * runs only as the pin or a [tested] version, so one outside them must move whatever is chosen
+     * ([AgentNeedRule.Always]): that is also the one newer copy that goes back to the pin, because this app cannot run
+     * it. A newer tested helper and a newer Node.js run as they are and are not listed.
+     */
+    fun shared(
+        helper: String?,
+        node: String?,
+        helperPin: String,
+        nodePin: String,
+        tested: Collection<String>,
+    ): SharedNeeds {
+        val runs = helper != null && helper in tested
+        val helperListed = helper == null || AgentPinRule.move(helper, helperPin, runsAsIs = runs) != AgentPinMove.None
+        val nodeListed = node == null || AgentPinRule.move(node, nodePin) == AgentPinMove.Update
+        val always = helper != null && helperListed && !runs
+        val rule = if (always) AgentNeedRule.Always else AgentNeedRule.WithAnyUpdate
+        return SharedNeeds(helper = rule.takeIf { helperListed }, node = rule.takeIf { nodeListed })
     }
 }

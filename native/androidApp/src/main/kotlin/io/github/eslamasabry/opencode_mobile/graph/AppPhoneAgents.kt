@@ -41,6 +41,8 @@ import io.github.eslamasabry.oc.engine.agents.install.AgentInstaller
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupFailure
 import io.github.eslamasabry.oc.engine.agents.install.AgentSetupPhase
 import io.github.eslamasabry.oc.engine.agents.install.AgentVersionCheck
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersionOrder
+import io.github.eslamasabry.oc.engine.agents.install.AgentVersions
 import io.github.eslamasabry.oc.engine.agents.install.InstallRefusal
 import io.github.eslamasabry.oc.engine.agents.install.InstallStart
 import io.github.eslamasabry.oc.engine.agents.probe.AgentAuthScripts
@@ -209,6 +211,8 @@ class AppPhoneAgents(
         val helperVersion: String?,
         /** The helper's install is not at its pin on disk ([readForUpdate]); false when unknown. */
         val helperOnDiskBehind: Boolean = false,
+        /** Installed copies newer than their pin, or of a version that cannot be read: never installed over. */
+        val ahead: Set<AgentId> = emptySet(),
     )
 
     /** Whether the helper's install was in place at its pin when [readForUpdate] last looked; null before it ran. */
@@ -435,17 +439,11 @@ class AppPhoneAgents(
         val owner = agentOwner(ownerId()) ?: return null
         val kept = keptFacts(owner)
         // A copy that runs but is not the pinned version has installed=false in the version answer (that field means
-        // "the pin is installed") and a found version: it is installed, and behind.
+        // "the pin is installed") and a found version: it is installed, and behind only when it is OLDER than the pin.
+        // A newer copy is never behind: the update would install the pin over it, a downgrade nobody asked for.
         val installed =
             phoneCatalog().filter { kept[it.id.raw]?.let { fact -> fact.installed == true || fact.found != null } == true }
-        val behind =
-            installed
-                .filter { agent ->
-                    val found = kept[agent.id.raw]?.found
-                    found != null && found != agent.recipe?.version
-                }
-                .map { it.id }
-                .toSet()
+        val behind = PhonePinOrder.behind(installed, kept)
         // A helper whose status cannot be read (a half-written record after a stop in the middle of an install) is
         // simply not known to run; it never ends the app.
         val helper =
@@ -462,6 +460,7 @@ class AppPhoneAgents(
             helper["running"] == true,
             helper["helperVersion"] as? String,
             helperOnDiskBehind = installed.isNotEmpty() && helperInPlace == false,
+            ahead = PhonePinOrder.ahead(installed, kept),
         )
     }
 
@@ -1991,4 +1990,28 @@ internal object HelperStopNews {
 
     fun byAndroid(helper: AgentHelperStatus?, since: Long): Boolean =
         helper?.noticeSince(since) == HelperNotice.PossiblyStoppedByAndroid
+}
+
+/**
+ * Where the installed agents' kept versions stand to this app's pins, for the automatic update. The versions were only
+ * compared as text ("not the pin"), so a copy newer than its pin counted as behind and the pin was installed over it.
+ */
+internal object PhonePinOrder {
+    /** The copies older than their pin: the only ones an update moves. */
+    fun behind(installed: List<AgentDescriptor>, kept: Map<String, PhoneAgentFacts.Fact>): Set<AgentId> =
+        installed.filter { order(it, kept) == AgentVersionOrder.Older }.map { it.id }.toSet()
+
+    /**
+     * The copies newer than their pin, or of a version that cannot be read: nothing is installed over them, not even
+     * for an install record that differs from the pin's.
+     */
+    fun ahead(installed: List<AgentDescriptor>, kept: Map<String, PhoneAgentFacts.Fact>): Set<AgentId> =
+        installed
+            .filter { kept[it.id.raw]?.found != null }
+            .filter { order(it, kept) == AgentVersionOrder.Newer || order(it, kept) == AgentVersionOrder.Unparsable }
+            .map { it.id }
+            .toSet()
+
+    private fun order(agent: AgentDescriptor, kept: Map<String, PhoneAgentFacts.Fact>): AgentVersionOrder =
+        AgentVersions.order(kept[agent.id.raw]?.found, agent.recipe?.version)
 }

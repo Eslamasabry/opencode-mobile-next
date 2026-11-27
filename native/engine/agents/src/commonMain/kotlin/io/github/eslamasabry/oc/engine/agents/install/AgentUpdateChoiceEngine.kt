@@ -53,7 +53,9 @@ public class AgentUpdateChoiceEngine(
     private val reads = Mutex()
 
     private fun apply(fresh: AgentUpdateInventory): AgentUpdateOffer? {
-        inventory = fresh
+        // Forward only: a row that would move a copy back to the pin (or whose version cannot be read) is never
+        // offered, so it is not on the sheet, not in its "Update N agents" and never allowed to the automatic update.
+        inventory = fresh.copy(items = fresh.items.filter(AgentPinRule::offerable))
         state.value = decisions.offer(inventory, reviewing)
         val offered = state.value
         sharedConsent =

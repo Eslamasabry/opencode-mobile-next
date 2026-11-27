@@ -17,10 +17,10 @@ public object AgentAutoUpdateRule {
     /**
      * The installed agent whose install brings the phone to the pins, or null when nothing is behind.
      *
-     * [installed] are the installed agents in catalog order, [behind] the installed agents whose copy is not their
-     * pinned version, [helperBehind] whether the agent helper (Paseo) is not the pinned one. An agent that is behind is
-     * updated first; when only the helper is behind, any installed agent's install brings it (the install job also
-     * checks the helper and Node.js and skips what is in place).
+     * [installed] are the installed agents in catalog order, [behind] the installed agents whose copy is older than
+     * their pinned version, [helperBehind] whether the agent helper (Paseo) is not the pinned one. An agent that is
+     * behind is updated first; when only the helper is behind, any installed agent's install brings it (the install
+     * job also checks the helper and Node.js and skips what is in place).
      */
     public fun target(installed: List<AgentId>, behind: Set<AgentId>, helperBehind: Boolean): AgentId? =
         installed.firstOrNull { it in behind } ?: if (helperBehind) installed.firstOrNull() else null
@@ -76,8 +76,10 @@ public interface AgentUpdateHost {
     public val installed: List<AgentId>
 
     /**
-     * The installed agents whose copy is not their pin, from the last read: another version, or (issue 147) the same
-     * version installed from another artifact or running another program ([AgentInstallRecord]).
+     * The installed agents whose copy is behind their pin, from the last read: an older version
+     * ([AgentVersionOrder.Older]), or (issue 147) the same version installed from another artifact or running another
+     * program ([AgentInstallRecord]). Never a copy newer than its pin, nor one whose version cannot be read: installing
+     * the pin over it would be a downgrade nobody asked for.
      */
     public val behind: Set<AgentId>
 

@@ -110,7 +110,8 @@ class PhoneAgentAutoUpdate(
     private val snapshot =
         SpacedSnapshot({ SystemClock.elapsedRealtime() }) {
             phones.updateFacts()?.let { facts ->
-                val records = recordBehind(app, facts.installed)
+                // A copy newer than its pin is never installed over, whatever the pinned version's record says.
+                val records = recordBehind(app, facts.installed) - facts.ahead
                 AgentSnapshot(facts, facts.behind + records, records - facts.behind)
             }
         }
