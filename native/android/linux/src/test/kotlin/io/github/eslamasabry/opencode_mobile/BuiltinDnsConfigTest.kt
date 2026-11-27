@@ -46,7 +46,9 @@ class BuiltinDnsConfigTest {
                 InetAddress.getByName("0.0.0.0"),
                 InetAddress.getByName("127.0.0.1"),
                 InetAddress.getByName("::1"),
-                InetAddress.getByAddress(byteArrayOf(0xfe.toByte(), 0x80.toByte(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)),
+                InetAddress.getByAddress(
+                    byteArrayOf(0xfe.toByte(), 0x80.toByte(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1),
+                ),
                 InetAddress.getByName("224.0.0.251"),
             )
 
