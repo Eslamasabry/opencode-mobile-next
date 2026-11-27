@@ -13,6 +13,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -90,8 +91,7 @@ class UsageHistoryTest {
         first.refresh(force = true)
 
         val key = WindowKey(usageSubscriptionKey("codex", "acct-1", "pc"), "5h")
-        val beforeRestart = first.history.value[key]
-        assertNotNull(beforeRestart)
+        val beforeRestart = first.historyStore.forWindow(key)
         assertEquals(2, beforeRestart.size)
         assertEquals(12.0, beforeRestart[0].usedPercent)
         assertEquals(28.0, beforeRestart[1].usedPercent)
@@ -99,9 +99,10 @@ class UsageHistoryTest {
 
         val raw = assertNotNull(kv.str(UsageHistory.key("pc")))
         assertFalse(raw.contains("token"))
+        assertFalse(raw.contains("acct-1"))
 
         val restarted = makeEngine(HistoryScriptedSource())
-        assertEquals(beforeRestart, restarted.history.value[key])
+        assertEquals(beforeRestart, restarted.historyStore.forWindow(key))
     }
 
     @Test
@@ -327,19 +328,19 @@ class UsageHistoryTest {
         val pcCodex = WindowKey(usageSubscriptionKey("codex", "a", "pc"), "5h")
         val pcGlm = WindowKey(usageSubscriptionKey("glm", "g", "pc"), "5h")
         val inAppCodex = WindowKey(usageSubscriptionKey("codex", "b", "inapp"), "5h")
-        assertEquals(1, engine.history.value[pcCodex]?.size)
-        assertEquals(1, engine.history.value[pcGlm]?.size)
-        assertEquals(1, engine.history.value[inAppCodex]?.size)
+        assertEquals(1, engine.historyStore.forWindow(pcCodex).size)
+        assertEquals(1, engine.historyStore.forWindow(pcGlm).size)
+        assertEquals(1, engine.historyStore.forWindow(inAppCodex).size)
 
         assertTrue(engine.removeProvider("pc", "codex"))
-        assertNull(engine.history.value[pcCodex])
-        assertEquals(1, engine.history.value[pcGlm]?.size)
+        assertTrue(engine.historyStore.forWindow(pcCodex).isEmpty())
+        assertEquals(1, engine.historyStore.forWindow(pcGlm).size)
 
         connections = listOf(IN_APP)
         assertTrue(engine.removeProfile("pc"))
         assertNull(kv.str(UsageHistory.key("pc")))
-        assertNull(engine.history.value[pcGlm])
-        assertEquals(1, engine.history.value[inAppCodex]?.size)
+        assertTrue(engine.historyStore.forWindow(pcGlm).isEmpty())
+        assertEquals(1, engine.historyStore.forWindow(inAppCodex).size)
     }
 
     @Test
@@ -370,11 +371,11 @@ class UsageHistoryTest {
         val engine = makeEngine(source)
         engine.refresh()
         val pcCodex = WindowKey(usageSubscriptionKey("codex", "a", "pc"), "5h")
-        assertEquals(1, engine.history.value[pcCodex]?.size)
+        assertEquals(1, engine.historyStore.forWindow(pcCodex).size)
 
         kv.refuse = true
         assertFalse(engine.removeProvider("pc", "codex"))
-        assertEquals(1, engine.history.value[pcCodex]?.size)
+        assertEquals(1, engine.historyStore.forWindow(pcCodex).size)
     }
 
     @Test
@@ -432,6 +433,187 @@ class UsageHistoryTest {
         val healed = makeEngine(healingSource)
         healed.refresh()
         val key = WindowKey(usageSubscriptionKey("codex", "acct-1", "pc"), "5h")
-        assertEquals(listOf(UsageSample(now, 35.0, reset)), healed.history.value[key])
+        assertEquals(listOf(UsageSample(now, 35.0, reset)), healed.historyStore.forWindow(key))
+    }
+
+    @Test
+    fun `B-STATE-149 resetsAt jitter within tolerance keeps window history and dedupes`() = runTest {
+        assertEquals(5.minutes, UsageHistory.RESET_JITTER_TOLERANCE)
+        val r1 = now + 5.hours
+        val history = UsageHistory(kv, LANE, clock = { now })
+        val key = WindowKey("codex|conn:pc", "5h")
+
+        val s1 = UsageSample(now, 10.0, r1)
+        val s2 = UsageSample(now + 10.minutes, 25.0, r1 + 45.seconds)
+        val s3 = UsageSample(now + 20.minutes, 40.0, r1 - 30.seconds)
+        history.recordSample("pc", key, s1)
+        history.recordSample("pc", key, s2)
+        history.recordSample("pc", key, s3)
+        assertEquals(listOf(s1, s2, s3), history.forWindow(key))
+
+        val commitsBefore = kv.commits
+        // Same usedPercent with +2 min resetsAt drift within 15 min: deduped without writing.
+        history.recordSample("pc", key, UsageSample(now + 25.minutes, 40.0, r1 + 2.minutes))
+        assertEquals(listOf(s1, s2, s3), history.forWindow(key))
+        assertEquals(commitsBefore, kv.commits)
+
+        // Same usedPercent with +2 min drift after >15 min: updates last fetchedAt in place.
+        val t36 = now + 36.minutes
+        history.recordSample("pc", key, UsageSample(t36, 40.0, r1 + 2.minutes))
+        assertEquals(listOf(s1, s2, s3.copy(fetchedAt = t36)), history.forWindow(key))
+
+        // Real reset (> tolerance): keeps previous window's last sample plus the new sample.
+        val r2 = r1 + 5.hours
+        val s4 = UsageSample(now + 5.hours + 5.minutes, 5.0, r2)
+        history.recordSample("pc", key, s4)
+        assertEquals(listOf(s3.copy(fetchedAt = t36), s4), history.forWindow(key))
+    }
+
+    @Test
+    fun `B-STATE-149 caps in-memory windows to match the 64-window persistence cap`() = runTest {
+        assertEquals(64, UsageHistory.MAX_WINDOWS_PER_CONNECTION)
+        val reset = now + 5.hours
+        val history = UsageHistory(kv, LANE, clock = { now })
+
+        for (i in 0 until 80) {
+            val k = WindowKey("codex|conn:pc", "win-$i")
+            history.recordSample("pc", k, UsageSample(now + i.seconds, (i % 100).toDouble(), reset))
+        }
+
+        assertEquals(UsageHistory.MAX_WINDOWS_PER_CONNECTION, history.samples.value.size)
+        assertTrue(history.forWindow(WindowKey("codex|conn:pc", "win-0")).isEmpty())
+        assertTrue(history.forWindow(WindowKey("codex|conn:pc", "win-15")).isEmpty())
+        assertEquals(1, history.forWindow(WindowKey("codex|conn:pc", "win-16")).size)
+        assertEquals(1, history.forWindow(WindowKey("codex|conn:pc", "win-79")).size)
+
+        val reloaded = UsageHistory(kv, LANE, clock = { now }, initialConnections = listOf("pc"))
+        assertEquals(history.samples.value, reloaded.samples.value)
+    }
+
+    @Test
+    fun `B-SEC-178 Paseo monitor never resurrects history after profile removal mid-read`() = runTest {
+        val reset = now + 5.hours
+        val reading =
+            ProviderUsageReading(
+                providerId = "claude",
+                displayName = "Claude",
+                fetchedAt = now,
+                windows = listOf(ProviderUsageWindowReading(18_000L, "5h", remainingPercent = 65, resetsAt = reset)),
+                accountRef = "user@corp.io",
+            )
+        val ports = StaticPaseoPorts(listOf(PaseoUsageProfile("paseo1", "PC")), listOf(reading))
+        val history = UsageHistory(kv, LANE, clock = { now })
+        val widget = UsageWidgetFeed(kv, LANE, isAndroid = true, clock = { now }).apply { attachHistory(history) }
+        val monitor = PaseoUsageMonitor(kv, LANE, ports, widget = widget, clock = { now }, autoRead = true)
+        monitor.attachHistory(history)
+
+        // Hold the first disk write while removeProfile runs concurrently.
+        val started = CompletableDeferred<Unit>()
+        val gate = CompletableDeferred<Unit>()
+        kv.started = started
+        kv.gate = gate
+
+        val job = async { monitor.refresh() }
+        started.await()
+        monitor.removeProfile("paseo1")
+        history.removeProfile("paseo1")
+        gate.complete(Unit)
+        job.await()
+
+        assertNull(kv.str(UsageHistory.key("paseo1")))
+        assertTrue(history.samples.value.isEmpty())
+    }
+
+    @Test
+    fun `B-SEC-178 Paseo monitor without widget never resurrects history after removal mid-write`() = runTest {
+        val reset = now + 5.hours
+        val reading =
+            ProviderUsageReading(
+                providerId = "claude",
+                displayName = "Claude",
+                fetchedAt = now,
+                windows = listOf(ProviderUsageWindowReading(18_000L, "5h", remainingPercent = 65, resetsAt = reset)),
+                accountRef = "user@corp.io",
+            )
+        val ports = StaticPaseoPorts(listOf(PaseoUsageProfile("paseo2", "PC")), listOf(reading))
+        val history = UsageHistory(kv, LANE, clock = { now })
+        val monitor = PaseoUsageMonitor(kv, LANE, ports, widget = null, clock = { now }, autoRead = true)
+        monitor.attachHistory(history)
+
+        val started = CompletableDeferred<Unit>()
+        val gate = CompletableDeferred<Unit>()
+        kv.started = started
+        kv.gate = gate
+
+        val job = async { monitor.refresh() }
+        started.await()
+        monitor.removeProfile("paseo2")
+        gate.complete(Unit)
+        job.await()
+
+        assertNull(kv.str(UsageHistory.key("paseo2")))
+        assertTrue(history.samples.value.isEmpty())
+    }
+
+    @Test
+    fun `B-SEC-178 stores opaque phone-derived account id instead of raw email inside profile history`() = runTest {
+        val reset = now + 5.hours
+        val history = UsageHistory(kv, LANE, clock = { now })
+
+        val aliceRaw = usageSubscriptionKey("claude", "alice@corp.io", "pc")
+        val bobRaw = usageSubscriptionKey("claude", "bob@corp.io", "pc")
+        val noAcctRaw = usageSubscriptionKey("codex", null, "pc")
+
+        history.recordReadings(
+            listOf(
+                sampleReading("claude", "pc", "alice@corp.io", used = 20.0, resetsAt = reset),
+                sampleReading("claude", "pc", "bob@corp.io", used = 60.0, resetsAt = reset),
+                sampleReading("codex", "pc", null, used = 35.0, resetsAt = reset),
+            )
+        )
+
+        val persisted = assertNotNull(kv.str(UsageHistory.key("pc")))
+        assertFalse(persisted.contains("alice@corp.io"))
+        assertFalse(persisted.contains("bob@corp.io"))
+        assertFalse(persisted.contains("corp.io"))
+        assertFalse(persisted.contains("@"))
+        assertTrue(history.samples.value.keys.none { "@" in it.subscriptionKey })
+
+        // Distinct accounts stay separated and reload cleanly; connection-only key keeps conn:<id>.
+        val aliceKey = UsageHistory.windowKey(aliceRaw, "5h")
+        val bobKey = UsageHistory.windowKey(bobRaw, "5h")
+        val noAcctKey = UsageHistory.windowKey(noAcctRaw, "5h")
+        assertTrue(aliceKey != bobKey)
+        assertEquals("codex|conn:pc", noAcctKey.subscriptionKey)
+        assertEquals(aliceKey, UsageHistory.canonicalWindowKey(aliceKey))
+        assertEquals(20.0, history.forWindow(WindowKey(aliceRaw, "5h")).single().usedPercent)
+        assertEquals(60.0, history.forWindow(WindowKey(bobRaw, "5h")).single().usedPercent)
+        assertEquals(35.0, history.forWindow(WindowKey(noAcctRaw, "5h")).single().usedPercent)
+
+        // Same account across two connections merges into one canonical window history.
+        now += 5.minutes
+        history.recordReadings(
+            listOf(sampleReading("claude", "inapp", "alice@corp.io", used = 40.0, resetsAt = reset))
+        )
+        assertEquals(2, history.forWindow(WindowKey(aliceRaw, "5h")).size)
+
+        // Restart preserves opaque separation and never leaks email on disk.
+        val reloaded = UsageHistory(kv, LANE, clock = { now }, initialConnections = listOf("pc", "inapp"))
+        assertEquals(2, reloaded.forWindow(WindowKey(aliceRaw, "5h")).size)
+        assertEquals(1, reloaded.forWindow(WindowKey(bobRaw, "5h")).size)
+
+        // Provider removal deletes opaque-keyed entries for that provider on the profile.
+        assertTrue(reloaded.removeProvider("pc", "claude"))
+        assertTrue(reloaded.forWindow(WindowKey(bobRaw, "5h")).isEmpty())
+        assertEquals(1, reloaded.forWindow(WindowKey(noAcctRaw, "5h")).size)
+
+        // Legacy persisted entry with raw email loads cleanly under the opaque key.
+        val legacyMs = now.toEpochMilliseconds()
+        val resetMs = reset.toEpochMilliseconds()
+        val legacyJson = """{"v":1,"w":[{"s":"claude|legacy@corp.io","i":"5h","p":[[$legacyMs,15.0,$resetMs]]}]}"""
+        kv.values[UsageHistory.key("legacy")] = PrefValue.Str(legacyJson)
+        val migrated = UsageHistory(kv, LANE, clock = { now }, initialConnections = listOf("legacy"))
+        assertTrue(migrated.samples.value.keys.none { "@" in it.subscriptionKey })
+        assertEquals(15.0, migrated.forWindow(WindowKey("claude|legacy@corp.io", "5h")).single().usedPercent)
     }
 }

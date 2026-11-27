@@ -17,9 +17,11 @@ import io.github.eslamasabry.oc.engine.integrations.usage.UsageSample
 import io.github.eslamasabry.oc.engine.integrations.usage.WindowKey
 import io.github.eslamasabry.oc.engine.integrations.usage.forWindow
 import io.github.eslamasabry.oc.engine.integrations.usage.usageSubscriptionKey
+import io.github.eslamasabry.oc.feature.plans.presentation.CollectorTarget
 import io.github.eslamasabry.opencode_mobile.release.RepoFiles
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -221,5 +223,79 @@ class UsageHistoryWiringTest {
         for (target in listOf("widget", "daemonUsage", "explicitMonitor?", "paseoSource", "collectorUsage")) {
             assertTrue("$target.attachHistory(created.historyStore)" in plansWiring, "missing $target history wiring")
         }
+        assertTrue("applyCollectorChange(" in plansWiring, "setCollector should delegate to applyCollectorChange")
+    }
+
+    @Test
+    fun `B-SEC-178 setCollector off-switch still returns changed when cache or history cleanup fails`() = runTest {
+        val paseoTarget = CollectorTarget(ProfileId("p1"), "PC", AndroidPlansPaseoSource.PROVIDER, true, "bind")
+        val builtinTarget = CollectorTarget(ProfileId("p1"), "Phone", PlansQuotaSource.BUILTIN, true, "bind")
+        val codexTarget = CollectorTarget(ProfileId("p1"), "PC", "codex", true, "bind")
+
+        var profileRemoved = 0
+        var providerRemoved = 0
+        val paseoOff =
+            applyCollectorChange(
+                target = paseoTarget,
+                enabled = false,
+                setEnabled = { true },
+                removeProfile = {
+                    profileRemoved++
+                    false
+                },
+                removeProvider = { _, _ ->
+                    providerRemoved++
+                    false
+                },
+            )
+        assertTrue(paseoOff)
+        assertEquals(1, profileRemoved)
+        assertEquals(0, providerRemoved)
+
+        val builtinOff =
+            applyCollectorChange(
+                target = builtinTarget,
+                enabled = false,
+                setEnabled = { true },
+                removeProfile = {
+                    profileRemoved++
+                    false
+                },
+                removeProvider = { _, _ -> false },
+            )
+        assertTrue(builtinOff)
+        assertEquals(2, profileRemoved)
+
+        val codexOff =
+            applyCollectorChange(
+                target = codexTarget,
+                enabled = false,
+                setEnabled = { true },
+                removeProfile = { false },
+                removeProvider = { _, _ ->
+                    providerRemoved++
+                    false
+                },
+            )
+        assertTrue(codexOff)
+        assertEquals(1, providerRemoved)
+
+        val refusedOff =
+            applyCollectorChange(
+                target = codexTarget,
+                enabled = false,
+                setEnabled = { false },
+                removeProfile = {
+                    profileRemoved++
+                    true
+                },
+                removeProvider = { _, _ ->
+                    providerRemoved++
+                    true
+                },
+            )
+        assertFalse(refusedOff)
+        assertEquals(2, profileRemoved)
+        assertEquals(1, providerRemoved)
     }
 }
