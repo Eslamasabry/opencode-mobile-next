@@ -845,8 +845,7 @@ public class UndoFromHerePresenter(
             // The page is drawn once, settled: every fact it words itself with is in before it leaves Loading. No copy
             // of files is kept in a folder that is not under Git, so the switch is not offered there (and never shown
             // first); the message count and the edited files are read the same way.
-            val filesRollbackSupported = shape == UndoShape.Staged || review.workingTreeAvailable()
-            val noFileCopies = filesRollbackSupported && setup.setup() == VersionControlSetupState.Absent
+            val noFileCopies = setup.setup() == VersionControlSetupState.Absent
             val canInitGit = noFileCopies && gitInit?.canInit() == true
             val prompt = review.prompt(promptId)
             var count: Int? = null
@@ -861,9 +860,8 @@ public class UndoFromHerePresenter(
                     prompt = (prompt as? Outcome.Ok)?.value,
                     promptUnavailable = prompt !is Outcome.Ok || prompt.value == null,
                     noFileCopies = noFileCopies,
-                    filesRollbackSupported = filesRollbackSupported,
                     canInitGit = canInitGit,
-                    applyFiles = if (noFileCopies || !filesRollbackSupported) false else it.applyFiles,
+                    applyFiles = if (noFileCopies) false else it.applyFiles,
                     messagesAfter = count,
                     edited = edited,
                 )

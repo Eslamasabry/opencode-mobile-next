@@ -462,14 +462,6 @@
     <string name="undoFromHereBodyNoGit__eq0">Este comando é removido. Este não é um projeto Git, então os arquivos permanecem como estão. É possível trazê-lo de volta até enviar outro comando.</string>
     <string name="undoFromHereBodyNoGit__eq1">Este comando e a mensagem depois dele são removidos. Este não é um projeto Git, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</string>
     <string name="undoFromHereBodyNoGitUnknown">Este comando e tudo depois dele são removidos. Este não é um projeto Git, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</string>
-    <plurals name="undoFromHereBodyNoRollback">
-        <item quantity="one">Este comando e a mensagem depois dele são removidos. Este agente não pode restaurar arquivos, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</item>
-        <item quantity="many">Este comando e as %1$d mensagens depois dele são removidos. Este agente não pode restaurar arquivos, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</item>
-        <item quantity="other">Este comando e as %1$d mensagens depois dele são removidos. Este agente não pode restaurar arquivos, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</item>
-    </plurals>
-    <string name="undoFromHereBodyNoRollback__eq0">Este comando é removido. Este agente não pode restaurar arquivos, então os arquivos permanecem como estão. É possível trazê-lo de volta até enviar outro comando.</string>
-    <string name="undoFromHereBodyNoRollback__eq1">Este comando e a mensagem depois dele são removidos. Este agente não pode restaurar arquivos, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</string>
-    <string name="undoFromHereBodyNoRollbackUnknown">Este comando e tudo depois dele são removidos. Este agente não pode restaurar arquivos, então os arquivos permanecem como estão. É possível trazê-los de volta até enviar outro comando.</string>
     <string name="reviewUndoStartGitRepository">Iniciar um repositório Git para este projeto</string>
     <string name="reviewUndoStartGitRepositoryHint">Mantenha os arquivos aqui e ative o Git para que futuras ações de desfazer possam restaurar arquivos.</string>
     <string name="reviewUndoStartGitFailed">Não foi possível iniciar um repositório Git para este projeto.</string>

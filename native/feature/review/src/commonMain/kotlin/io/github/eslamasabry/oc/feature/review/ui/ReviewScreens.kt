@@ -232,9 +232,6 @@ import io.github.eslamasabry.oc.ui.words.res.undoFromHereBody
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoGit
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoGitUnknown
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoGit__eq0
-import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoRollback
-import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoRollbackUnknown
-import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyNoRollback__eq0
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBodyUnknown
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereBody__eq0
 import io.github.eslamasabry.oc.ui.words.res.undoFromHereFilesLabel
@@ -1099,28 +1096,20 @@ private fun undoFromHereBodyText(state: UndoFromHereUi): String =
 
 @Composable
 private fun oneStepUndoBodyText(state: UndoFromHereUi): String =
-    when {
-        !state.filesRollbackSupported ->
-            countedUndoBody(
-                state.messagesAfter,
-                Res.string.undoFromHereBodyNoRollbackUnknown,
-                Res.string.undoFromHereBodyNoRollback__eq0,
-                Res.plurals.undoFromHereBodyNoRollback,
-            )
-        state.noFileCopies ->
-            countedUndoBody(
-                state.messagesAfter,
-                Res.string.undoFromHereBodyNoGitUnknown,
-                Res.string.undoFromHereBodyNoGit__eq0,
-                Res.plurals.undoFromHereBodyNoGit,
-            )
-        else ->
-            countedUndoBody(
-                state.messagesAfter,
-                Res.string.undoFromHereBodyUnknown,
-                Res.string.undoFromHereBody__eq0,
-                Res.plurals.undoFromHereBody,
-            )
+    if (state.noFileCopies) {
+        countedUndoBody(
+            state.messagesAfter,
+            Res.string.undoFromHereBodyNoGitUnknown,
+            Res.string.undoFromHereBodyNoGit__eq0,
+            Res.plurals.undoFromHereBodyNoGit,
+        )
+    } else {
+        countedUndoBody(
+            state.messagesAfter,
+            Res.string.undoFromHereBodyUnknown,
+            Res.string.undoFromHereBody__eq0,
+            Res.plurals.undoFromHereBody,
+        )
     }
 
 @Composable

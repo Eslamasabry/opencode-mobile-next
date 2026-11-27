@@ -463,14 +463,6 @@
     <string name="undoFromHereBodyNoGit__eq0">Este mensaje se elimina. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlo hasta que envíes otro mensaje.</string>
     <string name="undoFromHereBodyNoGit__eq1">Este mensaje y el mensaje posterior se eliminan. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
     <string name="undoFromHereBodyNoGitUnknown">Este mensaje y todo lo que viene después se eliminan. Este no es un proyecto Git, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
-    <plurals name="undoFromHereBodyNoRollback">
-        <item quantity="one">Este mensaje y el mensaje posterior se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
-        <item quantity="many">Este mensaje y los %1$d mensajes posteriores se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
-        <item quantity="other">Este mensaje y los %1$d mensajes posteriores se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</item>
-    </plurals>
-    <string name="undoFromHereBodyNoRollback__eq0">Este mensaje se elimina. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlo hasta que envíes otro mensaje.</string>
-    <string name="undoFromHereBodyNoRollback__eq1">Este mensaje y el mensaje posterior se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
-    <string name="undoFromHereBodyNoRollbackUnknown">Este mensaje y todo lo que viene después se eliminan. Este agente no puede devolver archivos, así que los archivos se quedan como están. Puedes devolverlos hasta que envíes otro mensaje.</string>
     <string name="reviewUndoStartGitRepository">Iniciar un repositorio Git para este proyecto</string>
     <string name="reviewUndoStartGitRepositoryHint">Mantén tus archivos aquí y activa Git para que futuros deshacer puedan devolver archivos.</string>
     <string name="reviewUndoStartGitFailed">No se pudo iniciar un repositorio Git para este proyecto.</string>

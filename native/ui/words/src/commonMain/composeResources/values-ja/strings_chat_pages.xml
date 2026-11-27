@@ -437,12 +437,6 @@
     <string name="undoFromHereBodyNoGit__eq0">このプロンプトが削除されます。Gitプロジェクトではないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
     <string name="undoFromHereBodyNoGit__eq1">このプロンプトとその後のメッセージが削除されます。Gitプロジェクトではないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
     <string name="undoFromHereBodyNoGitUnknown">このプロンプトとその後のすべてが削除されます。Gitプロジェクトではないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
-    <plurals name="undoFromHereBodyNoRollback">
-        <item quantity="other">このプロンプトとその後の%1$d件のメッセージが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</item>
-    </plurals>
-    <string name="undoFromHereBodyNoRollback__eq0">このプロンプトが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
-    <string name="undoFromHereBodyNoRollback__eq1">このプロンプトとその後のメッセージが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
-    <string name="undoFromHereBodyNoRollbackUnknown">このプロンプトとその後のすべてが削除されます。このエージェントはファイルを元に戻せないため、ファイルはそのまま残ります。次のプロンプトを送るまで元に戻せます。</string>
     <string name="reviewUndoStartGitRepository">このプロジェクトでGitリポジトリを開始</string>
     <string name="reviewUndoStartGitRepositoryHint">ファイルを残したままGitを有効にし、今後の取り消しでファイルを戻せるようにします。</string>
     <string name="reviewUndoStartGitFailed">このプロジェクトでGitリポジトリを開始できませんでした。</string>

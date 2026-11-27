@@ -438,12 +438,6 @@
     <string name="undoFromHereBodyNoGit__eq0">Pesan ini dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
     <string name="undoFromHereBodyNoGit__eq1">Pesan ini dan pesan setelahnya dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
     <string name="undoFromHereBodyNoGitUnknown">Pesan ini dan semua setelahnya dihapus. Ini bukan proyek Git, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
-    <plurals name="undoFromHereBodyNoRollback">
-        <item quantity="other">Pesan ini dan %1$d pesan setelahnya dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</item>
-    </plurals>
-    <string name="undoFromHereBodyNoRollback__eq0">Pesan ini dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
-    <string name="undoFromHereBodyNoRollback__eq1">Pesan ini dan pesan setelahnya dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
-    <string name="undoFromHereBodyNoRollbackUnknown">Pesan ini dan semua setelahnya dihapus. Agen ini tidak bisa mengembalikan file, jadi file tetap seperti sekarang. Pesan dapat dikembalikan sebelum mengirim pesan lain.</string>
     <string name="reviewUndoStartGitRepository">Mulai repositori Git untuk proyek ini</string>
     <string name="reviewUndoStartGitRepositoryHint">Simpan file Anda di sini dan aktifkan Git agar pembatalan berikutnya dapat mengembalikan file.</string>
     <string name="reviewUndoStartGitFailed">Tidak bisa memulai repositori Git untuk proyek ini.</string>

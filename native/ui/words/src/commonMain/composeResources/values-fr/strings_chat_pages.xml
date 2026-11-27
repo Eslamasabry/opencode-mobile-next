@@ -462,14 +462,6 @@
     <string name="undoFromHereBodyNoGit__eq0">Ce message est supprimé. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez le remettre avant d'envoyer un autre message.</string>
     <string name="undoFromHereBodyNoGit__eq1">Ce message et le message suivant sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
     <string name="undoFromHereBodyNoGitUnknown">Ce message et tout ce qui suit sont supprimés. Ce projet n'utilise pas Git, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
-    <plurals name="undoFromHereBodyNoRollback">
-        <item quantity="one">Ce message et le message suivant sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
-        <item quantity="many">Ce message et les %1$d messages suivants sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
-        <item quantity="other">Ce message et les %1$d messages suivants sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</item>
-    </plurals>
-    <string name="undoFromHereBodyNoRollback__eq0">Ce message est supprimé. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez le remettre avant d'envoyer un autre message.</string>
-    <string name="undoFromHereBodyNoRollback__eq1">Ce message et le message suivant sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
-    <string name="undoFromHereBodyNoRollbackUnknown">Ce message et tout ce qui suit sont supprimés. Cet agent ne peut pas restaurer les fichiers, donc les fichiers restent tels quels. Vous pouvez les remettre avant d'envoyer un autre message.</string>
     <string name="reviewUndoStartGitRepository">Démarrer un dépôt Git pour ce projet</string>
     <string name="reviewUndoStartGitRepositoryHint">Gardez vos fichiers ici et activez Git pour que les prochaines annulations puissent restaurer les fichiers.</string>
     <string name="reviewUndoStartGitFailed">Impossible de démarrer un dépôt Git pour ce projet.</string>

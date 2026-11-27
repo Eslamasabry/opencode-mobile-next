@@ -264,8 +264,6 @@ public data class UndoFromHereUi(
     val applyFiles: Boolean = true,
     /** The folder is not under Git, so no file copies exist: files cannot be put back, and the page says so. */
     val noFileCopies: Boolean = false,
-    /** False when this server or agent does not support putting files back at all. */
-    val filesRollbackSupported: Boolean = true,
     /** True when one-tap Git setup is available for this non-Git project on the server's active folder. */
     val canInitGit: Boolean = false,
     val initializingGit: Boolean = false,

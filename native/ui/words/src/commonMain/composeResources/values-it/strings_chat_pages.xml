@@ -463,14 +463,6 @@
     <string name="undoFromHereBodyNoGit__eq0">Questo messaggio viene rimosso. Questo non è un progetto Git, quindi i file restano come sono. Puoi ripristinarlo finché non invii un altro messaggio.</string>
     <string name="undoFromHereBodyNoGit__eq1">Questo messaggio e il messaggio successivo vengono rimossi. Questo non è un progetto Git, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</string>
     <string name="undoFromHereBodyNoGitUnknown">Questo messaggio e tutto ciò che segue vengono rimossi. Questo non è un progetto Git, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</string>
-    <plurals name="undoFromHereBodyNoRollback">
-        <item quantity="one">Questo messaggio e il messaggio successivo vengono rimossi. Questo agente non può ripristinare i file, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</item>
-        <item quantity="many">Questo messaggio e i %1$d messaggi successivi vengono rimossi. Questo agente non può ripristinare i file, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</item>
-        <item quantity="other">Questo messaggio e i %1$d messaggi successivi vengono rimossi. Questo agente non può ripristinare i file, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</item>
-    </plurals>
-    <string name="undoFromHereBodyNoRollback__eq0">Questo messaggio viene rimosso. Questo agente non può ripristinare i file, quindi i file restano come sono. Puoi ripristinarlo finché non invii un altro messaggio.</string>
-    <string name="undoFromHereBodyNoRollback__eq1">Questo messaggio e il messaggio successivo vengono rimossi. Questo agente non può ripristinare i file, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</string>
-    <string name="undoFromHereBodyNoRollbackUnknown">Questo messaggio e tutto ciò che segue vengono rimossi. Questo agente non può ripristinare i file, quindi i file restano come sono. Puoi ripristinarli finché non invii un altro messaggio.</string>
     <string name="reviewUndoStartGitRepository">Avvia un repository Git per questo progetto</string>
     <string name="reviewUndoStartGitRepositoryHint">Mantieni i file qui e attiva Git così i prossimi annullamenti potranno ripristinare i file.</string>
     <string name="reviewUndoStartGitFailed">Impossibile avviare un repository Git per questo progetto.</string>

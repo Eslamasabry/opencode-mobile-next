@@ -439,12 +439,6 @@
     <string name="undoFromHereBodyNoGit__eq0">这条提示会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它。</string>
     <string name="undoFromHereBodyNoGit__eq1">这条提示和后面的消息会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
     <string name="undoFromHereBodyNoGitUnknown">这条提示和后面的所有内容都会被移除。这不是 Git 项目，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
-    <plurals name="undoFromHereBodyNoRollback">
-        <item quantity="other">这条提示和后面的 %1$d 条消息会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</item>
-    </plurals>
-    <string name="undoFromHereBodyNoRollback__eq0">这条提示会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它。</string>
-    <string name="undoFromHereBodyNoRollback__eq1">这条提示和后面的消息会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
-    <string name="undoFromHereBodyNoRollbackUnknown">这条提示和后面的所有内容都会被移除。此智能体无法还原文件，所以文件保持原样。在发送下一条提示之前，你可以恢复它们。</string>
     <string name="reviewUndoStartGitRepository">为此项目初始化 Git 仓库</string>
     <string name="reviewUndoStartGitRepositoryHint">保留现有文件并启用 Git，方便以后撤销时还原文件。</string>
     <string name="reviewUndoStartGitFailed">无法为此项目初始化 Git 仓库。</string>
