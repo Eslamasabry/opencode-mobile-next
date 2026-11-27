@@ -112,14 +112,12 @@ private const val MEGABYTE = 1_000_000.0
 private val SIGNER_DETAIL = Regex("""^signer\s+([^,]+),\s*expected\s+(.+)$""", RegexOption.IGNORE_CASE)
 
 /** Parses `"signer <update>, expected <own>"` into labeled fingerprints, or null when the text has another shape. */
-internal fun parseSignerDetails(raw: String?): SignerDetails? {
-    val text = raw?.trim().orEmpty()
-    val match = SIGNER_DETAIL.matchEntire(text) ?: return null
-    val update = match.groupValues[1].trim()
-    val own = match.groupValues[2].trim()
-    if (own.isEmpty() || update.isEmpty()) return null
-    return SignerDetails(own = own, update = update)
-}
+internal fun parseSignerDetails(raw: String?): SignerDetails? =
+    SIGNER_DETAIL.matchEntire(raw?.trim().orEmpty())?.let { match ->
+        val update = match.groupValues[1].trim()
+        val own = match.groupValues[2].trim()
+        if (own.isEmpty() || update.isEmpty()) null else SignerDetails(own = own, update = update)
+    }
 
 /** The page's state from the engine's [state] at [now] (Flutter `_UpdatesBody.build`). Pure. */
 public fun updatesUi(state: AppUpdateState, now: Instant): UpdatesUi {

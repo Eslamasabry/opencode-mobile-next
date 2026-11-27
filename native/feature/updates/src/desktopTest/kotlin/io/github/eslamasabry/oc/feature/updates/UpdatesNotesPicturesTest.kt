@@ -27,6 +27,7 @@ import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
+import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkAction
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesUi
 import io.github.eslamasabry.oc.feature.updates.presentation.updatesUi
@@ -109,13 +110,7 @@ class UpdatesNotesPicturesTest {
 
         override fun onChecks(on: Boolean) = Unit
 
-        override fun onOpenNoteLink(url: String) = Unit
-
-        override fun onConfirmNoteLink() = Unit
-
-        override fun onDismissNoteLink() = Unit
-
-        override fun onDismissLinkNotice() = Unit
+        override fun onNoteLink(action: NoteLinkAction) = Unit
     }
 
     @BeforeTest
@@ -133,6 +128,53 @@ class UpdatesNotesPicturesTest {
         return checkNotNull(d) { "$NOTES_PATH not found from ${System.getProperty("user.dir")}" }
     }
 
+    private data class PictureStates(
+        val available: UpdatesUi,
+        val testBuild: UpdatesUi,
+        val signerFailure: UpdatesUi,
+    )
+
+    private fun pictureStates(notes: String): PictureStates {
+        val rel = RELEASE.copy(notes = notes)
+        val detail =
+            "signer 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C, " +
+                "expected 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+        return PictureStates(
+            available =
+                updatesUi(
+                    AppUpdateState(
+                        phase = UpdatePhase.Available,
+                        release = rel,
+                        downloadSize = APK_SIZE,
+                        installed = INSTALLED,
+                    ),
+                    now,
+                ),
+            testBuild =
+                updatesUi(
+                    AppUpdateState(
+                        phase = UpdatePhase.Available,
+                        release = rel,
+                        downloadSize = APK_SIZE,
+                        installed = InstalledApp(PACKAGE, "3.0.2-test.10142", 10142),
+                    ),
+                    now,
+                ),
+            signerFailure =
+                updatesUi(
+                    AppUpdateState(
+                        phase = UpdatePhase.Failed,
+                        failure = UpdateFailure.Signer,
+                        detail = detail,
+                        release = rel,
+                        downloadSize = APK_SIZE,
+                        installed = INSTALLED,
+                    ),
+                    now,
+                ),
+        )
+    }
+
     @Test
     fun `B-MIGR-012 updates page What's new pictures before and after at 360 dp`() {
         val root = repoRoot()
@@ -141,40 +183,7 @@ class UpdatesNotesPicturesTest {
             File(root, NOTES_PATH).readText().trimEnd() +
                 "\n\nSee the [release notes on GitHub]($releaseUrl)."
         val out = File(root, "native/feature/updates/build/renders").apply { mkdirs() }
-        val state =
-            updatesUi(
-                AppUpdateState(
-                    phase = UpdatePhase.Available,
-                    release = RELEASE.copy(notes = notes),
-                    downloadSize = APK_SIZE,
-                    installed = INSTALLED,
-                ),
-                now,
-            )
-        val testBuildState =
-            updatesUi(
-                AppUpdateState(
-                    phase = UpdatePhase.Available,
-                    release = RELEASE.copy(notes = notes),
-                    downloadSize = APK_SIZE,
-                    installed = InstalledApp(PACKAGE, "3.0.2-test.10142", 10142),
-                ),
-                now,
-            )
-        val signerFailureState =
-            updatesUi(
-                AppUpdateState(
-                    phase = UpdatePhase.Failed,
-                    failure = UpdateFailure.Signer,
-                    detail =
-                        "signer 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C, " +
-                            "expected 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
-                    release = RELEASE.copy(notes = notes),
-                    downloadSize = APK_SIZE,
-                    installed = INSTALLED,
-                ),
-                now,
-            )
+        val states = pictureStates(notes)
         val variants =
             listOf(
                 Variant(AppearanceMode.Light, 1.0f, "light-t10"),
@@ -184,16 +193,16 @@ class UpdatesNotesPicturesTest {
             )
         for (v in variants) {
             capture(File(out, "before-updates-whats-new-360-${v.tag}.png"), v) {
-                BeforeUpdatesScreen(state, NoopActions)
+                BeforeUpdatesScreen(states.available, NoopActions)
             }
             capture(File(out, "after-updates-whats-new-360-${v.tag}.png"), v) {
-                UpdatesScreen(state, NoopActions)
+                UpdatesScreen(states.available, NoopActions)
             }
             capture(File(out, "after-updates-test-build-360-${v.tag}.png"), v) {
-                UpdatesScreen(testBuildState, NoopActions)
+                UpdatesScreen(states.testBuild, NoopActions)
             }
             capture(File(out, "after-updates-signer-failure-360-${v.tag}.png"), v, openDetails = true) {
-                UpdatesScreen(signerFailureState, NoopActions)
+                UpdatesScreen(states.signerFailure, NoopActions)
             }
         }
     }

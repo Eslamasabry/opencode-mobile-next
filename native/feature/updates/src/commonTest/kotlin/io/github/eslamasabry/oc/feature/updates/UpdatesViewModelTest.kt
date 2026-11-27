@@ -8,6 +8,7 @@ import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
+import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkAction
 import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkPrompt
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesAction
@@ -210,15 +211,15 @@ class UpdatesViewModelTest {
         val rig = UpdateRig(clock)
         val vm = started(rig)
         val url = "https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v3.0.3"
-        vm.onOpenNoteLink(url)
+        vm.onNoteLink(NoteLinkAction.Open(url))
         assertEquals(NoteLinkPrompt(url, "github.com"), vm.state.value.linkPrompt)
         assertTrue(links.openedNotes.isEmpty(), "must wait for confirmation before opening")
-        vm.onDismissNoteLink()
+        vm.onNoteLink(NoteLinkAction.DismissPrompt)
         assertNull(vm.state.value.linkPrompt)
         assertTrue(links.openedNotes.isEmpty())
 
-        vm.onOpenNoteLink(url)
-        vm.onConfirmNoteLink()
+        vm.onNoteLink(NoteLinkAction.Open(url))
+        vm.onNoteLink(NoteLinkAction.Confirm)
         assertNull(vm.state.value.linkPrompt)
         assertEquals(listOf(url), links.openedNotes)
         assertFalse(vm.state.value.noBrowser)
@@ -237,7 +238,7 @@ class UpdatesViewModelTest {
                 "",
             )
         for (bad in unsafe) {
-            vm.onOpenNoteLink(bad)
+            vm.onNoteLink(NoteLinkAction.Open(bad))
             assertNull(vm.state.value.linkPrompt, "refused link must not prompt: $bad")
             assertTrue(links.openedNotes.isEmpty())
             assertFalse(vm.state.value.noBrowser)
@@ -250,10 +251,10 @@ class UpdatesViewModelTest {
         links.openNoteResult = Outcome.Failed(Failure.Device())
         val vm = started(rig)
         val url = "https://example.com/guide"
-        vm.onOpenNoteLink(url)
-        vm.onConfirmNoteLink()
+        vm.onNoteLink(NoteLinkAction.Open(url))
+        vm.onNoteLink(NoteLinkAction.Confirm)
         assertTrue(vm.state.value.noBrowser)
-        vm.onDismissLinkNotice()
+        vm.onNoteLink(NoteLinkAction.DismissNoBrowser)
         assertFalse(vm.state.value.noBrowser)
     }
 }

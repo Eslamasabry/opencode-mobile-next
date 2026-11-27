@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
-import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkPrompt
+import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkAction
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesAction
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesLine
@@ -116,6 +116,19 @@ public fun UpdatesScreen(
     dismissArrival: () -> Unit = {},
 ) {
     val gutter = LocalKitTokens.current.gutter.dp
+    val status =
+        if (state.noBrowser) {
+            KitStatus(
+                kind = KitStatusKind.Info,
+                message = stringResource(Res.string.appUpdateNoBrowser),
+                id = "updates:no-browser",
+                tone = StatusTone.Failure,
+                onDismiss = { actions.onNoteLink(NoteLinkAction.DismissNoBrowser) },
+                dismissLabel = stringResource(Res.string.notifyDismiss),
+            )
+        } else {
+            null
+        }
     KitScreen(
         topBar = {
             KitTopBar(
@@ -125,25 +138,26 @@ public fun UpdatesScreen(
                 onExit = actions::onBack,
             )
         },
-        status = if (state.noBrowser) noBrowserStatus(actions) else null,
+        status = status,
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
         UpdatesPageBody(state, actions, gutter, showArrival, dismissArrival)
-        UpdatesLinkConfirm(state.linkPrompt, actions)
+        KitConfirm(
+            spec =
+                state.linkPrompt?.let {
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.chatFeelOpenLinkTitle),
+                        confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
+                        kind = KitConfirmKind.Neutral,
+                        body = stringResource(Res.string.chatFeelOpenLinkBody, it.host),
+                    )
+                },
+            onConfirm = { actions.onNoteLink(NoteLinkAction.Confirm) },
+            onCancel = { actions.onNoteLink(NoteLinkAction.DismissPrompt) },
+        )
     }
 }
-
-@Composable
-private fun noBrowserStatus(actions: UpdatesActions): KitStatus =
-    KitStatus(
-        kind = KitStatusKind.Info,
-        message = stringResource(Res.string.appUpdateNoBrowser),
-        id = "updates:no-browser",
-        tone = StatusTone.Failure,
-        onDismiss = actions::onDismissLinkNotice,
-        dismissLabel = stringResource(Res.string.notifyDismiss),
-    )
 
 @Composable
 private fun UpdatesPageBody(
@@ -288,30 +302,16 @@ private fun UpdatesWhatsNew(notes: String, actions: UpdatesActions, gutter: Dp) 
     Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
         KitSectionLabel(stringResource(Res.string.appUpdateWhatsNew))
         val blocks = remember(notes) { KitMdSource.blocks("updates-notes", notes, streaming = false) }
-        val links = remember(actions) { KitMarkdownActions(onLink = actions::onOpenNoteLink) }
+        val links =
+            remember(actions) {
+                KitMarkdownActions(onLink = { actions.onNoteLink(NoteLinkAction.Open(it)) })
+            }
         KitMarkdown(
             blocks,
             links,
             Modifier.padding(horizontal = gutter).testTag("updates-notes"),
         )
     }
-}
-
-@Composable
-private fun UpdatesLinkConfirm(prompt: NoteLinkPrompt?, actions: UpdatesActions) {
-    KitConfirm(
-        spec =
-            prompt?.let {
-                KitConfirmSpec(
-                    title = stringResource(Res.string.chatFeelOpenLinkTitle),
-                    confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
-                    kind = KitConfirmKind.Neutral,
-                    body = stringResource(Res.string.chatFeelOpenLinkBody, it.host),
-                )
-            },
-        onConfirm = actions::onConfirmNoteLink,
-        onCancel = actions::onDismissNoteLink,
-    )
 }
 
 @Composable

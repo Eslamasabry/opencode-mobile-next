@@ -7,6 +7,17 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 /** A safe `https` link from release notes waiting for the person's confirmation before opening outside the app. */
 public data class NoteLinkPrompt(val url: String, val host: String)
 
+/** User actions for links inside What's new release notes (B-628). */
+public sealed interface NoteLinkAction {
+    public data class Open(val url: String) : NoteLinkAction
+
+    public data object Confirm : NoteLinkAction
+
+    public data object DismissPrompt : NoteLinkAction
+
+    public data object DismissNoBrowser : NoteLinkAction
+}
+
 /** What the Updates page can do. Each name says its one target. */
 public interface UpdatesActions {
     public fun onBack()
@@ -31,17 +42,8 @@ public interface UpdatesActions {
     /** The "Check GitHub for new versions" switch. */
     public fun onChecks(on: Boolean)
 
-    /** A link tapped inside What's new: checked by ExternalLinkPolicy before asking to open. */
-    public fun onOpenNoteLink(url: String)
-
-    /** The person confirmed opening the prompted What's new link in their browser. */
-    public fun onConfirmNoteLink()
-
-    /** The person dismissed the What's new link confirmation without opening it. */
-    public fun onDismissNoteLink()
-
-    /** Dismisses the plain notice shown when no browser could open a link. */
-    public fun onDismissLinkNotice()
+    /** Handles tapping, confirming, or dismissing What's new links and the missing-browser notice (B-628). */
+    public fun onNoteLink(action: NoteLinkAction)
 }
 
 /**

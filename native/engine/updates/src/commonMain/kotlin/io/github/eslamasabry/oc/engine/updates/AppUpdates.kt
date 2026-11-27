@@ -94,6 +94,12 @@ public data class AppUpdateState(
         get() = failure != UpdateFailure.Signer && failure != UpdateFailure.Package && failure != UpdateFailure.Version
 }
 
+/** Policy controlling which update feed and signing key this build accepts. */
+public data class UpdatePolicy(
+    val feedOverride: String = "",
+    val publicSignerSha256: String? = null,
+)
+
 /**
  * The one app-wide holder of the app's own update (port of Flutter `AppUpdateController`,
  * docs/design/app-updates-2026-10-31.md). Checks GitHub at most once every six hours (start-up and resume), offers the
@@ -107,8 +113,7 @@ public class AppUpdates(
     private val store: UpdateStore,
     private val clock: Clock,
     supported: Boolean = true,
-    private val feedOverride: String = "",
-    private val publicSignerSha256: String? = null,
+    private val policy: UpdatePolicy = UpdatePolicy(),
 ) {
     private val mutable = MutableStateFlow(AppUpdateState(supported = supported))
     public val state: StateFlow<AppUpdateState> = mutable.asStateFlow()
@@ -133,15 +138,11 @@ public class AppUpdates(
         val app = platform.installed()
         if (isTestBuild(app)) {
             clearForTestBuild(app)
-            return Unit.ok()
-        }
-        var release: AppRelease? = null
-        val saved = record.releaseJson
-        if (saved != null) {
-            val parsed = AppRelease.parse(saved)
-            if (parsed != null && parsed.build > app.build) {
-                release = parsed
-            } else {
+        } else {
+            val saved = record.releaseJson
+            val parsed = saved?.let(AppRelease::parse)
+            val release = parsed?.takeIf { it.build > app.build }
+            if (saved != null && release == null) {
                 // The release this app offered is the one running now: say so once (B-217).
                 if (parsed != null && parsed.build == app.build) set { it.copy(updated = parsed) }
                 // Installed (or older, or unreadable): the finding and its download are done.
@@ -149,29 +150,30 @@ public class AppUpdates(
                 store.write(record)
                 platform.clearUpdateDir()
             }
+            if (release != null) abis = platform.supportedAbis()
+            set {
+                it.copy(
+                    enabled = record.enabled,
+                    checkedAt = record.lastCheckMs?.let(Instant::fromEpochMilliseconds),
+                    installed = app,
+                    testBuild = false,
+                    release = release,
+                    downloadSize = release?.apkFor(abis)?.size,
+                    phase = if (release != null) UpdatePhase.Available else UpdatePhase.None,
+                )
+            }
         }
-        if (release != null) abis = platform.supportedAbis()
-        set {
-            it.copy(
-                enabled = record.enabled,
-                checkedAt = record.lastCheckMs?.let(Instant::fromEpochMilliseconds),
-                installed = app,
-                testBuild = false,
-                release = release,
-                downloadSize = release?.apkFor(abis)?.size,
-                phase = if (release != null) UpdatePhase.Available else UpdatePhase.None,
-            )
-        }
-        return checkIfDue()
+        return if (s.isTestBuild) Unit.ok() else checkIfDue()
     }
 
     /** True when this install is a `-test.<build>` build or signed with a non-public release key (B-218). */
     private suspend fun isTestBuild(app: InstalledApp): Boolean {
-        if (app.isTestBuild) return true
-        val expected = publicSignerSha256?.takeIf { it.isNotBlank() }
-        if (feedOverride.isNotEmpty() || expected == null) return false
-        val own = platform.ownSignerSha256()
-        return own.isNotEmpty() && !own.equals(expected, ignoreCase = true)
+        val expected = policy.publicSignerSha256?.takeIf { it.isNotBlank() }
+        return when {
+            app.isTestBuild -> true
+            policy.feedOverride.isNotEmpty() || expected == null -> false
+            else -> platform.ownSignerSha256().let { it.isNotEmpty() && !it.equals(expected, ignoreCase = true) }
+        }
     }
 
     private suspend fun clearForTestBuild(app: InstalledApp) {
@@ -207,7 +209,7 @@ public class AppUpdates(
 
     /** Start-up and resume: asks GitHub at most once every six hours. */
     public suspend fun checkIfDue(): Outcome<Unit> {
-        if (!s.supported || s.isTestBuild || !s.enabled || s.busy) return Unit.ok()
+        if (s.inactive || !s.enabled) return Unit.ok()
         val last = s.checkedAt
         if (last != null && clock.now() - last < CHECK_INTERVAL) return Unit.ok()
         return check()
@@ -215,7 +217,7 @@ public class AppUpdates(
 
     /** Check now: asks regardless of the clock. */
     public suspend fun checkNow(): Outcome<Unit> {
-        if (!s.supported || s.isTestBuild || s.busy) return Unit.ok()
+        if (s.inactive) return Unit.ok()
         return check()
     }
 
@@ -300,7 +302,7 @@ public class AppUpdates(
      */
     private fun offerable(release: AppRelease): Boolean {
         val files = listOfNotNull(release.apkFor(abis), release.checksums)
-        return files.size == 2 && files.all { isTrustedReleaseFileUrl(it.url, feedOverride) }
+        return files.size == 2 && files.all { isTrustedReleaseFileUrl(it.url, policy.feedOverride) }
     }
 
     private suspend fun stamp(at: Instant) {
@@ -360,7 +362,7 @@ public class AppUpdates(
     public suspend fun updateNow(): Outcome<Unit> {
         set { it.copy(promptOpen = false) }
         val release = s.release
-        if (!s.supported || s.isTestBuild || release == null || s.busy) return Unit.ok()
+        if (s.inactive || release == null) return Unit.ok()
         val app = s.installed ?: platform.installed()
         if (isTestBuild(app)) {
             clearForTestBuild(app)
@@ -391,7 +393,10 @@ public class AppUpdates(
         val asset = release.apkFor(abis)
         val sums = release.checksums
         if (asset == null || sums == null) return fail(UpdateFailure.NoFile, "no file for this phone")
-        if (!isTrustedReleaseFileUrl(asset.url, feedOverride) || !isTrustedReleaseFileUrl(sums.url, feedOverride)) {
+        if (
+            !isTrustedReleaseFileUrl(asset.url, policy.feedOverride) ||
+                !isTrustedReleaseFileUrl(sums.url, policy.feedOverride)
+        ) {
             return fail(UpdateFailure.NoFile, "untrusted release file address")
         }
         set { it.copy(phase = UpdatePhase.Downloading, downloadSize = asset.size) }
@@ -483,6 +488,10 @@ public class AppUpdates(
         }
         return checkIfDue()
     }
+
+    /** True when the updater cannot start a new check or download right now. */
+    private val AppUpdateState.inactive: Boolean
+        get() = !supported || isTestBuild || busy
 
     /** A newer release waits, nothing is running, and the person neither put it off nor has the Updates page open. */
     private val AppUpdateState.offerWaiting: Boolean

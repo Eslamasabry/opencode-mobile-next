@@ -102,6 +102,7 @@ import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
+import io.github.eslamasabry.oc.engine.updates.UpdatePolicy
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
@@ -190,7 +191,7 @@ object PlatformBindings {
             // Release builds only (Flutter #126): a debuggable build cannot take a release APK.
             supported = AppUpdates.supportedOn(build.debuggable),
             // B-218: only builds signed with the public CI key can install public GitHub releases.
-            publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256,
+            policy = UpdatePolicy(publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256),
         )
 }
 
@@ -245,13 +246,25 @@ class ReleasePageLinks(private val opener: ExternalLinkOpener) : UpdateLinks {
     }
 
     override fun inspectNoteLink(url: String): NoteLinkPrompt? =
-        PlatformRules.noteLink(policy, url)?.let { NoteLinkPrompt(it.link.uri, it.shownHost) }
+        noteLink(policy, url)?.let { NoteLinkPrompt(it.link.uri, it.shownHost) }
 
     override suspend fun openNoteLink(url: String): Outcome<Unit> {
         val link =
-            PlatformRules.noteLink(policy, url)?.link
+            noteLink(policy, url)?.link
                 ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
         return opener.open(link)
+    }
+
+    companion object {
+        /**
+         * A link inside GitHub release notes ("What's new", B-628): only `https` web links pass
+         * [ExternalLinkPolicy] under [LinkOrigin.Markdown]; plain `http`, non-web schemes,
+         * credentials, and malformed URLs are refused.
+         */
+        fun noteLink(policy: ExternalLinkPolicy, url: String): LinkDecision.AskFirst? {
+            val decision = policy.check(url, LinkOrigin.Markdown)
+            return if (decision is LinkDecision.AskFirst && !decision.insecure) decision else null
+        }
     }
 }
 
@@ -2023,16 +2036,6 @@ internal object PlatformRules {
             is LinkDecision.AskFirst -> decision.link.takeIf { decision.shownHost == "github.com" }
             is LinkDecision.Refuse -> null
         }
-    }
-
-    /**
-     * A link inside GitHub release notes ("What's new", B-628): only `https` web links pass
-     * [ExternalLinkPolicy] under [LinkOrigin.Markdown]; plain `http`, non-web schemes, credentials,
-     * and malformed URLs are refused.
-     */
-    fun noteLink(policy: ExternalLinkPolicy, url: String): LinkDecision.AskFirst? {
-        val decision = policy.check(url, LinkOrigin.Markdown)
-        return if (decision is LinkDecision.AskFirst && !decision.insecure) decision else null
     }
 
     /** The Settings Updates page's view of the updater. */

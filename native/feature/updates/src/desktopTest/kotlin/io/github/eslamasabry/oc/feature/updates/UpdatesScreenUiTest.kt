@@ -33,6 +33,7 @@ import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
+import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkAction
 import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkPrompt
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
 import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
@@ -98,13 +99,15 @@ class UpdatesScreenUiTest {
 
         override fun onChecks(on: Boolean) { calls += "checks:$on" }
 
-        override fun onOpenNoteLink(url: String) { calls += "noteLink:$url" }
-
-        override fun onConfirmNoteLink() { calls += "confirmNoteLink" }
-
-        override fun onDismissNoteLink() { calls += "dismissNoteLink" }
-
-        override fun onDismissLinkNotice() { calls += "dismissLinkNotice" }
+        override fun onNoteLink(action: NoteLinkAction) {
+            calls +=
+                when (action) {
+                    is NoteLinkAction.Open -> "noteLink:${action.url}"
+                    NoteLinkAction.Confirm -> "confirmNoteLink"
+                    NoteLinkAction.DismissPrompt -> "dismissNoteLink"
+                    NoteLinkAction.DismissNoBrowser -> "dismissLinkNotice"
+                }
+        }
 
         override fun onNotNow() { calls += "notNow" }
     }

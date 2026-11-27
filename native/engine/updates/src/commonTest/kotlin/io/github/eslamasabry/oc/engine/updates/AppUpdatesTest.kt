@@ -328,7 +328,7 @@ class AppUpdatesTest {
                 platform,
                 store,
                 clock,
-                publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256,
+                policy = UpdatePolicy(publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256),
             )
         c.start()
         c.checkNow()
@@ -352,7 +352,7 @@ class AppUpdatesTest {
                 platform,
                 store,
                 clock,
-                publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256,
+                policy = UpdatePolicy(publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256),
             )
         c.start()
         assertFalse(c.state.value.isTestBuild)
