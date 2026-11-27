@@ -45,6 +45,19 @@ class SetupStuckSilentTest {
             progress.components.first { it.id == "essentials" }.error,
         )
         assertTrue(progress.logTail.contains("Linux mode: compatible"), "Details must name the Linux mode used")
+
+        // When the compatible retry after a stall exits with an ordinary error, StepTimedOut and Details remain intact.
+        val retryErrorRecord =
+            record.copy(
+                logTail =
+                    "[oc] Step essentials stopped making progress in normal mode; trying compatibility mode\n" +
+                        "[oc] Step essentials failed (Linux mode: compatible): apt-get returned exit 100\n",
+            )
+        val retryErrorProgress =
+            SetupPlanning.progressFromRecord(retryErrorRecord, components, nowMillis = 260_000L, redact = { it })
+        assertEquals(SetupError.StepTimedOut("Git and SSH"), retryErrorProgress.error)
+        assertTrue(retryErrorProgress.logTail.contains("Linux mode: compatible"))
+        assertTrue(retryErrorProgress.logTail.contains("apt-get returned exit 100"))
     }
 
     @Test

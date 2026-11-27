@@ -446,40 +446,32 @@ class SetupRunner private constructor(private val context: Context) {
      * was interrupted rather than failed, so a stop the person did not ask
      * for never needs Continue setup or a force stop. The row says so.
      */
-    private fun runScriptRetrying(spec: Spec, component: SetupComponentStatus): String? {
-        var attempt = 1
-        while (true) {
-            try {
-                val outcome = runWithCompatFallback(spec, component)
-                outcome.terminalDetail?.let(::logLine)
-                if (!SetupStepRetry.again(attempt, cancelled, SetupStepRetry.interrupted(outcome.failure))) {
-                    return outcome.failure
-                }
-            } catch (error: InstallerInterruptedException) {
-                if (!SetupStepRetry.again(attempt, cancelled, interrupted = true)) throw error
-            }
-            attempt++
-            Log.w(
-                BuiltinLinux.TAG,
-                "setup step ${spec.id} interrupted; running it again ($attempt of ${SetupStepRetry.ATTEMPTS})",
-            )
-            val label = spec.labels["retry"] ?: "Interrupted. Trying again"
-            logLine("==> $label ($attempt/${SetupStepRetry.ATTEMPTS})")
-            event(component, SetupProtocol.Event.Stage(label))
-        }
+    private fun runScriptRetrying(spec: Spec, component: SetupComponentStatus): String? =
+        SetupCompatFallback.runRetrying(
+            stepId = spec.id,
+            currentCompat = { linux.serverCompat() },
+            hooks = compatHooks(spec, component),
+            logDetail = ::logLine,
+            onInterruptRetry = { attempt -> notifyInterruptRetry(spec, component, attempt) },
+        )
+
+    private fun notifyInterruptRetry(spec: Spec, component: SetupComponentStatus, attempt: Int) {
+        Log.w(
+            BuiltinLinux.TAG,
+            "setup step ${spec.id} interrupted; running it again ($attempt of ${SetupStepRetry.ATTEMPTS})",
+        )
+        val label = spec.labels["retry"] ?: "Interrupted. Trying again"
+        logLine("==> $label ($attempt/${SetupStepRetry.ATTEMPTS})")
+        event(component, SetupProtocol.Event.Stage(label))
     }
 
-    private fun runWithCompatFallback(spec: Spec, component: SetupComponentStatus): SetupCompatFallback.Outcome =
-        SetupCompatFallback.run(
-            stepId = spec.id,
-            initialCompat = linux.serverCompat(),
-            hooks = SetupCompatFallback.hooks(
-                isCancelled = { cancelled },
-                persistCompat = { linux.persistProotCompat() },
-                clearCompat = { linux.clearProotCompat() },
-                onCompatRetry = { reason -> notifyCompatRetry(spec, component, reason) },
-                runOnce = { compat -> runAttempt(spec, component, compat) },
-            ),
+    private fun compatHooks(spec: Spec, component: SetupComponentStatus): SetupCompatFallback.Hooks =
+        SetupCompatFallback.hooks(
+            isCancelled = { cancelled },
+            persistCompat = { linux.persistProotCompat() },
+            clearCompat = { linux.clearProotCompat() },
+            onCompatRetry = { reason -> notifyCompatRetry(spec, component, reason) },
+            runOnce = { compat -> runAttempt(spec, component, compat) },
         )
 
     private fun notifyCompatRetry(spec: Spec, component: SetupComponentStatus, reasonLine: String) {
@@ -557,21 +549,28 @@ class SetupRunner private constructor(private val context: Context) {
             isBusy = { isInstallerTreeBusy(linux, started) },
         )
         val run = SetupScriptRun(completion, watchdog)
-        watchdog.start()
-        try {
-            started.outputStream.close()
-            started.inputStream.bufferedReader().forEachLine { line -> handleScriptLine(spec, component, run, line) }
-        } catch (error: SetupPersistenceException) {
-            linux.stopInstaller(started)
-            synchronized(lock) { process = null }
-            throw error
-        } catch (_: Exception) {
-            // A failed/closed pipe must not leak a running child.
-            try { linux.stopInstaller(started) } catch (_: Exception) { }
-        } finally {
-            watchdog.stop()
-        }
-        val code = try { started.waitFor() } finally { synchronized(lock) { process = null } }
+        val code =
+            try {
+                watchdog.guardUntilExit(
+                    readOutput = {
+                        try {
+                            started.outputStream.close()
+                            started.inputStream.bufferedReader().forEachLine { line ->
+                                handleScriptLine(spec, component, run, line)
+                            }
+                        } catch (error: SetupPersistenceException) {
+                            linux.stopInstaller(started)
+                            throw error
+                        } catch (_: Exception) {
+                            // A failed/closed pipe must not leak a running child.
+                            try { linux.stopInstaller(started) } catch (_: Exception) { }
+                        }
+                    },
+                    waitForExit = { started.waitFor() },
+                )
+            } finally {
+                synchronized(lock) { process = null }
+            }
         lastExitCode = SetupStepRetry.crashExit(completion.exitCode ?: code, run.sawSegfault)
         lastStalled = watchdog.isStalled && completion.exitCode != 0
         return SetupCompatFallback.resolveScriptFailure(cancelled, completion.exitCode, lastStalled, compatible) {

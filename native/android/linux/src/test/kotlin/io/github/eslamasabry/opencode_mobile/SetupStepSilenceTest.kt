@@ -287,12 +287,6 @@ class SetupStepSilenceTest {
 
     @Test
     fun `B-SETUP-034 watchdog stays active after stdout EOF until waitFor completes`() {
-        val guardMethod =
-            SetupSilenceWatchdog::class.java.declaredMethods.firstOrNull { it.name == "guardUntilExit" }
-        assertTrue(
-            "SetupSilenceWatchdog must provide guardUntilExit to stay active until waitFor completes",
-            guardMethod != null,
-        )
         val clock = java.util.concurrent.atomic.AtomicLong(0L)
         val silence = SetupStepSilence(timeoutMs = 50L, nowMs = { clock.get() })
         val stops = java.util.concurrent.atomic.AtomicInteger(0)
@@ -308,16 +302,18 @@ class SetupStepSilenceTest {
                 pollMs = 5L,
             )
         var readDone = false
-        val readOutput: () -> Unit = { readDone = true }
-        val waitForExit: () -> Int = {
-            clock.set(60L)
-            assertTrue(
-                "watchdog must stop hung process after EOF",
-                exitUnblock.await(2, java.util.concurrent.TimeUnit.SECONDS),
+        val code =
+            watchdog.guardUntilExit(
+                readOutput = { readDone = true },
+                waitForExit = {
+                    clock.set(60L)
+                    assertTrue(
+                        "watchdog must stop hung process after EOF",
+                        exitUnblock.await(2, java.util.concurrent.TimeUnit.SECONDS),
+                    )
+                    143
+                },
             )
-            143
-        }
-        val code = guardMethod!!.invoke(watchdog, readOutput, waitForExit) as Int
         assertTrue(readDone)
         assertEquals(143, code)
         assertTrue(watchdog.isStalled)
@@ -368,12 +364,6 @@ class SetupStepSilenceTest {
 
     @Test
     fun `B-SETUP-036 outer interrupt retries never trigger a second compatible fallback cycle`() {
-        val runRetrying =
-            SetupCompatFallback::class.java.declaredMethods.firstOrNull { it.name == "runRetrying" }
-        assertTrue(
-            "SetupCompatFallback must track compat fallback across outer interrupt retries",
-            runRetrying != null,
-        )
         var serverCompat = false
         val modes = mutableListOf<Boolean>()
         var compatRetries = 0
@@ -405,17 +395,50 @@ class SetupStepSilenceTest {
             )
         val logged = mutableListOf<String>()
         val failure =
-            runRetrying!!.invoke(
-                SetupCompatFallback,
-                "node",
-                { serverCompat },
-                hooks,
-                { line: String -> logged += line },
-                { _: Int -> interruptRetries++ },
-            ) as String?
+            SetupCompatFallback.runRetrying(
+                stepId = "node",
+                currentCompat = { serverCompat },
+                hooks = hooks,
+                logDetail = { logged += it },
+                onInterruptRetry = { interruptRetries++ },
+            )
         assertEquals("Segmentation fault", failure)
         assertEquals("compat fallback must run at most once across outer retries", 1, compatRetries)
         assertEquals(1, interruptRetries)
+        assertEquals(listOf(false, true, false), modes)
+    }
+
+    @Test
+    fun `B-SETUP-039 interrupt exception during compat attempt blocks a second compat fallback cycle`() {
+        var serverCompat = false
+        var compatRetries = 0
+        val modes = mutableListOf<Boolean>()
+        val logged = mutableListOf<String>()
+        val hooks =
+            SetupCompatFallback.hooks(
+                isCancelled = { false },
+                persistCompat = { serverCompat = true },
+                clearCompat = { serverCompat = false },
+                onCompatRetry = { compatRetries++ },
+                runOnce = { compat ->
+                    modes += compat
+                    when (modes.size) {
+                        1 -> SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
+                        2 -> throw InstallerInterruptedException("killed during compat")
+                        else -> SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
+                    }
+                },
+            )
+        val failure =
+            SetupCompatFallback.runRetrying(
+                stepId = "essentials",
+                currentCompat = { serverCompat },
+                hooks = hooks,
+                logDetail = { logged += it },
+                onInterruptRetry = { serverCompat = false },
+            )
+        assertTrue(SetupCompatFallback.isStalled(failure))
+        assertEquals(1, compatRetries)
         assertEquals(listOf(false, true, false), modes)
     }
 

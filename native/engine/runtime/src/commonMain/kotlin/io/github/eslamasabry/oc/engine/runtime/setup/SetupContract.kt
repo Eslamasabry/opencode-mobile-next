@@ -344,14 +344,44 @@ public enum class SetupActivity {
             val line =
                 log.lineSequence().map { it.trim() }.lastOrNull { it.isNotEmpty() && !it.contains("OCTRACE") }
                     ?: return null
+            return fromLine(line)
+        }
+
+        /**
+         * Activity for the currently running step, anchored to [stage] when present so stale output from a prior
+         * component or unrecognized log lines do not hide or override the known current stage.
+         */
+        public fun forStep(stage: String?, log: String): SetupActivity? {
+            val stageText = stage?.trim()?.takeIf { it.isNotEmpty() } ?: return fromLog(log)
+            val stageActivity = fromLine(stageText)
+            val lines =
+                log.lineSequence()
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() && !it.contains("OCTRACE") }
+                    .toList()
+            val marker = "==> $stageText"
+            val markerIndex = lines.indexOfLast { it == marker || it.startsWith("$marker ") }
+            val currentActivity =
+                if (markerIndex >= 0 && markerIndex + 1 < lines.size) {
+                    fromLine(lines.last())
+                } else {
+                    null
+                }
             return when {
+                currentActivity != null && currentActivity != Working -> currentActivity
+                stageActivity != Working -> stageActivity
+                else -> currentActivity ?: stageActivity
+            }
+        }
+
+        private fun fromLine(line: String): SetupActivity =
+            when {
                 downloadingPattern.containsMatchIn(line) -> Downloading
                 unpackingPattern.containsMatchIn(line) -> Unpacking
                 configuringPattern.containsMatchIn(line) -> Configuring
                 checkingPattern.containsMatchIn(line) -> Checking
                 else -> Working
             }
-        }
     }
 }
 

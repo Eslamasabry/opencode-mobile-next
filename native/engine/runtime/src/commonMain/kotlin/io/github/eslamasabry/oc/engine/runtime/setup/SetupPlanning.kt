@@ -429,8 +429,7 @@ public object SetupPlanning {
             },
             activity =
                 if (running != null) {
-                    SetupActivity.fromLog(setupLogForPeople(record.logTail))
-                        ?: running.stage?.let(SetupActivity::fromLog)
+                    SetupActivity.forStep(running.stage, setupLogForPeople(record.logTail))
                 } else {
                     null
                 },

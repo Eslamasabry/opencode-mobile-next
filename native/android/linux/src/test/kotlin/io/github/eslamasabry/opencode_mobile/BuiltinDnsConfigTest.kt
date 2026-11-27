@@ -34,7 +34,8 @@ class BuiltinDnsConfigTest {
         val picked = BuiltinDnsConfig.selectNameservers(servers)
         assertEquals(listOf("192.0.2.53", "198.51.100.1", "2001:db8:0:0:0:0:0:53"), picked)
         assertEquals(
-            "nameserver 192.0.2.53\nnameserver 198.51.100.1\nnameserver 2001:db8:0:0:0:0:0:53\n",
+            "${BuiltinDnsConfig.MANAGED_HEADER}\n" +
+                "nameserver 192.0.2.53\nnameserver 198.51.100.1\nnameserver 2001:db8:0:0:0:0:0:53\n",
             BuiltinDnsConfig.formatResolvConf(servers),
         )
     }

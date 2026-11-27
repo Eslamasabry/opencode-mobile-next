@@ -114,6 +114,20 @@ internal class SetupSilenceWatchdog(
         thread?.interrupt()
     }
 
+    /**
+     * Runs [readOutput] followed by [waitForExit] while this watchdog stays active, stopping it only after
+     * [waitForExit] completes so an installer that closes stdout/stderr while hung still triggers silence stop.
+     */
+    fun <T> guardUntilExit(readOutput: () -> Unit, waitForExit: () -> T): T {
+        start()
+        return try {
+            readOutput()
+            waitForExit()
+        } finally {
+            stop()
+        }
+    }
+
     private fun runLoop() {
         var running = true
         while (running && !finished.get() && !isCancelled()) {
@@ -121,7 +135,7 @@ internal class SetupSilenceWatchdog(
             if (waitMs <= 0L) {
                 if (isBusy()) {
                     silence.touch()
-                } else {
+                } else if (silence.remainingMs() <= 0L) {
                     stopIfStillSilent()
                     running = false
                 }
@@ -140,7 +154,8 @@ internal class SetupSilenceWatchdog(
         }
 
     private fun stopIfStillSilent() {
-        if (!finished.get() && !isCancelled() && stalled.compareAndSet(false, true)) {
+        val stillSilent = !finished.get() && !isCancelled() && silence.isTimedOut()
+        if (stillSilent && stalled.compareAndSet(false, true)) {
             try {
                 stopProcess()
             } catch (_: IllegalStateException) {
@@ -307,51 +322,126 @@ internal object SetupCompatFallback {
             override fun runOnce(compatible: Boolean): StepAttempt = runOnce(compatible)
         }
 
-    fun run(stepId: String, initialCompat: Boolean, hooks: Hooks): Outcome {
+    fun run(
+        stepId: String,
+        initialCompat: Boolean,
+        hooks: Hooks,
+        allowCompatRetry: Boolean = true,
+    ): Outcome {
         val first = hooks.runOnce(initialCompat)
         return when {
             hooks.isCancelled() -> Outcome("cancelled", initialCompat, retriedInCompat = false, emptyList(), null)
             first.failure == null && !first.stalled ->
                 Outcome(null, initialCompat, retriedInCompat = false, emptyList(), null)
-            SetupStepRetry.compatibility(first.exitCode, initialCompat, hooks.isCancelled(), first.stalled) ->
+            allowCompatRetry &&
+                SetupStepRetry.compatibility(first.exitCode, initialCompat, hooks.isCancelled(), first.stalled) ->
                 retryOnceInCompat(stepId, first, hooks)
             else -> singleAttemptFailure(stepId, initialCompat, first)
         }
     }
 
-    private fun retryOnceInCompat(stepId: String, first: StepAttempt, hooks: Hooks): Outcome {
-        hooks.persistCompat()
-        val reason =
-            if (first.stalled) {
-                "[oc] Step $stepId stopped making progress in normal mode; trying compatibility mode"
-            } else {
-                "[oc] Step $stepId crashed in normal mode; trying compatibility mode"
+    /**
+     * Runs [run] across outer interruption retries (up to [SetupStepRetry.ATTEMPTS]), ensuring compatible-mode
+     * fallback runs at most once even if a compatible attempt ends with SIGTERM/SIGKILL or an interrupt exception.
+     */
+    fun runRetrying(
+        stepId: String,
+        currentCompat: () -> Boolean,
+        hooks: Hooks,
+        logDetail: (String) -> Unit,
+        onInterruptRetry: (Int) -> Unit,
+    ): String? {
+        var attempt = 1
+        var compatFallbackUsed = false
+        val trackedHooks =
+            object : Hooks by hooks {
+                override fun onCompatRetry(reasonLine: String) {
+                    compatFallbackUsed = true
+                    hooks.onCompatRetry(reasonLine)
+                }
             }
-        hooks.onCompatRetry(reason)
-        val second = hooks.runOnce(true)
-        return when {
-            hooks.isCancelled() -> {
-                hooks.clearCompat()
-                Outcome("cancelled", usedCompat = true, retriedInCompat = true, listOf(reason), null)
+        while (true) {
+            try {
+                val outcome = run(stepId, currentCompat(), trackedHooks, allowCompatRetry = !compatFallbackUsed)
+                if (outcome.retriedInCompat) compatFallbackUsed = true
+                outcome.terminalDetail?.let(logDetail)
+                val interrupted = SetupStepRetry.interrupted(outcome.failure)
+                if (!SetupStepRetry.again(attempt, hooks.isCancelled(), interrupted)) return outcome.failure
+            } catch (error: InstallerInterruptedException) {
+                if (!SetupStepRetry.again(attempt, hooks.isCancelled(), interrupted = true)) throw error
             }
-            second.failure == null && !second.stalled -> {
-                val doneLine = linuxModeDetail(stepId, compatible = true, outcome = "finished")
-                Outcome(null, usedCompat = true, retriedInCompat = true, listOf(reason, doneLine), doneLine)
-            }
-            else -> {
-                hooks.clearCompat()
-                val failure = if (second.stalled) stalledFailure(compatible = true) else second.failure
-                val outcomeWord = if (second.stalled) "stopped making progress" else "failed"
-                val failLine = linuxModeDetail(stepId, compatible = true, outcome = outcomeWord)
-                Outcome(failure, usedCompat = true, retriedInCompat = true, listOf(reason, failLine), failLine)
-            }
+            attempt++
+            onInterruptRetry(attempt)
         }
     }
+}
 
-    private fun singleAttemptFailure(stepId: String, compatible: Boolean, attempt: StepAttempt): Outcome {
-        val failure = if (attempt.stalled) stalledFailure(compatible) else attempt.failure
-        val outcomeWord = if (attempt.stalled) "stopped making progress" else "failed"
-        val failLine = if (failure != null) linuxModeDetail(stepId, compatible, outcomeWord) else null
-        return Outcome(failure, compatible, retriedInCompat = false, listOfNotNull(failLine), failLine)
+private const val MAX_DETAIL_SUFFIX_CHARS: Int = 200
+
+private fun retryOnceInCompat(
+    stepId: String,
+    first: SetupCompatFallback.StepAttempt,
+    hooks: SetupCompatFallback.Hooks,
+): SetupCompatFallback.Outcome {
+    hooks.persistCompat()
+    val reason =
+        if (first.stalled) {
+            "[oc] Step $stepId stopped making progress in normal mode; trying compatibility mode"
+        } else {
+            "[oc] Step $stepId crashed in normal mode; trying compatibility mode"
+        }
+    hooks.onCompatRetry(reason)
+    val second = hooks.runOnce(true)
+    return when {
+        hooks.isCancelled() -> {
+            hooks.clearCompat()
+            SetupCompatFallback.Outcome("cancelled", usedCompat = true, retriedInCompat = true, listOf(reason), null)
+        }
+        second.failure == null && !second.stalled -> {
+            val doneLine = SetupCompatFallback.linuxModeDetail(stepId, compatible = true, outcome = "finished")
+            SetupCompatFallback.Outcome(
+                null,
+                usedCompat = true,
+                retriedInCompat = true,
+                listOf(reason, doneLine),
+                doneLine,
+            )
+        }
+        else -> {
+            hooks.clearCompat()
+            val stalledOutcome = first.stalled || second.stalled
+            val failure =
+                if (stalledOutcome) SetupCompatFallback.stalledFailure(compatible = true) else second.failure
+            val outcomeWord = if (second.stalled) "stopped making progress" else "failed"
+            val detailSuffix =
+                second.failure
+                    ?.trim()
+                    ?.takeIf { first.stalled && !second.stalled && it.isNotEmpty() }
+                    ?.replace('\n', ' ')
+                    ?.take(MAX_DETAIL_SUFFIX_CHARS)
+                    ?.let { ": $it" }
+                    .orEmpty()
+            val failLine =
+                SetupCompatFallback.linuxModeDetail(stepId, compatible = true, outcome = outcomeWord) + detailSuffix
+            SetupCompatFallback.Outcome(
+                failure,
+                usedCompat = true,
+                retriedInCompat = true,
+                listOf(reason, failLine),
+                failLine,
+            )
+        }
     }
+}
+
+private fun singleAttemptFailure(
+    stepId: String,
+    compatible: Boolean,
+    attempt: SetupCompatFallback.StepAttempt,
+): SetupCompatFallback.Outcome {
+    val failure = if (attempt.stalled) SetupCompatFallback.stalledFailure(compatible) else attempt.failure
+    val outcomeWord = if (attempt.stalled) "stopped making progress" else "failed"
+    val failLine =
+        if (failure != null) SetupCompatFallback.linuxModeDetail(stepId, compatible, outcomeWord) else null
+    return SetupCompatFallback.Outcome(failure, compatible, retriedInCompat = false, listOfNotNull(failLine), failLine)
 }

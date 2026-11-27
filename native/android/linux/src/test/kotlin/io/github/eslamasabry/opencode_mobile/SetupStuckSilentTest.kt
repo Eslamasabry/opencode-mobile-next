@@ -36,7 +36,11 @@ class SetupStuckSilentTest {
         )
         assertTrue(
             "SetupRunner must route silent and crashing steps through compatible fallback",
-            runner.contains("SetupCompatFallback"),
+            runner.contains("SetupCompatFallback.runRetrying("),
+        )
+        assertTrue(
+            "SetupRunner must keep the silence watchdog active until waitFor completes",
+            runner.contains("watchdog.guardUntilExit("),
         )
     }
 }
