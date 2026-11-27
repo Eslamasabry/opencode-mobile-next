@@ -231,6 +231,19 @@ class PlatformRulesTest {
     }
 
     @Test
+    fun `B-628 What's new links allow only https through ExternalLinkPolicy and refuse unsafe schemes`() {
+        val policy = ExternalLinkPolicy()
+        val ok = PlatformRules.noteLink(policy, "https://github.com/Eslamasabry/opencode-mobile-next/issues/142")
+        assertEquals("github.com", ok?.shownHost)
+        assertEquals("https://github.com/Eslamasabry/opencode-mobile-next/issues/142", ok?.link?.uri)
+        assertNull(PlatformRules.noteLink(policy, "http://example.com/notes"), "plain http is refused")
+        assertNull(PlatformRules.noteLink(policy, "javascript:alert(1)"))
+        assertNull(PlatformRules.noteLink(policy, "intent://example.com/#Intent;end"))
+        assertNull(PlatformRules.noteLink(policy, "file:///etc/hosts"))
+        assertNull(PlatformRules.noteLink(policy, "https://user:pass@example.com/secret"))
+    }
+
+    @Test
     fun `B-MIGR-012 Settings Updates shows the real updater, with nothing waiting too`() {
         val build = AppBuildInfo("2.2.0", 58, Channel.entries.first(), debuggable = false)
         val never = PlatformRules.updateFacts(AppUpdateState(), build) { "x" }
@@ -241,6 +254,8 @@ class PlatformRulesTest {
         assertEquals(UpdateState.UpToDate("on 5"), checked.state)
         assertFalse(checked.checksOn)
         assertEquals(UpdateState.Checking, PlatformRules.updateFacts(AppUpdateState(phase = UpdatePhase.Checking), build) { "" }.state)
+        val testBuild = AppBuildInfo("3.0.2-test.10142", 10142, Channel.entries.first(), debuggable = false)
+        assertEquals(UpdateState.TestBuild, PlatformRules.updateFacts(AppUpdateState(), testBuild) { "" }.state)
     }
 
     @Test

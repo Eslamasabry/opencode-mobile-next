@@ -65,7 +65,7 @@
     <string name="handoffUiUnavailableDirectory">The server did not report a project folder for this conversation, so there is no folder to open it in. Reload the conversation and try again.</string>
     <string name="handoffUiUnavailableWorkspace">This conversation runs inside a cloud environment. Its folder belongs to the environment’s host, so a plain terminal command cannot open it. Export and import the conversation instead.</string>
     <string name="handoffUiUnavailableReference">This conversation’s reference cannot be placed in a command safely.</string>
-    <string name="handoffUiPhoneTitle">Open on another phone</string>
+    <string name="handoffUiPhoneTitle">Continue on another phone</string>
     <string name="handoffUiPhoneIntro">Scan with OpenCode Mobile on the other phone. The code holds only the server and conversation IDs.</string>
     <string name="handoffUiPhoneQrLabel">QR code that opens this conversation on another phone</string>
     <string name="handoffUiPhoneLinkLabel">Link</string>
@@ -327,7 +327,7 @@
     <string name="inboxEmptyTitle">Nothing waits for you</string>
     <string name="inboxFinishedLabel">Finished, not opened yet</string>
     <string name="inboxOpenLabel">Open %1$s</string>
-    <string name="inboxOpenOnServer">Open on %1$s</string>
+    <string name="inboxOpenOnServer">Open request on %1$s</string>
     <string name="inboxWaitingForAnswer">Waiting for your answer</string>
     <string name="inboxAsksPermission">Asks for your permission</string>
     <string name="inboxAsksQuestion">Asks you a question</string>

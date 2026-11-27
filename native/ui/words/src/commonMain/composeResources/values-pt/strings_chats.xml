@@ -114,7 +114,7 @@
     <string name="handoffUiUnavailableDirectory">O servidor não informou a pasta do projeto desta conversa, então não há pasta para abri-la. Recarregue a conversa e tente novamente.</string>
     <string name="handoffUiUnavailableWorkspace">Esta conversa roda dentro de um ambiente na nuvem. A pasta dela pertence ao host do ambiente, então um comando de terminal comum não consegue abri-la. Exporte e importe a conversa.</string>
     <string name="handoffUiUnavailableReference">A referência desta conversa não pode ser colocada em um comando com segurança.</string>
-    <string name="handoffUiPhoneTitle">Abrir em outro celular</string>
+    <string name="handoffUiPhoneTitle">Continuar em outro celular</string>
     <string name="handoffUiPhoneIntro">Escaneie com o OpenCode Mobile no outro celular. O código contém apenas os IDs do servidor e da conversa.</string>
     <string name="handoffUiPhoneQrLabel">Código QR que abre esta conversa em outro celular</string>
     <string name="handoffUiPhoneLinkLabel">Link</string>
@@ -305,7 +305,7 @@
     <string name="inboxEmptyTitle">Nada espera por você</string>
     <string name="inboxFinishedLabel">Concluído, ainda não aberto</string>
     <string name="inboxOpenLabel">Abrir %1$s</string>
-    <string name="inboxOpenOnServer">Abrir em %1$s</string>
+    <string name="inboxOpenOnServer">Abrir pedido em %1$s</string>
     <string name="inboxWaitingForAnswer">Esperando sua resposta</string>
     <string name="inboxAsksPermission">Pede sua permissão</string>
     <string name="inboxAsksQuestion">Faz uma pergunta a você</string>

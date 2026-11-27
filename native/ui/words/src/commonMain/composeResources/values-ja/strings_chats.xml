@@ -112,7 +112,7 @@
     <string name="handoffUiUnavailableDirectory">サーバーからこの会話のプロジェクトフォルダが返されなかったため、開くフォルダがありません。会話を再読み込みしてからもう一度お試しください。</string>
     <string name="handoffUiUnavailableWorkspace">この会話はクラウド環境内で実行されています。フォルダは環境のホスト側にあるため、通常のターミナルコマンドでは開けません。代わりに会話をエクスポートしてインポートしてください。</string>
     <string name="handoffUiUnavailableReference">この会話の参照情報はコマンドに安全に含められません。</string>
-    <string name="handoffUiPhoneTitle">別のスマートフォンで開く</string>
+    <string name="handoffUiPhoneTitle">別のスマートフォンで続ける</string>
     <string name="handoffUiPhoneIntro">別のスマートフォンのOpenCode Mobileでスキャンしてください。コードにはサーバーIDと会話IDのみが含まれます。</string>
     <string name="handoffUiPhoneQrLabel">別のスマートフォンでこの会話を開くQRコード</string>
     <string name="handoffUiPhoneLinkLabel">リンク</string>
@@ -321,7 +321,7 @@
     <string name="inboxEmptyTitle">対応待ちはありません</string>
     <string name="inboxFinishedLabel">完了・未読</string>
     <string name="inboxOpenLabel">%1$sを開く</string>
-    <string name="inboxOpenOnServer">%1$sで開く</string>
+    <string name="inboxOpenOnServer">%1$sでリクエストを開く</string>
     <string name="inboxWaitingForAnswer">回答を待っています</string>
     <string name="inboxAsksPermission">権限の確認を求めています</string>
     <string name="inboxAsksQuestion">質問があります</string>

@@ -16,11 +16,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
+import io.github.eslamasabry.oc.engine.updates.InstalledApp
+import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesUi
@@ -103,6 +108,14 @@ class UpdatesNotesPicturesTest {
         override fun onCheckNow() = Unit
 
         override fun onChecks(on: Boolean) = Unit
+
+        override fun onOpenNoteLink(url: String) = Unit
+
+        override fun onConfirmNoteLink() = Unit
+
+        override fun onDismissNoteLink() = Unit
+
+        override fun onDismissLinkNotice() = Unit
     }
 
     @BeforeTest
@@ -123,12 +136,39 @@ class UpdatesNotesPicturesTest {
     @Test
     fun `B-MIGR-012 updates page What's new pictures before and after at 360 dp`() {
         val root = repoRoot()
-        val notes = File(root, NOTES_PATH).readText()
+        val releaseUrl = "https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v3.0.3"
+        val notes =
+            File(root, NOTES_PATH).readText().trimEnd() +
+                "\n\nSee the [release notes on GitHub]($releaseUrl)."
         val out = File(root, "native/feature/updates/build/renders").apply { mkdirs() }
         val state =
             updatesUi(
                 AppUpdateState(
                     phase = UpdatePhase.Available,
+                    release = RELEASE.copy(notes = notes),
+                    downloadSize = APK_SIZE,
+                    installed = INSTALLED,
+                ),
+                now,
+            )
+        val testBuildState =
+            updatesUi(
+                AppUpdateState(
+                    phase = UpdatePhase.Available,
+                    release = RELEASE.copy(notes = notes),
+                    downloadSize = APK_SIZE,
+                    installed = InstalledApp(PACKAGE, "3.0.2-test.10142", 10142),
+                ),
+                now,
+            )
+        val signerFailureState =
+            updatesUi(
+                AppUpdateState(
+                    phase = UpdatePhase.Failed,
+                    failure = UpdateFailure.Signer,
+                    detail =
+                        "signer 842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C, " +
+                            "expected 1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C",
                     release = RELEASE.copy(notes = notes),
                     downloadSize = APK_SIZE,
                     installed = INSTALLED,
@@ -149,10 +189,21 @@ class UpdatesNotesPicturesTest {
             capture(File(out, "after-updates-whats-new-360-${v.tag}.png"), v) {
                 UpdatesScreen(state, NoopActions)
             }
+            capture(File(out, "after-updates-test-build-360-${v.tag}.png"), v) {
+                UpdatesScreen(testBuildState, NoopActions)
+            }
+            capture(File(out, "after-updates-signer-failure-360-${v.tag}.png"), v, openDetails = true) {
+                UpdatesScreen(signerFailureState, NoopActions)
+            }
         }
     }
 
-    private fun capture(file: File, variant: Variant, content: @Composable () -> Unit) {
+    private fun capture(
+        file: File,
+        variant: Variant,
+        openDetails: Boolean = false,
+        content: @Composable () -> Unit,
+    ) {
         runDesktopComposeUiTest((WIDTH_DP * DENSITY).toInt(), (HEIGHT_DP * DENSITY).toInt()) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(DENSITY, variant.scale)) {
@@ -176,6 +227,10 @@ class UpdatesNotesPicturesTest {
                 }
             }
             waitForIdle()
+            if (openDetails) {
+                onNodeWithText("Details").performScrollTo().performClick()
+                waitForIdle()
+            }
             mainClock.advanceTimeBy(1_000)
             waitForIdle()
             val image = onRoot().captureToImage().toAwtImage()

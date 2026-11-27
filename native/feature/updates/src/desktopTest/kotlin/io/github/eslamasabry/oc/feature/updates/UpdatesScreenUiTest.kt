@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -13,6 +14,8 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -21,18 +24,22 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
+import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkPrompt
 import io.github.eslamasabry.oc.feature.updates.presentation.NoticeUi
 import io.github.eslamasabry.oc.feature.updates.presentation.OfferUi
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatePromptActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateNoticeActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
+import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesUi
 import io.github.eslamasabry.oc.feature.updates.presentation.updatesUi
 import io.github.eslamasabry.oc.feature.updates.ui.UPDATED_HOLD_MS
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateNotice
@@ -91,6 +98,14 @@ class UpdatesScreenUiTest {
 
         override fun onChecks(on: Boolean) { calls += "checks:$on" }
 
+        override fun onOpenNoteLink(url: String) { calls += "noteLink:$url" }
+
+        override fun onConfirmNoteLink() { calls += "confirmNoteLink" }
+
+        override fun onDismissNoteLink() { calls += "dismissNoteLink" }
+
+        override fun onDismissLinkNotice() { calls += "dismissLinkNotice" }
+
         override fun onNotNow() { calls += "notNow" }
     }
 
@@ -106,8 +121,11 @@ class UpdatesScreenUiTest {
         }
     }
 
-    private fun ComposeUiTest.page(state: AppUpdateState, actions: Recording = Recording()): Recording {
-        setContent { Themed { UpdatesScreen(updatesUi(state, now), actions) } }
+    private fun ComposeUiTest.page(state: AppUpdateState, actions: Recording = Recording()): Recording =
+        pageUi(updatesUi(state, now), actions)
+
+    private fun ComposeUiTest.pageUi(ui: UpdatesUi, actions: Recording = Recording()): Recording {
+        setContent { Themed { UpdatesScreen(ui, actions) } }
         waitForIdle()
         return actions
     }
@@ -189,7 +207,7 @@ class UpdatesScreenUiTest {
         val actions =
             page(available.copy(phase = UpdatePhase.Failed, failure = UpdateFailure.Checksum, detail = detail))
         onNodeWithText("2.2.0 couldn't be installed").assertExists()
-        onNodeWithText("The download didn't match its checksum, so it wasn't installed.").assertExists()
+        onNodeWithText("The download didn't match its checksum, so try downloading it again.").assertExists()
         assertTrue(!shows("is ready"))
         assertTrue(!shows(detail), "technical text stays folded")
         onNodeWithText("Details").performScrollTo().performClick()
@@ -201,13 +219,16 @@ class UpdatesScreenUiTest {
     }
 
     @Test
-    fun `B-MIGR-012 a signer failure offers Open on GitHub, not Try again`() = runComposeUiTest {
+    fun `B-MIGR-012 a signer failure offers View release on GitHub, not Try again`() = runComposeUiTest {
         val actions =
             page(available.copy(phase = UpdatePhase.Failed, failure = UpdateFailure.Signer, detail = "signer BB22, expected AA11"))
-        onNodeWithText("This download isn't signed like your app, so it wasn't installed.").assertExists()
+        onNodeWithText(
+                "This download isn't signed like your app, so view the release on GitHub or install a matching build.",
+            )
+            .assertExists()
         assertTrue(!shows("Try again"))
         assertTrue(onAllNodesWithText("BB22", substring = true).fetchSemanticsNodes().isEmpty())
-        onNodeWithText("Open on GitHub").performClick()
+        onNodeWithText("View release on GitHub").performClick()
         assertEquals(listOf("openRelease"), actions.calls)
     }
 
@@ -410,5 +431,85 @@ class UpdatesScreenUiTest {
                     .joinToString(" ") { it.text }
             assertTrue(". " !in failureText, "expected one plain sentence: $failureText")
             assertTrue("install" in failureText.lowercase(), "expected next step in: $failureText")
+        }
+
+    @Test
+    fun `B-627 every update failure says why and what next in one plain sentence`() = runComposeUiTest {
+        val current = mutableStateOf(UpdateFailure.Network)
+        setContent {
+            Themed {
+                UpdatesScreen(
+                    updatesUi(
+                        available.copy(phase = UpdatePhase.Failed, failure = current.value),
+                        now,
+                    ),
+                    Recording(),
+                )
+            }
+        }
+        for (why in UpdateFailure.entries) {
+            current.value = why
+            waitForIdle()
+            val text =
+                onNodeWithTag("updates-failure")
+                    .fetchSemanticsNode()
+                    .config
+                    .getOrNull(SemanticsProperties.Text)
+                    .orEmpty()
+                    .joinToString(" ") { it.text }
+            assertTrue(text.isNotBlank(), "$why had blank failure text")
+            assertTrue(". " !in text, "$why must be one plain sentence: $text")
+            assertTrue("so " in text.lowercase(), "$why must include what next: $text")
+        }
+    }
+
+    @Test
+    fun `B-628 What's new links are visibly styled and tapping one routes to onOpenNoteLink`() =
+        runComposeUiTest {
+            val url = "https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v3.0.3"
+            val notes = "Read the [release notes]($url) for details."
+            val actions = page(available.copy(release = RELEASE.copy(notes = notes)))
+            onNodeWithText("Read the release notes for details.", useUnmergedTree = true)
+                .performScrollTo()
+                .assertExists()
+            val linkAnnotation =
+                textLayouts()
+                    .flatMap { layout ->
+                        val text = layout.layoutInput.text
+                        text.getLinkAnnotations(0, text.length).map { it.item }
+                    }
+                    .filterIsInstance<LinkAnnotation.Clickable>()
+                    .single()
+            assertEquals(
+                TextDecoration.Underline,
+                linkAnnotation.styles?.style?.textDecoration,
+                "links in What's new must stay visually clear",
+            )
+            linkAnnotation.linkInteractionListener?.onClick(linkAnnotation)
+            assertEquals(listOf("noteLink:$url"), actions.calls)
+        }
+
+    @Test
+    fun `B-628 link confirmation names the host and missing browser shows one plain dismissible message`() =
+        runComposeUiTest {
+            val url = "https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v3.0.3"
+            val actions =
+                pageUi(
+                    updatesUi(available, now)
+                        .copy(linkPrompt = NoteLinkPrompt(url, "github.com"), noBrowser = true),
+                )
+            onNodeWithText("Open link?", useUnmergedTree = true).assertExists()
+            onNodeWithText("This opens github.com outside the app.", useUnmergedTree = true)
+                .assertExists()
+            onNode(
+                    hasText("Open") and
+                        (hasAnyAncestor(hasTestTag("kit-dialog")) or
+                            hasAnyAncestor(hasTestTag("kit-sheet"))),
+                )
+                .performClick()
+            onNodeWithText("No browser on this device can open that link.", useUnmergedTree = true)
+                .assertExists()
+            onNodeWithContentDescription("Dismiss").performClick()
+            assertEquals(listOf("confirmNoteLink", "dismissLinkNotice"), actions.calls)
         }
 }

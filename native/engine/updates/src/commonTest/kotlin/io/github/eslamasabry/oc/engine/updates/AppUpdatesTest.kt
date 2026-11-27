@@ -307,9 +307,59 @@ class AppUpdatesTest {
         c.start()
         c.checkNow()
         c.updateNow()
+        assertTrue(c.state.value.isTestBuild)
         assertFalse(c.state.value.hasPendingRelease, "test build must not offer a public update")
         assertFalse(c.state.value.noticeVisible)
         assertEquals(0, feed.downloads, "no public APK downloaded onto a test build")
         assertTrue(platform.installs.isEmpty())
+    }
+
+    @Test
+    fun `B-218 a non-public signer never offers or downloads public releases and clears saved ones`() = runTest {
+        val ownerKey = "1DE5BF08146F269BCD9EB5C2FFC94469CE4617D37806285955F978A62494D60C"
+        platform.version = "3.0.2"
+        platform.build = 10142
+        platform.ownSigner = ownerKey
+        store.record = UpdateRecord(releaseJson = releaseJson(tag = "v3.0.3+10160"))
+        feed.latestBody = releaseJson(tag = "v3.0.3+10160").ok()
+        val c =
+            AppUpdates(
+                feed,
+                platform,
+                store,
+                clock,
+                publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256,
+            )
+        c.start()
+        c.checkNow()
+        c.updateNow()
+        assertTrue(c.state.value.isTestBuild)
+        assertFalse(c.state.value.hasPendingRelease)
+        assertNull(store.record.releaseJson, "saved public release is cleared on a non-public build")
+        assertEquals(0, feed.latestCalls, "non-public signer does not poll public releases")
+        assertEquals(0, feed.downloads)
+    }
+
+    @Test
+    fun `B-218 a public build signed with the public key is offered public updates as today`() = runTest {
+        platform.version = "3.0.2"
+        platform.build = 57
+        platform.ownSigner = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256
+        platform.signer = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256
+        val c =
+            AppUpdates(
+                feed,
+                platform,
+                store,
+                clock,
+                publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256,
+            )
+        c.start()
+        assertFalse(c.state.value.isTestBuild)
+        assertTrue(c.state.value.hasPendingRelease)
+        assertTrue(c.state.value.noticeVisible)
+        c.updateNow()
+        assertEquals(1, feed.downloads)
+        assertEquals(1, platform.installs.size)
     }
 }

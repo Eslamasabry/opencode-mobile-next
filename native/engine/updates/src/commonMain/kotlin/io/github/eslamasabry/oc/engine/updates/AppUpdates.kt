@@ -59,9 +59,16 @@ public data class AppUpdateState(
      * line's Dismiss, or its own short hold) clears it; it never comes back after that.
      */
     val updated: AppRelease? = null,
+    /** B-218: true when this install is a test build (a `-test.<build>` version or non-public signer). */
+    val testBuild: Boolean = false,
 ) {
+    /** True when this build cannot install public updates (either `-test.<build>` or a non-public signer). */
+    public val isTestBuild: Boolean
+        get() = testBuild || installed?.isTestBuild == true
+
     /** A newer release is known and not installed: drives the gear badge and stays on after Not now. */
-    public val hasPendingRelease: Boolean get() = supported && release != null
+    public val hasPendingRelease: Boolean
+        get() = supported && !isTestBuild && release != null
 
     public val busy: Boolean
         get() =
@@ -74,7 +81,7 @@ public data class AppUpdateState(
      */
     public val noticeVisible: Boolean
         get() {
-            if (!supported || pageOpen) return false
+            if (!supported || isTestBuild || pageOpen) return false
             return when (phase) {
                 UpdatePhase.Available, UpdatePhase.ReadyToInstall -> !notNow
                 UpdatePhase.Downloading, UpdatePhase.Verifying, UpdatePhase.Installing -> true
@@ -101,6 +108,7 @@ public class AppUpdates(
     private val clock: Clock,
     supported: Boolean = true,
     private val feedOverride: String = "",
+    private val publicSignerSha256: String? = null,
 ) {
     private val mutable = MutableStateFlow(AppUpdateState(supported = supported))
     public val state: StateFlow<AppUpdateState> = mutable.asStateFlow()
@@ -123,6 +131,10 @@ public class AppUpdates(
         started = true
         record = store.read()
         val app = platform.installed()
+        if (isTestBuild(app)) {
+            clearForTestBuild(app)
+            return Unit.ok()
+        }
         var release: AppRelease? = null
         val saved = record.releaseJson
         if (saved != null) {
@@ -144,12 +156,45 @@ public class AppUpdates(
                 enabled = record.enabled,
                 checkedAt = record.lastCheckMs?.let(Instant::fromEpochMilliseconds),
                 installed = app,
+                testBuild = false,
                 release = release,
                 downloadSize = release?.apkFor(abis)?.size,
                 phase = if (release != null) UpdatePhase.Available else UpdatePhase.None,
             )
         }
         return checkIfDue()
+    }
+
+    /** True when this install is a `-test.<build>` build or signed with a non-public release key (B-218). */
+    private suspend fun isTestBuild(app: InstalledApp): Boolean {
+        if (app.isTestBuild) return true
+        val expected = publicSignerSha256?.takeIf { it.isNotBlank() }
+        if (feedOverride.isNotEmpty() || expected == null) return false
+        val own = platform.ownSignerSha256()
+        return own.isNotEmpty() && !own.equals(expected, ignoreCase = true)
+    }
+
+    private suspend fun clearForTestBuild(app: InstalledApp) {
+        if (record.releaseJson != null) {
+            record = record.copy(releaseJson = null)
+            store.write(record)
+            platform.clearUpdateDir()
+        }
+        verifiedPath = null
+        set {
+            it.copy(
+                enabled = record.enabled,
+                checkedAt = record.lastCheckMs?.let(Instant::fromEpochMilliseconds),
+                installed = app,
+                testBuild = true,
+                release = null,
+                downloadSize = null,
+                phase = UpdatePhase.None,
+                failure = null,
+                detail = null,
+                promptOpen = false,
+            )
+        }
     }
 
     public suspend fun setEnabled(on: Boolean): Outcome<Unit> {
@@ -162,7 +207,7 @@ public class AppUpdates(
 
     /** Start-up and resume: asks GitHub at most once every six hours. */
     public suspend fun checkIfDue(): Outcome<Unit> {
-        if (!s.supported || !s.enabled || s.busy) return Unit.ok()
+        if (!s.supported || s.isTestBuild || !s.enabled || s.busy) return Unit.ok()
         val last = s.checkedAt
         if (last != null && clock.now() - last < CHECK_INTERVAL) return Unit.ok()
         return check()
@@ -170,7 +215,7 @@ public class AppUpdates(
 
     /** Check now: asks regardless of the clock. */
     public suspend fun checkNow(): Outcome<Unit> {
-        if (!s.supported || s.busy) return Unit.ok()
+        if (!s.supported || s.isTestBuild || s.busy) return Unit.ok()
         return check()
     }
 
@@ -208,6 +253,10 @@ public class AppUpdates(
     private suspend fun check(): Outcome<Unit> {
         val before = admit(UpdatePhase.Checking) ?: return Unit.ok()
         val app = s.installed ?: platform.installed()
+        if (isTestBuild(app)) {
+            clearForTestBuild(app)
+            return Unit.ok()
+        }
         set { it.copy(installed = app) }
         val body = feed.latest()
         if (body is Outcome.Failed) {
@@ -311,7 +360,12 @@ public class AppUpdates(
     public suspend fun updateNow(): Outcome<Unit> {
         set { it.copy(promptOpen = false) }
         val release = s.release
-        if (!s.supported || release == null || s.busy) return Unit.ok()
+        if (!s.supported || s.isTestBuild || release == null || s.busy) return Unit.ok()
+        val app = s.installed ?: platform.installed()
+        if (isTestBuild(app)) {
+            clearForTestBuild(app)
+            return Unit.ok()
+        }
         val kept = verifiedPath
         val reuse = kept != null && platform.exists(kept)
         // One download and one install session at a time: a second Update tap while this one runs does nothing.
@@ -422,7 +476,7 @@ public class AppUpdates(
 
     /** Back in the app: continues an install that waited for the permission, then checks when due. */
     public suspend fun onResumed(): Outcome<Unit> {
-        if (!s.supported) return Unit.ok()
+        if (!s.supported || s.isTestBuild) return Unit.ok()
         val path = verifiedPath
         if (s.phase == UpdatePhase.ReadyToInstall && s.needsPermission && path != null && platform.canInstall()) {
             return install(path)
@@ -432,7 +486,7 @@ public class AppUpdates(
 
     /** A newer release waits, nothing is running, and the person neither put it off nor has the Updates page open. */
     private val AppUpdateState.offerWaiting: Boolean
-        get() = phase == UpdatePhase.Available && release != null && !(notNow || pageOpen)
+        get() = !isTestBuild && phase == UpdatePhase.Available && release != null && !(notNow || pageOpen)
 
     private fun fail(why: UpdateFailure, detail: String?): Outcome<Unit> {
         log.i { "update stopped: $why" }
@@ -449,6 +503,10 @@ public class AppUpdates(
 
         /** The wait after start-up or resume before the check (Flutter: 1200 ms). */
         public val OPEN_DELAY: Duration = 1200.milliseconds
+
+        /** Public GitHub release signing certificate SHA-256 (AGENTS.md). */
+        public const val PUBLIC_RELEASE_SIGNER_SHA256: String =
+            "842284B27AA297FB74CF831779FD16498517E1BC2104451459FEC2EA7AC11D1C"
 
         /** Release builds only: a debuggable build cannot take a release APK (Flutter `kReleaseMode`). */
         public fun supportedOn(debuggable: Boolean): Boolean = !debuggable

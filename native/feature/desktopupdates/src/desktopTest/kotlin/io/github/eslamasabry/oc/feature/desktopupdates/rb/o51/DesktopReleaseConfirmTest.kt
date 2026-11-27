@@ -67,7 +67,7 @@ class DesktopReleaseConfirmTest {
             assertEquals(listOf("ask"), calls)
             onNodeWithText("Open the release on GitHub?", useUnmergedTree = true).assertExists()
             onNode(
-                    hasText("Open on GitHub") and
+                    hasText("View release on GitHub") and
                         (hasAnyAncestor(hasTestTag("kit-dialog")) or
                             hasAnyAncestor(hasTestTag("kit-sheet")))
                 )

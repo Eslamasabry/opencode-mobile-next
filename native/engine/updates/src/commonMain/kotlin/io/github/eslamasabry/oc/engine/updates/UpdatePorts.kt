@@ -4,7 +4,11 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import kotlinx.coroutines.flow.Flow
 
 /** What is installed now (package, versionName, versionCode). */
-public data class InstalledApp(val packageName: String, val version: String, val build: Int)
+public data class InstalledApp(val packageName: String, val version: String, val build: Int) {
+    /** Non-public builds carry `-test.<build>` in their version name (AGENTS.md). */
+    public val isTestBuild: Boolean
+        get() = version.contains("-test.", ignoreCase = true)
+}
 
 /** What Android says about a downloaded APK. */
 public data class ApkInfo(val packageName: String, val versionCode: Long, val signerSha256: String)

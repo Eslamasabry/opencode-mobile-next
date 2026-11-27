@@ -6,14 +6,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
+import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkPrompt
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesAction
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesActions
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesLine
@@ -25,6 +26,9 @@ import io.github.eslamasabry.oc.ui.kit.frame.KitScreen
 import io.github.eslamasabry.oc.ui.kit.frame.KitScreenWidth
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBar
 import io.github.eslamasabry.oc.ui.kit.frame.KitTopBarExit
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirm
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmKind
+import io.github.eslamasabry.oc.ui.kit.modal.KitConfirmSpec
 import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
@@ -34,11 +38,15 @@ import io.github.eslamasabry.oc.ui.kit.state.KitDetailsFold
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
 import io.github.eslamasabry.oc.ui.kit.state.KitProgress
 import io.github.eslamasabry.oc.ui.kit.state.KitProgressView
+import io.github.eslamasabry.oc.ui.kit.state.KitTechnicalValue
+import io.github.eslamasabry.oc.ui.kit.status.KitStatus
+import io.github.eslamasabry.oc.ui.kit.status.KitStatusKind
 import io.github.eslamasabry.oc.ui.kit.teaching.KitTip
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeDaysAgo
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeHoursAgo
 import io.github.eslamasabry.oc.ui.kit.text.kitRelativeMinutesAgo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
+import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdown
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMarkdownActions
 import io.github.eslamasabry.oc.ui.kitchat.markdown.KitMdSource
@@ -63,25 +71,34 @@ import io.github.eslamasabry.oc.ui.words.res.appUpdateFailPackage
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailSigner
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailStorage
 import io.github.eslamasabry.oc.ui.words.res.appUpdateFailVersion
+import io.github.eslamasabry.oc.ui.words.res.appUpdateFileSignature
 import io.github.eslamasabry.oc.ui.words.res.appUpdateInstall
 import io.github.eslamasabry.oc.ui.words.res.appUpdateInstallReadyTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateInstalling
 import io.github.eslamasabry.oc.ui.words.res.appUpdateNeverChecked
+import io.github.eslamasabry.oc.ui.words.res.appUpdateNoBrowser
 import io.github.eslamasabry.oc.ui.words.res.appUpdateNotInstalled
 import io.github.eslamasabry.oc.ui.words.res.appUpdateOpenRelease
+import io.github.eslamasabry.oc.ui.words.res.appUpdateOwnSignature
 import io.github.eslamasabry.oc.ui.words.res.appUpdatePercent
 import io.github.eslamasabry.oc.ui.words.res.appUpdatePermissionNeeded
 import io.github.eslamasabry.oc.ui.words.res.appUpdateReadyTitle
 import io.github.eslamasabry.oc.ui.words.res.appUpdateSizeMb
+import io.github.eslamasabry.oc.ui.words.res.appUpdateTestBuildLine
+import io.github.eslamasabry.oc.ui.words.res.appUpdateTestBuildNotice
 import io.github.eslamasabry.oc.ui.words.res.appUpdateTryAgain
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpToDate
 import io.github.eslamasabry.oc.ui.words.res.appUpdateUpdate
 import io.github.eslamasabry.oc.ui.words.res.appUpdateVerifying
 import io.github.eslamasabry.oc.ui.words.res.appUpdateWhatsNew
 import io.github.eslamasabry.oc.ui.words.res.appUpdatesTitle
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkAction
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkBody
+import io.github.eslamasabry.oc.ui.words.res.chatFeelOpenLinkTitle
 import io.github.eslamasabry.oc.ui.words.res.kitCopyDetails
 import io.github.eslamasabry.oc.ui.words.res.kitDetails
 import io.github.eslamasabry.oc.ui.words.res.kitTopBarBack
+import io.github.eslamasabry.oc.ui.words.res.notifyDismiss
 import io.github.eslamasabry.oc.ui.words.res.whatsNewShowUpdates
 import org.jetbrains.compose.resources.stringResource
 
@@ -108,113 +125,193 @@ public fun UpdatesScreen(
                 onExit = actions::onBack,
             )
         },
+        status = if (state.noBrowser) noBrowserStatus(actions) else null,
         width = KitScreenWidth.Reading,
         edges = KitScreenEdges.Bleed,
     ) {
-        Column(
-            Modifier.fillMaxSize()
-                .verticalScroll(kitPageScrollState())
-                .padding(vertical = Space.S3.dp),
-            verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+        UpdatesPageBody(state, actions, gutter, showArrival, dismissArrival)
+        UpdatesLinkConfirm(state.linkPrompt, actions)
+    }
+}
+
+@Composable
+private fun noBrowserStatus(actions: UpdatesActions): KitStatus =
+    KitStatus(
+        kind = KitStatusKind.Info,
+        message = stringResource(Res.string.appUpdateNoBrowser),
+        id = "updates:no-browser",
+        tone = StatusTone.Failure,
+        onDismiss = actions::onDismissLinkNotice,
+        dismissLabel = stringResource(Res.string.notifyDismiss),
+    )
+
+@Composable
+private fun UpdatesPageBody(
+    state: UpdatesUi,
+    actions: UpdatesActions,
+    gutter: Dp,
+    showArrival: Boolean,
+    dismissArrival: () -> Unit,
+) {
+    Column(
+        Modifier.fillMaxSize()
+            .verticalScroll(kitPageScrollState())
+            .padding(vertical = Space.S3.dp),
+        verticalArrangement = Arrangement.spacedBy(Space.S3.dp),
+    ) {
+        val line = lineWords(state)
+        KitRowGroup {
+            KitRow(
+                title =
+                    state.version?.let {
+                        stringResource(Res.string.appUpdateCurrentVersion, it)
+                    } ?: stringResource(Res.string.appTitle),
+                modifier = Modifier.testTag("updates-state"),
+                supporting = line,
+                supportingMaxLines = 3,
+                trailing =
+                    state.action?.let { KitRowTrailing.Action(mainAction(it, actions)) }
+                        ?: KitRowTrailing.None,
+            )
+        }
+        if (state.isTestBuild) {
+            KitNotice(
+                stringResource(Res.string.appUpdateTestBuildNotice),
+                Modifier.padding(horizontal = gutter).testTag("updates-test-build"),
+            )
+        }
+        if (state.showProgress) UpdatesDownloadProgress(state, gutter)
+        state.failure?.let { failure ->
+            KitNotice(
+                failureWords(failure),
+                Modifier.padding(horizontal = gutter).testTag("updates-failure"),
+                tone = StatusTone.Failure,
+            )
+        }
+        UpdatesDetailsFold(state, gutter)
+        if (state.needsPermission) {
+            KitNotice(
+                stringResource(Res.string.appUpdatePermissionNeeded),
+                Modifier.padding(horizontal = gutter),
+            )
+        }
+        if (state.supported && !state.isTestBuild) {
+            UpdatesCheckControls(state, actions, line, showArrival, dismissArrival)
+        }
+        state.notes?.let { notes -> UpdatesWhatsNew(notes, actions, gutter) }
+    }
+}
+
+@Composable
+private fun UpdatesDownloadProgress(state: UpdatesUi, gutter: Dp) {
+    val percent = state.percent
+    val progress = state.progress
+    KitProgressView(
+        progress =
+            if (progress == null || percent == null) KitProgress.Waiting()
+            else
+                KitProgress.Known(
+                    progress,
+                    caption = stringResource(Res.string.appUpdatePercent, percent.toString()),
+                ),
+        modifier = Modifier.padding(horizontal = gutter),
+    )
+}
+
+@Composable
+private fun UpdatesDetailsFold(state: UpdatesUi, gutter: Dp) {
+    val build = state.build
+    val signer = state.signerDetails
+    val detail = state.detail
+    if (build == null && signer == null && detail == null) return
+    val redactor = LocalKitRedactor.current
+    val notes =
+        listOfNotNull(
+            build?.let { "${stringResource(Res.string.appUpdateBuildLabel)} · $it" },
+            detail,
+        )
+    val values =
+        signer?.let { sig ->
+            listOf(
+                KitTechnicalValue(
+                    stringResource(Res.string.appUpdateOwnSignature),
+                    redactor.details(sig.own),
+                ),
+                KitTechnicalValue(
+                    stringResource(Res.string.appUpdateFileSignature),
+                    redactor.details(sig.update),
+                ),
+            )
+        }.orEmpty()
+    KitDetailsFold(
+        label = stringResource(Res.string.kitDetails),
+        copyLabel = stringResource(Res.string.kitCopyDetails),
+        modifier = Modifier.padding(horizontal = gutter),
+        values = values,
+        notes = notes,
+    )
+}
+
+@Composable
+private fun UpdatesCheckControls(
+    state: UpdatesUi,
+    actions: UpdatesActions,
+    line: String,
+    showArrival: Boolean,
+    dismissArrival: () -> Unit,
+) {
+    KitRowGroup {
+        KitSwitchRow(
+            title = stringResource(Res.string.appUpdateCheckSwitch),
+            checked = state.checksOn,
+            supporting = stringResource(Res.string.appUpdateCheckSwitchBody),
+            onCheckedChange = actions::onChecks,
+        )
+        KitTip(
+            stringResource(Res.string.whatsNewShowUpdates),
+            showArrival,
+            dismissArrival,
         ) {
-            val line = lineWords(state)
-            KitRowGroup {
-                KitRow(
-                    title =
-                        state.version?.let {
-                            stringResource(Res.string.appUpdateCurrentVersion, it)
-                        } ?: stringResource(Res.string.appTitle),
-                    modifier = Modifier.testTag("updates-state"),
-                    supporting = line,
-                    supportingMaxLines = 3,
-                    trailing =
-                        state.action?.let { KitRowTrailing.Action(mainAction(it, actions)) }
-                            ?: KitRowTrailing.None,
-                )
-            }
-            if (state.showProgress) {
-                val percent = state.percent
-                val progress = state.progress
-                KitProgressView(
-                    progress =
-                        if (progress == null || percent == null) KitProgress.Waiting()
-                        else
-                            KitProgress.Known(
-                                progress,
-                                caption =
-                                    stringResource(Res.string.appUpdatePercent, percent.toString()),
-                            ),
-                    modifier = Modifier.padding(horizontal = gutter),
-                )
-            }
-            state.failure?.let { failure ->
-                KitNotice(
-                    failureWords(failure),
-                    Modifier.padding(horizontal = gutter).testTag("updates-failure"),
-                    tone = StatusTone.Failure,
-                )
-            }
-            state.build?.let { build ->
-                KitDetailsFold(
-                    label = stringResource(Res.string.kitDetails),
-                    copyLabel = stringResource(Res.string.kitCopyDetails),
-                    modifier = Modifier.padding(horizontal = gutter),
-                    notes =
-                        listOfNotNull(
-                            "${stringResource(Res.string.appUpdateBuildLabel)} · $build",
-                            state.detail,
-                        ),
-                )
-            }
-            if (state.needsPermission) {
-                KitNotice(
-                    stringResource(Res.string.appUpdatePermissionNeeded),
-                    Modifier.padding(horizontal = gutter),
-                )
-            }
-            if (state.supported) {
-                KitRowGroup {
-                    KitSwitchRow(
-                        title = stringResource(Res.string.appUpdateCheckSwitch),
-                        checked = state.checksOn,
-                        supporting = stringResource(Res.string.appUpdateCheckSwitchBody),
-                        onCheckedChange = actions::onChecks,
-                    )
-                    KitTip(
-                        stringResource(Res.string.whatsNewShowUpdates),
-                        showArrival,
-                        dismissArrival,
-                    ) {
-                        KitRow(
-                            title = stringResource(Res.string.appUpdateCheckNow),
-                            modifier = Modifier.testTag("updates-check-now"),
-                            enabled = state.checkNowEnabled,
-                            disabledReason = if (state.checkNowEnabled) null else line,
-                            onClick = actions::onCheckNow,
-                        )
-                    }
-                }
-            }
-            state.notes?.let { notes ->
-                Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
-                    KitSectionLabel(stringResource(Res.string.appUpdateWhatsNew))
-                    // The notes are GitHub Markdown, drawn by the kit's reader; a link in them
-                    // opens nothing, because the page's only opener takes the release page alone
-                    // and no link may open outside the link policy.
-                    val blocks =
-                        remember(notes) {
-                            KitMdSource.blocks("updates-notes", notes, streaming = false)
-                        }
-                    val links = remember { KitMarkdownActions(onLink = {}) }
-                    KitMarkdown(
-                        blocks,
-                        links,
-                        Modifier.padding(horizontal = gutter).testTag("updates-notes"),
-                    )
-                }
-            }
+            KitRow(
+                title = stringResource(Res.string.appUpdateCheckNow),
+                modifier = Modifier.testTag("updates-check-now"),
+                enabled = state.checkNowEnabled,
+                disabledReason = if (state.checkNowEnabled) null else line,
+                onClick = actions::onCheckNow,
+            )
         }
     }
+}
+
+@Composable
+private fun UpdatesWhatsNew(notes: String, actions: UpdatesActions, gutter: Dp) {
+    Column(verticalArrangement = Arrangement.spacedBy(Space.S2.dp)) {
+        KitSectionLabel(stringResource(Res.string.appUpdateWhatsNew))
+        val blocks = remember(notes) { KitMdSource.blocks("updates-notes", notes, streaming = false) }
+        val links = remember(actions) { KitMarkdownActions(onLink = actions::onOpenNoteLink) }
+        KitMarkdown(
+            blocks,
+            links,
+            Modifier.padding(horizontal = gutter).testTag("updates-notes"),
+        )
+    }
+}
+
+@Composable
+private fun UpdatesLinkConfirm(prompt: NoteLinkPrompt?, actions: UpdatesActions) {
+    KitConfirm(
+        spec =
+            prompt?.let {
+                KitConfirmSpec(
+                    title = stringResource(Res.string.chatFeelOpenLinkTitle),
+                    confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
+                    kind = KitConfirmKind.Neutral,
+                    body = stringResource(Res.string.chatFeelOpenLinkBody, it.host),
+                )
+            },
+        onConfirm = actions::onConfirmNoteLink,
+        onCancel = actions::onDismissNoteLink,
+    )
 }
 
 @Composable
@@ -287,6 +384,7 @@ private fun lineWords(state: UpdatesUi): String {
         UpdatesLine.Verifying -> stringResource(Res.string.appUpdateVerifying)
         UpdatesLine.Installing -> stringResource(Res.string.appUpdateInstalling)
         UpdatesLine.ReadyToInstall -> stringResource(Res.string.appUpdateInstallReadyTitle, v)
+        UpdatesLine.TestBuild -> stringResource(Res.string.appUpdateTestBuildLine)
     }
 }
 
