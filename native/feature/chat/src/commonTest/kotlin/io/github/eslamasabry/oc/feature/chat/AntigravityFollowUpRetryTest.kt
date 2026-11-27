@@ -209,11 +209,13 @@ class AntigravityFollowUpRetryTest {
                 holdNextPrompt = null
                 it.await()
             }
-            if (!beforeSend()) return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-            if (failNextPrompt) {
-                failNextPrompt = false
-                return Outcome.Failed(refusal)
-            }
+            val refused =
+                when {
+                    !beforeSend() -> Failure.Refused(RefusalReason.StaleScope)
+                    failNextPrompt -> refusal.also { failNextPrompt = false }
+                    else -> null
+                }
+            if (refused != null) return Outcome.Failed(refused)
             return when (val sent = base.prompt(session, prompt, null)) {
                 is Outcome.Failed -> sent
                 is Outcome.Ok -> Outcome.Ok(PromptAdmission.Confirmed(messageId.raw))
@@ -297,6 +299,8 @@ class AntigravityFollowUpRetryTest {
                     clientPromptMessageID = true,
                 )
             kv.warm()
+            // The helper's stream is up before the page opens: a send needs a connected link, as on the phone.
+            base.events.connect()
             registry.open(profile)
             test.runCurrent()
             world

@@ -43,74 +43,84 @@ class AntigravityFollowUpSendTest {
         fun build(): FakeDaemon =
             FakeDaemon().apply {
                 version = "0.15.4"
-                handlers["get_providers_snapshot_request"] = {
-                    "get_providers_snapshot_response" to jsonOf(
-                        "entries" to listOf(
-                            mapOf(
-                                "provider" to "antigravity",
-                                "status" to "ready",
-                                "enabled" to true,
-                                "models" to listOf(
-                                    mapOf(
-                                        "provider" to "antigravity",
-                                        "id" to "gemini-3.8-flash-high",
-                                        "label" to "Gemini 3.8 Flash (High)",
-                                        "aliases" to listOf("gemini-flash-high-alias"),
-                                    ),
+                reads()
+                changes()
+            }
+
+        /** What the helper answers when it is read: its model list and its agents. */
+        private fun FakeDaemon.reads() {
+            handlers["get_providers_snapshot_request"] = {
+                "get_providers_snapshot_response" to jsonOf(
+                    "entries" to listOf(
+                        mapOf(
+                            "provider" to "antigravity",
+                            "status" to "ready",
+                            "enabled" to true,
+                            "models" to listOf(
+                                mapOf(
+                                    "provider" to "antigravity",
+                                    "id" to "gemini-3.8-flash-high",
+                                    "label" to "Gemini 3.8 Flash (High)",
+                                    "aliases" to listOf("gemini-flash-high-alias"),
                                 ),
                             ),
                         ),
-                    )
-                }
-                handlers["fetch_agents_request"] = {
-                    "fetch_agents_response" to jsonOf(
-                        "entries" to agents.values.map { mapOf("agent" to it) },
-                        "pageInfo" to mapOf("hasMore" to false),
-                    )
-                }
-                handlers["fetch_agent_request"] = { m ->
-                    "fetch_agent_response" to jsonOf("agent" to agents[m.str("agentId")], "error" to null)
-                }
-                handlers["fetch_agent_timeline_request"] = { m ->
-                    "fetch_agent_timeline_response" to jsonOf(
-                        "agentId" to m.str("agentId"),
-                        "error" to null,
-                        "entries" to emptyList<Any>(),
-                    )
-                }
-                handlers["create_agent_request"] = { m ->
-                    val config = m["config"] as JsonObject
-                    val id = "real-${agents.size + 1}"
-                    val base = agentJson(
-                        id,
-                        cwd = reportedCwd(config.str("cwd") ?: cwd),
-                        provider = "antigravity",
-                        status = "running",
-                        title = null,
-                    )
-                    val model = reportedModel(config.str("model"))
-                    val agent = JsonObject(base + ("model" to (model?.let(::JsonPrimitive) ?: JsonNull)))
-                    agents[id] = agent
-                    "status" to jsonOf("status" to "agent_created", "agentId" to id, "agent" to agent)
-                }
-                handlers["set_agent_model_request"] = { m ->
-                    val id = m.str("agentId")!!
-                    val model = reportedModel(m.str("modelId"))
-                    agents[id]?.let {
-                        agents[id] = JsonObject(it + ("model" to (model?.let(::JsonPrimitive) ?: JsonNull)))
-                    }
-                    "set_agent_model_response" to jsonOf("ok" to true)
-                }
-                handlers["set_agent_thinking_request"] = { "set_agent_thinking_response" to jsonOf("ok" to true) }
-                handlers["set_agent_mode_request"] = { "set_agent_mode_response" to jsonOf("ok" to true) }
-                handlers["send_agent_message_request"] = { m ->
-                    "send_agent_message_response" to jsonOf(
-                        "agentId" to m.str("agentId"),
-                        "accepted" to true,
-                        "error" to null,
-                    )
-                }
+                    ),
+                )
             }
+            handlers["fetch_agents_request"] = {
+                "fetch_agents_response" to jsonOf(
+                    "entries" to agents.values.map { mapOf("agent" to it) },
+                    "pageInfo" to mapOf("hasMore" to false),
+                )
+            }
+            handlers["fetch_agent_request"] = { m ->
+                "fetch_agent_response" to jsonOf("agent" to agents[m.str("agentId")], "error" to null)
+            }
+            handlers["fetch_agent_timeline_request"] = { m ->
+                "fetch_agent_timeline_response" to jsonOf(
+                    "agentId" to m.str("agentId"),
+                    "error" to null,
+                    "entries" to emptyList<Any>(),
+                )
+            }
+        }
+
+        /** What the helper does when it is asked: start an agent, set its model, take a message. */
+        private fun FakeDaemon.changes() {
+            handlers["create_agent_request"] = { m ->
+                val config = m["config"] as JsonObject
+                val id = "real-${agents.size + 1}"
+                val base = agentJson(
+                    id,
+                    cwd = reportedCwd(config.str("cwd") ?: cwd),
+                    provider = "antigravity",
+                    status = "running",
+                    title = null,
+                )
+                val model = reportedModel(config.str("model"))
+                val agent = JsonObject(base + ("model" to (model?.let(::JsonPrimitive) ?: JsonNull)))
+                agents[id] = agent
+                "status" to jsonOf("status" to "agent_created", "agentId" to id, "agent" to agent)
+            }
+            handlers["set_agent_model_request"] = { m ->
+                val id = m.str("agentId")!!
+                val model = reportedModel(m.str("modelId"))
+                agents[id]?.let {
+                    agents[id] = JsonObject(it + ("model" to (model?.let(::JsonPrimitive) ?: JsonNull)))
+                }
+                "set_agent_model_response" to jsonOf("ok" to true)
+            }
+            handlers["set_agent_thinking_request"] = { "set_agent_thinking_response" to jsonOf("ok" to true) }
+            handlers["set_agent_mode_request"] = { "set_agent_mode_response" to jsonOf("ok" to true) }
+            handlers["send_agent_message_request"] = { m ->
+                "send_agent_message_response" to jsonOf(
+                    "agentId" to m.str("agentId"),
+                    "accepted" to true,
+                    "error" to null,
+                )
+            }
+        }
     }
 
     private fun TestScope.harness(daemon: FakeDaemon, subfolders: Boolean = true): GatewayHarness =
@@ -203,6 +213,23 @@ class AntigravityFollowUpSendTest {
         assertIs<Outcome.Ok<*>>(h.gateway.promptWithMessageId(id, MessageId("m2"), followUp) { true })
         assertEquals(1, h.daemon.of("send_agent_message_request").size)
     }
+
+    @Test
+    fun `B-399-1g Antigravity follow-up on a connection that has not read the model list names the model by it`() =
+        runTest {
+            val model = ModelRef("antigravity", "gemini-3.8-flash-high")
+            val long = "antigravity/gemini-3.8-flash-high"
+            val backend = AntigravityDaemon(cwd = project, reportedModel = { long })
+            // The first turn ran before this connection opened (the helper's socket was replaced since).
+            val before = agentJson("real-1", cwd = project, provider = "antigravity", status = "idle", title = null)
+            backend.agents["real-1"] = JsonObject(before + ("model" to JsonPrimitive(long)))
+            val h = harness(backend.build())
+            val id = SessionId("real-1")
+
+            assertIs<Outcome.Ok<*>>(h.gateway.setSessionModel(id, model, ""))
+            val readback = assertIs<Outcome.Ok<Session>>(h.gateway.session(id)).value
+            assertEquals(model, readback.selection?.model, "the model list's id, read before the model is set")
+        }
 
     @Test
     fun `B-399-1d moving a pinned gateway to another project still refuses follow-up as StaleScope`() = runTest {
