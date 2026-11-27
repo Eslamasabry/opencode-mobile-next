@@ -141,6 +141,13 @@ class UpdatesScreenUiTest {
 
     private fun ComposeUiTest.shows(text: String): Boolean = onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
 
+    /** The words the failure notice draws: the notice is a frame, its sentence is a text node inside it. */
+    private fun ComposeUiTest.failureWords(): String =
+        onAllNodes(hasAnyAncestor(hasTestTag("updates-failure")), useUnmergedTree = true)
+            .fetchSemanticsNodes()
+            .flatMap { it.config.getOrNull(SemanticsProperties.Text).orEmpty() }
+            .joinToString(" ") { it.text }
+
     private fun releaseNotes(): String {
         val path = "docs/releases/v3.0.3+10160.md"
         var d: File? = File(System.getProperty("user.dir")).absoluteFile
@@ -431,13 +438,7 @@ class UpdatesScreenUiTest {
             assertTrue(!shows("Open on GitHub"), "Open on GitHub does not say what you get there")
             onNodeWithText("View release on GitHub").performClick()
             assertEquals(listOf("openRelease"), actions.calls)
-            val failureText =
-                onNodeWithTag("updates-failure")
-                    .fetchSemanticsNode()
-                    .config
-                    .getOrNull(SemanticsProperties.Text)
-                    .orEmpty()
-                    .joinToString(" ") { it.text }
+            val failureText = failureWords()
             assertTrue(". " !in failureText, "expected one plain sentence: $failureText")
             assertTrue("install" in failureText.lowercase(), "expected next step in: $failureText")
         }
@@ -459,13 +460,7 @@ class UpdatesScreenUiTest {
         for (why in UpdateFailure.entries) {
             current.value = why
             waitForIdle()
-            val text =
-                onNodeWithTag("updates-failure")
-                    .fetchSemanticsNode()
-                    .config
-                    .getOrNull(SemanticsProperties.Text)
-                    .orEmpty()
-                    .joinToString(" ") { it.text }
+            val text = failureWords()
             assertTrue(text.isNotBlank(), "$why had blank failure text")
             assertTrue(". " !in text, "$why must be one plain sentence: $text")
             assertTrue("so " in text.lowercase(), "$why must include what next: $text")
@@ -502,11 +497,12 @@ class UpdatesScreenUiTest {
     fun `B-628 link confirmation names the host and missing browser shows one plain dismissible message`() =
         runComposeUiTest {
             val url = "https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v3.0.3"
-            val actions =
-                pageUi(
-                    updatesUi(available, now)
-                        .copy(linkPrompt = NoteLinkPrompt(url, "github.com"), noBrowser = true),
-                )
+            val actions = Recording()
+            val base = updatesUi(available, now)
+            // The confirmation first, then the notice once it has closed: the page never shows both at once.
+            val ui = mutableStateOf(base.copy(linkPrompt = NoteLinkPrompt(url, "github.com")))
+            setContent { Themed { UpdatesScreen(ui.value, actions) } }
+            waitForIdle()
             onNodeWithText("Open link?", useUnmergedTree = true).assertExists()
             onNodeWithText("This opens github.com outside the app.", useUnmergedTree = true)
                 .assertExists()
@@ -516,8 +512,11 @@ class UpdatesScreenUiTest {
                             hasAnyAncestor(hasTestTag("kit-sheet"))),
                 )
                 .performClick()
-            onNodeWithText("No browser on this device can open that link.", useUnmergedTree = true)
-                .assertExists()
+            ui.value = base.copy(noBrowser = true)
+            waitForIdle()
+            // The status line keeps its words in one spoken node, so the message is found by the line's own tag.
+            onNodeWithTag("kit-status-message", useUnmergedTree = true)
+                .assertTextContains("No browser on this device can open that link.", substring = true)
             onNodeWithContentDescription("Dismiss").performClick()
             assertEquals(listOf("confirmNoteLink", "dismissLinkNotice"), actions.calls)
         }
