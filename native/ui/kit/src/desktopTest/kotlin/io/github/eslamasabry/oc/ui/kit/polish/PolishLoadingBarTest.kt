@@ -20,6 +20,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
@@ -254,5 +255,38 @@ class PolishLoadingBarTest {
             val topY = bar.top.value.toInt()
             val diff = colorDiff(pixels[x, topY], pixels[x, topY + 4])
             assertTrue(diff < 0.01f, "Glass light bar must have no 1 dp crisp hairline (Owner #62), diff=$diff")
+        }
+
+    @Test
+    fun `B-561 no-Back top bar keeps subtitle gap and bottom`() =
+        runDesktopComposeUiTest(360, 160) {
+            setContent {
+                CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                    KitTheme(
+                        KitAppearance(style = Style.Solid, mode = AppearanceMode.Dark, motion = MotionLevel.Off),
+                        FakeKitPlatform(),
+                        "en",
+                        stillFrame = true,
+                    ) {
+                        CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 160f)) {
+                            KitTopBar(
+                                title = "Conversations",
+                                subtitle = "This phone",
+                                exit = KitTopBarExit.None,
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            val bar = onNodeWithTag("kit-top-bar", useUnmergedTree = true).getBoundsInRoot()
+            val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).getBoundsInRoot()
+            val sub = onNodeWithText("This phone", useUnmergedTree = true).getBoundsInRoot()
+            val gap = (sub.top - title.bottom).value
+            assertTrue(gap <= 4.5f, "no-Back subtitle top must be <= title bottom + 4 dp, was $gap dp")
+            assertTrue(
+                bar.bottom >= sub.bottom - 0.5.dp,
+                "no-Back bar bottom (${bar.bottom}) must not be above subtitle bottom (${sub.bottom})",
+            )
         }
 }

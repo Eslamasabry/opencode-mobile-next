@@ -250,7 +250,7 @@ class PolishTranscriptChatTest {
                 permission("p1", "bash", "npm test"),
                 permission("p2", "webfetch", "https://example.com/docs"),
             ).toImmutableList()
-        for (locale in listOf("en", "ar")) {
+        for (locale in listOf("en", "ar", "zh", "ja")) {
             Locale.setDefault(Locale.forLanguageTag(locale))
             kitUiTest(360, 640) {
                 setContent {
@@ -268,6 +268,12 @@ class PolishTranscriptChatTest {
                 for (t in folded) {
                     assertFalse("?," in t, "$locale: found '?,' in '$t'")
                     assertFalse("\u061F," in t, "$locale: found '؟,' in '$t'")
+                    assertFalse("\uFF1F," in t, "$locale: found '？,' in '$t'")
+                    val beforeDot = t.substringBefore(" · ").trimEnd()
+                    assertFalse(
+                        beforeDot.endsWith('?') || beforeDot.endsWith('\u061F') || beforeDot.endsWith('\uFF1F'),
+                        "$locale: stray question mark before dot in '$t'",
+                    )
                 }
             }
         }
@@ -401,4 +407,33 @@ class PolishTranscriptChatTest {
             )
             assertTrue(diff < 0.01f, "Solid TurnChangedFiles must not force a panel box (Owner #2), got $sample")
         }
+
+    @Test
+    fun `B-561 usable title width is equal in Solid and Glass`() {
+        fun titleWidth(style: Style): Float {
+            var width = 0f
+            kitUiTest(360, 780) {
+                val scene = ChatScene()
+                val state =
+                    scene.live().copy(
+                        title = "A very long conversation title that fills the usable header width cleanly",
+                    )
+                setContent {
+                    E20Scene(dark = true, style = style) {
+                        scene.Screen(state, canGoBack = true)
+                    }
+                }
+                waitForIdle()
+                val bounds = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).getBoundsInRoot()
+                width = (bounds.right - bounds.left).value
+            }
+            return width
+        }
+        val solid = titleWidth(Style.Solid)
+        val glass = titleWidth(Style.Glass)
+        assertTrue(
+            abs(solid - glass) <= 1f,
+            "usable title width must match: Solid=$solid dp, Glass=$glass dp",
+        )
+    }
 }

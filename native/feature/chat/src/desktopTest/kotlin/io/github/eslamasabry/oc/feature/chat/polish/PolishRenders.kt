@@ -255,6 +255,30 @@ class PolishRenders {
         }
 
     @Test
+    fun `render 580 changed files glass light`() =
+        kitUiTest(360, 320) {
+            setContent {
+                E20Scene(dark = false, style = Style.Glass) {
+                    CompositionLocalProvider(LocalKitWindow provides KitWindowInfo(360f, 780f)) {
+                        Box(Modifier.width(360.dp)) {
+                            TurnChangedFiles(
+                                files = listOf(ChangedFile("src/app.kt", 3, 1), ChangedFile("src/main.kt", 1, 0)),
+                                onOpenFile = {},
+                                onAllFiles = {},
+                            )
+                        }
+                    }
+                }
+            }
+            waitForIdle()
+            ImageIO.write(
+                onRoot().captureToImage().toAwtImage(),
+                "png",
+                out("580", "changed-files-glass", "1.0", "light"),
+            )
+        }
+
+    @Test
     fun `render 561 plain topbar`() =
         kitUiTest(360, 640) {
             setContent {
