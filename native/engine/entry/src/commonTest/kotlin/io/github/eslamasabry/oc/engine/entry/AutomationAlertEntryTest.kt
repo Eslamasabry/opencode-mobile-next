@@ -13,7 +13,8 @@ class AutomationAlertEntryTest {
     private val t0 = Instant.fromEpochMilliseconds(1_000L)
     private val p1 = ProfileId("p1")
     private val world = EntryWorld(
-        open = true,
+        bootstrap = BootstrapPhase.Ready,
+        gateOpen = true,
         isAndroid = true,
         activeProfileId = p1,
         savedProfileIds = setOf(p1),
