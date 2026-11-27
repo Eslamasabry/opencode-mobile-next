@@ -39,8 +39,8 @@ public data class AutomationNotification(
 /** What one tracker call found (B-620): alerts to post, and what a pause asked here takes out of the shade. */
 public data class AutomationAlertDiff(
     val post: List<AutomationNotification> = emptyList(),
-    val dismissKeys: Set<String> = emptyList(),
-    val dismissGroups: Set<String> = emptyList(),
+    val dismissKeys: Set<String> = emptySet(),
+    val dismissGroups: Set<String> = emptySet(),
 ) {
     /** True when there is nothing to post or to dismiss. */
     public val isEmpty: Boolean
