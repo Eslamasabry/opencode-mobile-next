@@ -424,7 +424,11 @@ class SetupStepSilenceTest {
                     modes += compat
                     when (modes.size) {
                         1 -> SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
-                        2 -> throw InstallerInterruptedException("killed during compat")
+                        2 ->
+                            throw InstallerInterruptedException(
+                                "killed during compat",
+                                IllegalStateException("interrupted"),
+                            )
                         else -> SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
                     }
                 },
