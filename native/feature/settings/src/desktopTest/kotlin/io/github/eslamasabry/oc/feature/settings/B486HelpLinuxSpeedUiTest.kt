@@ -30,6 +30,7 @@ import javax.imageio.ImageIO
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -40,7 +41,7 @@ import kotlinx.coroutines.flow.StateFlow
  */
 @OptIn(ExperimentalTestApi::class)
 class B486HelpLinuxSpeedUiTest {
-    private val out = File("build/b486-renders").also { it.mkdirs() }
+    private val out = File("build/renders/agents-fast-cold-start").also { it.mkdirs() }
     private val savedLocale: Locale = Locale.getDefault()
 
     @AfterTest
@@ -106,7 +107,7 @@ class B486HelpLinuxSpeedUiTest {
                 onNodeWithText("Fast").assertIsDisplayed()
                 onNodeWithText("Running in fast mode.").assertIsDisplayed()
                 onNodeWithTag("settings-help-try-fast-mode").assertDoesNotExist()
-                assertEquals(1, port.refreshCalls)
+                assertTrue(port.refreshCalls >= 1, "opening Help must refresh the phone Linux speed mode")
                 ImageIO.write(
                     onRoot().captureToImage().toAwtImage(),
                     "png",

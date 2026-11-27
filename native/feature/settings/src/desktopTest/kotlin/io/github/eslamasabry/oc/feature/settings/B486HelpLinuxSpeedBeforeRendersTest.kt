@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  */
 @OptIn(ExperimentalTestApi::class)
 class B486HelpLinuxSpeedBeforeRendersTest {
-    private val out = File("build/b486-renders").also { it.mkdirs() }
+    private val out = File("build/renders/agents-fast-cold-start").also { it.mkdirs() }
     private val savedLocale: Locale = Locale.getDefault()
 
     @AfterTest
