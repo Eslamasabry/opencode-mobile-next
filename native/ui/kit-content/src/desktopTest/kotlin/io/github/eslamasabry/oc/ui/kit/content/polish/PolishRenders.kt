@@ -41,7 +41,7 @@ import kotlin.test.assertTrue
 
 class PolishRenders {
     companion object {
-        const val PHASE = "after"
+        const val PHASE = "before"
     }
 
     @Test
@@ -127,9 +127,10 @@ class PolishRenders {
                 "png",
                 File(dir, "580-$PHASE-viewer-bottom-clearance-360-1.0-dark.png"),
             )
+            println("BEFORE_VIEWER_CLEARANCE=$clearance dp")
             assertTrue(
-                clearance >= 8f,
-                "last code line must clear bottom action by >= 8 dp ($PHASE), was $clearance dp ($lastLine vs $action)",
+                false,
+                "BEFORE_VIEWER_CLEARANCE=$clearance dp (passes8=${clearance >= 8f}, $lastLine vs $action)",
             )
         }
     }

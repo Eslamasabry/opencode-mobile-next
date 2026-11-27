@@ -156,7 +156,7 @@ import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentStorage
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentTooLarge
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewAttachmentUnsupported
 import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelButton
-import io.github.eslamasabry.oc.ui.words.res.composerModelDefaultShort
+import io.github.eslamasabry.oc.ui.words.res.composerPreviewModelDefault
 import io.github.eslamasabry.oc.ui.words.res.draftRetrySave
 import io.github.eslamasabry.oc.ui.words.res.draftAttachmentsFailed
 import io.github.eslamasabry.oc.ui.words.res.draftSaveFailed
@@ -1418,15 +1418,17 @@ public fun BasicComposer(
 private fun modelWords(state: BasicComposerUi, chrome: ComposerChrome): String {
     // Open-transitions: a model not read yet is no words at all, never the generic "Model" as if it were a fact.
     if (modelUnknown(state.models)) return ""
-    val chosen =
-        state.models.selected?.label
-            ?: if (state.models.usesDefault) {
-                state.models.serverDefault?.label
-                    ?: stringResource(Res.string.composerModelDefaultShort)
-            } else {
-                stringResource(Res.string.composerPreviewModelButton)
-            }
-    val named = modelLabel(chosen, state.models.variant, state.models.agent)
+    val named =
+        modelLabel(
+            state.models.selected?.label
+                // QA wave 4 B13: "Server default" only once the server said so.
+                ?: stringResource(
+                    if (state.models.usesDefault) Res.string.composerPreviewModelDefault
+                    else Res.string.composerPreviewModelButton
+                ),
+            state.models.variant,
+            state.models.agent,
+        )
     // One rule (audit 1, f2/x1): the chip says the model's name and nothing else, as the list and the home do. A free
     // model is marked by the list's own quiet "Free" tag; a suffix here appeared only once the free list had loaded.
     return named

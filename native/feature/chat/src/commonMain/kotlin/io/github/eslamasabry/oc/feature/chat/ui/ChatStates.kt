@@ -9,13 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -90,44 +88,22 @@ internal fun Modifier.chatPane(): Modifier = kitMaxWidth(ChatPane.maxWidth(Local
  */
 @Composable
 internal fun ChatLoadingBody(label: String?, modifier: Modifier = Modifier) {
-    // B-561: top-aligned column starting right under the header (skeleton first, then the slow words).
-    // Reserve space for the waiting words before sizing the decorative turns so short/1.3x chats keep them visible.
-    val tokens = LocalKitTokens.current
-    val fontScale = maxOf(1f, LocalDensity.current.fontScale)
-    val wordsReserve = if (label == null) 0.dp else Space.S4.dp + (LOADING_WORDS_RESERVE_DP * fontScale).dp
-    val twoTurnsHeight = (tokens.gutter * 2 + Space.S2 + TWO_SKELETON_TURNS_DP).dp
-    BoxWithConstraints(
-        modifier
-            .fillMaxSize()
-            .padding(kitScreenChromePadding())
-            .padding(bottom = Space.S2.dp)
-            .chatPane()
-            .testTag("chat-loading"),
+    // The frame's overlaid chrome lies over the body (the chat keeps one layout while it loads): the turns rest above the
+    // message box as the transcript's newest line does (the list's own 8 dp over the frame's room), the words in the
+    // middle of what is left.
+    Box(
+        modifier.fillMaxSize().padding(kitScreenChromePadding()).padding(bottom = Space.S2.dp).chatPane(),
+        contentAlignment = Alignment.BottomCenter,
     ) {
-        val turns = if (!constraints.hasBoundedHeight || maxHeight >= twoTurnsHeight + wordsReserve) 2 else 1
-        Column(
-            Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Box(Modifier.fillMaxWidth().weight(1f, fill = false)) {
-                KitSkeletonTranscript(
-                    Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true),
-                    turns = turns,
-                )
-            }
-            Spacer(Modifier.height(Space.S4.dp))
-            KitSlowWords(
-                label,
-                ChatPane.LOADING_WORDS_AFTER_MS,
-                Modifier.padding(horizontal = tokens.gutter.dp),
-                textModifier = Modifier.testTag("chat-loading-words"),
-            )
-        }
+        KitSkeletonTranscript(Modifier.fillMaxWidth().testTag("chat-loading"))
+        KitSlowWords(
+            label,
+            ChatPane.LOADING_WORDS_AFTER_MS,
+            Modifier.align(Alignment.Center).padding(horizontal = LocalKitTokens.current.gutter.dp),
+            textModifier = Modifier.testTag("chat-loading-words"),
+        )
     }
 }
-
-private const val TWO_SKELETON_TURNS_DP = 244
-private const val LOADING_WORDS_RESERVE_DP = 56f
 
 /**
  * OMP-OPEN: the load-failure page's words name what did not answer. A conversation of this phone's agents names its

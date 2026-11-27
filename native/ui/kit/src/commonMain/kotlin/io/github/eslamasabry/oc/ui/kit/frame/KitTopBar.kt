@@ -906,18 +906,15 @@ private fun Modifier.endUnderText(line: androidx.compose.ui.unit.TextUnit, top: 
     layout { measurable, constraints ->
         val p = measurable.measure(constraints)
         val pad = top.roundToPx()
+        val words = wordsHeight(p, line)
         val inner = (p.height - pad).coerceAtLeast(0)
-        val words =
-            wordsHeight(p, line)
-                ?: if (line.isSp) line.roundToPx().takeIf { it in 1 until inner } else null
         val bottom = if (words == null) p.height else pad + (inner + words.coerceAtMost(inner)) / 2
         layout(p.width, bottom.coerceIn(0, p.height)) { p.place(0, 0) }
     }
 
 /**
  * E20-S10: rises so the content's vertically centred words start [gap] under what is above it, and reports [bottom]
- * less height below (a target overlapping the empty edge under the bar). Falls back to [line] when a child subcompose
- * layout (such as BoxWithConstraints in KitTopBarScope) does not forward baselines.
+ * less height below (a target overlapping the empty edge under the bar). Unchanged without baselines.
  */
 private fun Modifier.riseToText(
     line: androidx.compose.ui.unit.TextUnit,
@@ -926,9 +923,7 @@ private fun Modifier.riseToText(
 ): Modifier =
     layout { measurable, constraints ->
         val p = measurable.measure(constraints)
-        val words =
-            wordsHeight(p, line)
-                ?: if (line.isSp) line.roundToPx().takeIf { it in 1 until p.height } else null
+        val words = wordsHeight(p, line)
         val slack = if (words == null) 0 else ((p.height - words) / 2).coerceAtLeast(0)
         val rise = (slack - gap.roundToPx()).coerceAtLeast(-gap.roundToPx())
         val height = (p.height - rise - bottom.roundToPx()).coerceAtLeast(0)
