@@ -77,9 +77,7 @@ public class NotificationActionBody(
         if (tap.decision == ShadeDecision.PauseAutomation) return pauseAutomation(tap)
         if (!tap.kind.isRequest) return ShadeOutcome.Ignored
         val reply = replyOf(tap) ?: return ShadeOutcome.Ignored
-        if (tap.requestId.isBlank() || tap.profileId.isBlank()) return repost(tap)
-        if (tap.decision.needsUnlock && lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked())
-            return repost(tap)
+        if (tap.mustRepostRequest(lock)) return repost(tap)
         // The exact tapped action (its token included) is the duplicate key; a repost carries a new
         // token, so it is answerable again.
         val claimKey =
@@ -190,9 +188,6 @@ public class NotificationActionBody(
     private fun canPauseFromShade(tap: ShadeTap): Boolean =
         tap.namesAnAutomation() && !(lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked())
 
-    private fun ShadeTap.namesAnAutomation(): Boolean =
-        kind.isAutomation && requestId.isNotBlank() && profileId.isNotBlank() && actionToken.isNotBlank()
-
     private fun repost(tap: ShadeTap): ShadeOutcome {
         shade.showOpenOnlyIfCurrent(tap)
         return ShadeOutcome.RepostedOpen
@@ -221,4 +216,15 @@ public interface StopObserver {
 
         override fun settled(conversation: ConversationRef, outcome: ShadeOutcome): Unit = Unit
     }
+}
+
+/** True when a tap names an automation, a server and the exact posted alert it was issued for. */
+private fun ShadeTap.namesAnAutomation(): Boolean =
+    kind.isAutomation && requestId.isNotBlank() && profileId.isNotBlank() && actionToken.isNotBlank()
+
+/** True when a request tap lacks its target or needs an unlock below API 31 (CR16-7). */
+private fun ShadeTap.mustRepostRequest(lock: DeviceLock): Boolean {
+    val missingTarget = requestId.isBlank() || profileId.isBlank()
+    val lockedBelowS = decision.needsUnlock && lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked()
+    return missingTarget || lockedBelowS
 }

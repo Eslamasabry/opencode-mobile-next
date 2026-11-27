@@ -130,6 +130,7 @@ import java.util.UUID
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -939,7 +940,7 @@ class PlatformHub(
             .collectLatest { (away, _) ->
                 if (!away) return@collectLatest
                 readAutomations(baseline = true)
-                while (isActive) {
+                while (currentCoroutineContext().isActive) {
                     delay(AUTOMATION_POLL_MS)
                     readAutomations(baseline = false)
                 }

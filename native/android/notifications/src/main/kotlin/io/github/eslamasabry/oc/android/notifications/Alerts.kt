@@ -91,8 +91,9 @@ public data class CodingAlert(
     /** Validity (plan 11 §10.4, ported from `validCodingAlert`). */
     public val isValid: Boolean
         get() {
-            if (sessionId.isBlank() || key.isBlank() || (kind.isAutomation && automationGroup.isBlank()))
-                return false
+            val missingIdentity = sessionId.isBlank() || key.isBlank()
+            val missingGroup = kind.isAutomation && automationGroup.isBlank()
+            if (missingIdentity || missingGroup) return false
             if (!kind.isQuota) return true
             return sessionId == "quota" &&
                 profileId.isNotBlank() &&
