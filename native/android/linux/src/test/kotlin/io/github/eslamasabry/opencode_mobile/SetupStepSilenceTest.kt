@@ -150,8 +150,8 @@ class SetupStepSilenceTest {
         )
         assertTrue(SetupCompatFallback.COMPAT_SILENCE_TIMEOUT_MS > SetupCompatFallback.SILENCE_TIMEOUT_MS)
 
-        var clock = 0L
-        val silence = SetupStepSilence(timeoutMs = 50L, nowMs = { clock })
+        val clock = java.util.concurrent.atomic.AtomicLong(0L)
+        val silence = SetupStepSilence(timeoutMs = 50L, nowMs = { clock.get() })
         val stops = java.util.concurrent.atomic.AtomicInteger(0)
         val stopped = java.util.concurrent.CountDownLatch(1)
         val watchdog =
@@ -166,13 +166,78 @@ class SetupStepSilenceTest {
             )
         watchdog.start()
         try {
-            clock = 60L
+            clock.set(60L)
             assertTrue(stopped.await(2, java.util.concurrent.TimeUnit.SECONDS))
             assertTrue(watchdog.isStalled)
             assertTrue(watchdog.isStopped())
             assertEquals(1, stops.get())
         } finally {
             watchdog.stop()
+        }
+    }
+
+    @Test
+    fun `B-SETUP-029 silent step whose process is busy is not stopped past the silence bound`() {
+        val clock = java.util.concurrent.atomic.AtomicLong(0L)
+        val busy = java.util.concurrent.atomic.AtomicBoolean(true)
+        val busyChecks = java.util.concurrent.atomic.AtomicInteger(0)
+        val silence = SetupStepSilence(timeoutMs = 50L, nowMs = { clock.get() })
+        val stops = java.util.concurrent.atomic.AtomicInteger(0)
+        val stopped = java.util.concurrent.CountDownLatch(1)
+        val watchdog =
+            watchdogWithBusy(
+                silence = silence,
+                isCancelled = { false },
+                stopProcess = {
+                    stops.incrementAndGet()
+                    stopped.countDown()
+                },
+                pollMs = 5L,
+                isBusy = {
+                    busyChecks.incrementAndGet()
+                    busy.get()
+                },
+            )
+        watchdog.start()
+        try {
+            clock.set(60L)
+            Thread.sleep(60L)
+            assertEquals("busy silent process must not be stopped", 0, stops.get())
+            assertFalse(watchdog.isStalled)
+
+            clock.set(120L)
+            Thread.sleep(60L)
+            assertEquals("busy silent process must stay alive past multiple bounds", 0, stops.get())
+            assertFalse(watchdog.isStalled)
+            assertTrue("expected isBusy hook to be consulted", busyChecks.get() >= 2)
+
+            busy.set(false)
+            clock.set(180L)
+            assertTrue(stopped.await(2, java.util.concurrent.TimeUnit.SECONDS))
+            assertTrue(watchdog.isStalled)
+            assertEquals(1, stops.get())
+        } finally {
+            watchdog.stop()
+        }
+    }
+
+    private fun watchdogWithBusy(
+        silence: SetupStepSilence,
+        isCancelled: () -> Boolean,
+        stopProcess: () -> Unit,
+        pollMs: Long,
+        isBusy: () -> Boolean,
+    ): SetupSilenceWatchdog {
+        val withBusy =
+            SetupSilenceWatchdog::class.java.declaredConstructors.firstOrNull { ctor ->
+                ctor.parameterTypes.size == 5 &&
+                    ctor.parameterTypes[4] == Function0::class.java
+            }
+        return if (withBusy != null) {
+            withBusy.isAccessible = true
+            withBusy.newInstance(silence, isCancelled, stopProcess, pollMs, isBusy) as SetupSilenceWatchdog
+        } else {
+            SetupSilenceWatchdog(silence, isCancelled, stopProcess, pollMs)
         }
     }
 }
