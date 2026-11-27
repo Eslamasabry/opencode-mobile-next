@@ -186,8 +186,21 @@ public object EntryDecider {
                 }
             AlertKind.Permission, AlertKind.Question, AlertKind.Complete, AlertKind.Error, AlertKind.Checkin ->
                 chatAlert(request, world)
+            AlertKind.AutomationMessage, AlertKind.AutomationFailed, AlertKind.AutomationPaused ->
+                automationAlert(request, world)
         }
     }
+
+    /**
+     * B-620: an automation's alert opens the run's chat (a failure lands on where it failed). A pause, or an alert
+     * that carries no chat ([AutomationAlertSession]), opens the server list, where the automation's row is.
+     */
+    private fun automationAlert(request: EntryRequest.AlertOpen, world: EntryWorld): EntryDecision =
+        if (request.kind == AlertKind.AutomationPaused || AutomationAlertSession.isNoChat(request.sessionId?.raw)) {
+            Go(EntryTarget.Servers(null))
+        } else {
+            chatAlert(request, world)
+        }
 
     /**
      * A computer team's alert names its page in the id it carries: `gate:<id>` is the Gate page, `run:<id>` the task page.
@@ -219,7 +232,7 @@ public object EntryDecider {
         val chat =
             when (request.kind) {
                 AlertKind.Permission, AlertKind.Question -> EntryTarget.Chat(ref, landOn = LandOn.OldestRequest)
-                AlertKind.Error -> EntryTarget.Chat(ref, landOn = LandOn.Failure)
+                AlertKind.Error, AlertKind.AutomationFailed -> EntryTarget.Chat(ref, landOn = LandOn.Failure)
                 AlertKind.Complete -> EntryTarget.Chat(ref, focusComposer = request.reply)
                 else -> EntryTarget.Chat(ref)
             }

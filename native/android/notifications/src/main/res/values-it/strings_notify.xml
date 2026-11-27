@@ -78,4 +78,20 @@
     <string name="notify_answer_in_app">Apri OpenCode per rispondere</string>
     <string name="notify_reply_watch_title">Ancora al lavoro sulla tua risposta</string>
     <string name="notify_status_public_working">OpenCode · al lavoro</string>
+    <!-- Server automations (B-620). -->
+    <string name="notify_automation">Automazione</string>
+    <string name="notify_automation_message_body">Ha terminato la sua esecuzione con qualcosa da leggere.</string>
+    <string name="notify_automation_failed_title">%1$s non riuscita</string>
+    <string name="notify_automation_failed_body">L\u0027esecuzione dell\u0027automazione non è riuscita.</string>
+    <string name="notify_automation_paused_title">%1$s in pausa</string>
+    <string name="notify_automation_paused_body">Questa automazione è stata messa in pausa.</string>
+    <string name="notify_automation_pause">Metti in pausa questa automazione</string>
+    <string name="notify_automation_pause_failed_title">Impossibile mettere in pausa l\u0027automazione</string>
+    <string name="notify_automation_pause_failed_body">Apri OpenCode per metterla in pausa da lì.</string>
+    <string name="notify_public_automation">Un\u0027automazione ha bisogno di te</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="one">%1$s · %2$s esecuzione</item>
+        <item quantity="many">%1$s · %2$s esecuzioni</item>
+        <item quantity="other">%1$s · %2$s esecuzioni</item>
+    </plurals>
 </resources>

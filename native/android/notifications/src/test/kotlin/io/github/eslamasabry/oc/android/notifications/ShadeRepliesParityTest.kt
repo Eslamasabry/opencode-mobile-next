@@ -36,6 +36,10 @@ class ShadeRepliesParityTest {
             dismissed += key
         }
 
+        override fun dismissGroup(group: String) {
+            dismissed += group
+        }
+
         override fun dismissIfCurrent(tap: ShadeTap): Boolean = true.also { dismiss(tap.key) }
 
         override fun showOpenOnlyIfCurrent(tap: ShadeTap): AlertShown = showOpenOnly(tap)

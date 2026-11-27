@@ -78,4 +78,20 @@
     <string name="notify_status_public_working">OpenCode · au travail</string>
     <string name="notify_alert_reason_sign_in_again">%1$s vous demande de vous connecter à nouveau.</string>
     <string name="notify_alert_reason_sign_in_again_any">L\u0027agent vous demande de vous connecter à nouveau.</string>
+    <!-- Server automations (B-620). -->
+    <string name="notify_automation">Automatisation</string>
+    <string name="notify_automation_message_body">A terminé son exécution avec quelque chose à lire.</string>
+    <string name="notify_automation_failed_title">Échec de %1$s</string>
+    <string name="notify_automation_failed_body">L\u0027exécution de l\u0027automatisation a échoué.</string>
+    <string name="notify_automation_paused_title">%1$s en pause</string>
+    <string name="notify_automation_paused_body">Cette automatisation a été mise en pause.</string>
+    <string name="notify_automation_pause">Mettre en pause cette automatisation</string>
+    <string name="notify_automation_pause_failed_title">Impossible de mettre l\u0027automatisation en pause</string>
+    <string name="notify_automation_pause_failed_body">Ouvrez OpenCode pour la mettre en pause là-bas.</string>
+    <string name="notify_public_automation">Une automatisation a besoin de vous</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="one">%1$s · %2$s exécution</item>
+        <item quantity="many">%1$s · %2$s exécutions</item>
+        <item quantity="other">%1$s · %2$s exécutions</item>
+    </plurals>
 </resources>

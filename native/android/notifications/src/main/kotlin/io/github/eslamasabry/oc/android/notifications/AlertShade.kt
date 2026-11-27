@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import androidx.core.app.NotificationCompat
 import io.github.eslamasabry.oc.core.common.launch.LaunchToken
 
@@ -36,6 +37,9 @@ public interface AlertShade {
     /** Dismisses one alert and refreshes both group summaries. */
     public fun dismiss(key: String)
 
+    /** B-620: dismisses every alert of one automation's group, and its summary. */
+    public fun dismissGroup(group: String)
+
     /** Compare and mutate atomically; an older request must never change its replacement. */
     public fun dismissIfCurrent(tap: ShadeTap): Boolean
 
@@ -66,7 +70,7 @@ public class AndroidAlertShade(
             }
             val id = NotificationIds.alert(alert.key)
             val publicWords = publicWords(alert)
-            val (title, text) = privateWords(alert, publicWords)
+            val (title, text) = wordsOf(alert, publicWords)
             val builder =
                 base(
                         route.channel,
@@ -83,6 +87,7 @@ public class AndroidAlertShade(
                     )
                     .setOnlyAlertOnce(!alert.kind.isQuota)
                     .setCategory(category(alert.kind))
+            if (alert.automationSilentUpdate) builder.setSilent(true)
             if (!alert.kind.isQuota)
                 builder.setPublicVersion(publicVersion(route.channel, publicWords))
             route.group?.let {
@@ -106,9 +111,10 @@ public class AndroidAlertShade(
                 putString(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID, alert.sessionId)
                 putString(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, alert.requestId)
                 putString(FrozenExtras.EXTRA_CODING_ALERT_TOKEN, alert.actionToken)
+                putAutomationFacts(alert)
             }
             if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
-            route.group?.let { refreshSummary(it) }
+            refreshSummaries(alert, route.group)
             return AlertShown.Shown
         }
     }
@@ -121,8 +127,17 @@ public class AndroidAlertShade(
                 return it
             }
             val id = NotificationIds.alert(tap.key)
-            val title = words.text(R.string.notify_public_needs_you)
-            val text = words.text(R.string.notify_answer_in_app)
+            val automation = tap.kind.isAutomation
+            val title =
+                words.text(
+                    if (automation) R.string.notify_automation_pause_failed_title
+                    else R.string.notify_public_needs_you
+                )
+            val text =
+                words.text(
+                    if (automation) R.string.notify_automation_pause_failed_body
+                    else R.string.notify_answer_in_app
+                )
             val builder =
                 base(
                         channel,
@@ -134,7 +149,10 @@ public class AndroidAlertShade(
                     .setSilent(true)
                     .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
                     .setPublicVersion(publicVersion(channel, title))
-            AlertPolicy.groupOf(tap.kind)?.let { builder.setGroup(it) }
+            // B-620: a pause that did not take leaves the automation's group in place, this row now Open only.
+            val group =
+                if (automation) tap.automationGroup.takeIf { it.isNotBlank() } else AlertPolicy.groupOf(tap.kind)
+            group?.let { builder.setGroup(it) }
             builder.extras.putString(FrozenExtras.EXTRA_SUMMARY_LINE, title)
             builder.extras.apply {
                 putString(FrozenExtras.EXTRA_CODING_ALERT_KIND, tap.kind.wire)
@@ -145,6 +163,7 @@ public class AndroidAlertShade(
                 putString(FrozenExtras.EXTRA_CODING_ALERT_TOKEN, tap.actionToken)
             }
             if (!post(id, builder.build())) return AlertShown.Blocked(BlockedWhy.Permission)
+            if (automation && group != null) refreshAutomationSummary(group)
             return AlertShown.Shown
         }
     }
@@ -152,10 +171,20 @@ public class AndroidAlertShade(
     override fun dismiss(key: String) {
         synchronized(shadeLock) {
             if (key.isBlank()) return
+            val group = ownNotification(NotificationIds.alert(key))?.notification?.group
             manager.cancel(NotificationIds.alert(key))
             // The last alert of a group takes its summary with it.
             refreshSummary(AlertGroups.NEEDS_YOU)
             refreshSummary(AlertGroups.FINISHED)
+            group?.takeIf(AlertGroups::isAutomation)?.let(::refreshAutomationSummary)
+        }
+    }
+
+    override fun dismissGroup(group: String) {
+        synchronized(shadeLock) {
+            if (group.isBlank()) return
+            ownRows().filter { it.notification.group == group }.forEach { manager.cancel(it.id) }
+            manager.cancel(NotificationIds.automationSummary(group))
         }
     }
 
@@ -188,10 +217,80 @@ public class AndroidAlertShade(
             extras.getString(FrozenExtras.EXTRA_CODING_ALERT_TOKEN).orEmpty() == tap.actionToken
     }
 
-    override fun isShowing(key: String): Boolean {
-        val id = NotificationIds.alert(key)
-        return manager.activeNotifications.any {
-            it.id == id && it.packageName == context.packageName
+    override fun isShowing(key: String): Boolean = ownNotification(NotificationIds.alert(key)) != null
+
+    /** This app's notification with [id], if it is showing. */
+    private fun ownNotification(id: Int): NotificationManager.ActiveNotification? =
+        ownRows().firstOrNull { it.id == id }
+
+    private fun ownRows(): List<NotificationManager.ActiveNotification> =
+        manager.activeNotifications.filter { it.packageName == context.packageName }
+
+    /** The summaries an alert belongs to, after it was posted, replaced or reposted. */
+    private fun refreshSummaries(alert: CodingAlert, group: String?) {
+        group?.let { if (alert.kind.isAutomation) refreshAutomationSummary(it) else refreshSummary(it) }
+    }
+
+    /**
+     * B-620: one summary per automation while two or more of its alerts show ("Nightly check · 6 runs"); none for a
+     * single alert. The name and the count come from the alerts themselves, so a group whose later alerts only
+     * replaced earlier ones still counts every run. The lock screen reads fixed words: the name stays off it.
+     */
+    private fun refreshAutomationSummary(group: String) {
+        val summaryId = NotificationIds.automationSummary(group)
+        val children =
+            ownRows().filter {
+                it.notification.group == group && (it.notification.flags and Notification.FLAG_GROUP_SUMMARY) == 0
+            }
+        if (children.size < 2) {
+            manager.cancel(summaryId)
+            return
+        }
+        val posted = children.map { it.notification.extras }
+        val name =
+            posted.firstNotNullOfOrNull {
+                it.getString(FrozenExtras.EXTRA_AUTOMATION_NAME)?.takeIf(String::isNotBlank)
+            } ?: posted.first().getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
+        val runs = posted.maxOf { it.getInt(FrozenExtras.EXTRA_AUTOMATION_RUNS, 1) }
+        val channel = NotifyChannel.CodingAction
+        val title = words.plural(R.plurals.notify_automation_runs, runs, name, runs)
+        val summary =
+            base(channel, title, "", summaryIntent(summaryId))
+                .setOnlyAlertOnce(true)
+                .setSilent(true)
+                .setGroup(group)
+                .setGroupSummary(true)
+                .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+                .setPublicVersion(publicVersion(channel, words.text(R.string.notify_public_automation)))
+                .build()
+        post(summaryId, summary)
+    }
+
+    /** B-620: what an automation's summary reads back from each of its alerts; nothing for any other kind. */
+    private fun Bundle.putAutomationFacts(alert: CodingAlert) {
+        if (!alert.kind.isAutomation) return
+        putString(FrozenExtras.EXTRA_CODING_ALERT_GROUP, alert.automationGroup)
+        putString(FrozenExtras.EXTRA_AUTOMATION_NAME, AlertCopy.cap(alert.chatTitle, AlertCopy.MAX_QUESTION))
+        putInt(FrozenExtras.EXTRA_AUTOMATION_RUNS, alert.automationCoveredRuns)
+    }
+
+    /** The shade's words (title, text); an automation's are its own (B-620). */
+    private fun wordsOf(alert: CodingAlert, publicTitle: String): Pair<String, String> =
+        if (alert.kind.isAutomation) automationWords(alert) else privateWords(alert, publicTitle)
+
+    /** B-620: the automation's name and what happened: its run's first line, or a fixed sentence. */
+    private fun automationWords(alert: CodingAlert): Pair<String, String> {
+        val named = AlertCopy.cap(alert.chatTitle, AlertCopy.MAX_QUESTION)
+        val name = named.ifBlank { words.text(R.string.notify_automation) }
+        return when (alert.kind) {
+            AlertKind.AutomationMessage ->
+                name to alert.detail.ifBlank { words.text(R.string.notify_automation_message_body) }
+            AlertKind.AutomationFailed ->
+                words.text(R.string.notify_automation_failed_title, name) to
+                    words.text(R.string.notify_automation_failed_body)
+            else ->
+                words.text(R.string.notify_automation_paused_title, name) to
+                    words.text(R.string.notify_automation_paused_body)
         }
     }
 
@@ -247,6 +346,8 @@ public class AndroidAlertShade(
             AlertKind.TeamReview -> words.text(R.string.notify_team_review_title)
             AlertKind.TeamRunFailed -> words.text(R.string.notify_team_failed_title)
             AlertKind.TeamCompleted -> words.text(R.string.notify_team_completed_title)
+            AlertKind.AutomationMessage, AlertKind.AutomationFailed, AlertKind.AutomationPaused ->
+                words.text(R.string.notify_public_automation)
         }
 
     /**
@@ -338,7 +439,8 @@ public class AndroidAlertShade(
         when (kind) {
             AlertKind.Permission,
             AlertKind.Question -> NotificationCompat.CATEGORY_RECOMMENDATION
-            AlertKind.Error, AlertKind.TeamRunFailed -> NotificationCompat.CATEGORY_ERROR
+            AlertKind.Error, AlertKind.TeamRunFailed, AlertKind.AutomationFailed ->
+                NotificationCompat.CATEGORY_ERROR
             AlertKind.TeamDecision -> NotificationCompat.CATEGORY_RECOMMENDATION
             else -> NotificationCompat.CATEGORY_STATUS
         }
@@ -389,6 +491,7 @@ public class AndroidAlertShade(
                 AlertButton.Label.AllowOnce -> words.text(R.string.notify_allow_once)
                 AlertButton.Label.Reject -> words.text(R.string.notify_reject)
                 AlertButton.Label.Open -> words.text(R.string.notify_open)
+                AlertButton.Label.PauseAutomation -> words.text(R.string.notify_automation_pause)
             }
         val pending =
             if (button.decision == ShadeDecision.Open) {
@@ -430,6 +533,8 @@ public class AndroidAlertShade(
             // answered with it.
             putExtra(FrozenExtras.EXTRA_CODING_ALERT_REQUEST_ID, alert.requestId)
             putExtra(FrozenExtras.EXTRA_CODING_ALERT_TOKEN, alert.actionToken)
+            // B-620: the automation group a Pause this automation tap clears; a group key, nothing of the person's.
+            putExtra(FrozenExtras.EXTRA_CODING_ALERT_GROUP, alert.automationGroup)
         }
 
     /**
@@ -466,16 +571,7 @@ public class AndroidAlertShade(
                     ?: extras.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
             if (line.isNotBlank()) inbox.addLine(line)
         }
-        val open =
-            PendingIntent.getActivity(
-                context,
-                summaryId,
-                Intent().apply {
-                    component = FrozenComponents.of(context, FrozenComponents.MAIN_ACTIVITY)
-                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                },
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-            )
+        val open = summaryIntent(summaryId)
         val summary =
             base(channel, title, "", open)
                 .setOnlyAlertOnce(true)
@@ -487,6 +583,18 @@ public class AndroidAlertShade(
                 .build()
         post(summaryId, summary)
     }
+
+    /** A summary's tap opens the app as it is: each alert of the group names its own target. */
+    private fun summaryIntent(summaryId: Int): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            summaryId,
+            Intent().apply {
+                component = FrozenComponents.of(context, FrozenComponents.MAIN_ACTIVITY)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
 
     internal companion object {
         private val shadeLock = Any()

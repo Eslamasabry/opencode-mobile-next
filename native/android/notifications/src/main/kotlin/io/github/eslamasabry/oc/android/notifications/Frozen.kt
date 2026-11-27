@@ -21,11 +21,21 @@ public object NotificationIds {
     public const val HEAT: Int = 0x7E4A1
     public const val ALERT_BASE: Int = 6000
 
+    /** B-620: automation summaries live above every alert id. */
+    public const val AUTOMATION_SUMMARY_BASE: Int = 0x5000_0000
+    private const val SUMMARY_MASK: Int = 0x00FF_FFFF
+
     /**
      * Copied verbatim (`BackgroundConnectionService.codingAlertNotificationID`), so ids match
      * Flutter-era alerts.
      */
     public fun alert(key: String): Int = ALERT_BASE + (key.hashCode() and 0x0fffffff)
+
+    /**
+     * New in the native app (B-620): the summary of one automation's alerts, above every alert id so the two never
+     * meet.
+     */
+    public fun automationSummary(group: String): Int = AUTOMATION_SUMMARY_BASE + (group.hashCode() and SUMMARY_MASK)
 
     /**
      * Broadcast request code of the [index]th button of notification [notificationId] (plan 11
@@ -40,12 +50,24 @@ public object AlertKeys {
     public fun input(profile: String, session: String): String = "input:$profile:$session"
 
     public fun status(profile: String, session: String): String = "status:$profile:$session"
+
+    /** B-620: the [slot]th visible alert of one automation; the tracker's `AutomationNotification.slotKey`. */
+    public fun automation(profile: String, automationId: String, slot: Int): String =
+        "${AlertGroups.automation(profile, automationId)}:$slot"
 }
 
 /** Group keys of the alert groups (plan 11 §10.4). */
 public object AlertGroups {
     public const val NEEDS_YOU: String = "opencode_needs_you"
     public const val FINISHED: String = "opencode_finished"
+
+    /** B-620: every automation group starts with this; the two fixed groups above never do. */
+    public const val AUTOMATION_PREFIX: String = "automation:"
+
+    /** B-620: one group per automation and server; the tracker's `AutomationNotification.groupKey`. */
+    public fun automation(profile: String, automationId: String): String = "$AUTOMATION_PREFIX$profile:$automationId"
+
+    public fun isAutomation(group: String): Boolean = group.startsWith(AUTOMATION_PREFIX)
 }
 
 /**
@@ -68,6 +90,16 @@ public object FrozenExtras {
      * Native-only reviewed request identity; a legacy action without it cannot authorize a request.
      */
     public const val EXTRA_CODING_ALERT_TOKEN: String = "oc.codingAlertToken"
+
+    /** Native-only (B-620): the automation group a Pause this automation tap clears. */
+    public const val EXTRA_CODING_ALERT_GROUP: String = "oc.codingAlertGroup"
+
+    /**
+     * Native-only (B-620): what an automation's summary reads back from its alerts. It rides the notification's own
+     * extras, never a tap's.
+     */
+    public const val EXTRA_AUTOMATION_NAME: String = "oc.codingAlertAutomationName"
+    public const val EXTRA_AUTOMATION_RUNS: String = "oc.codingAlertAutomationRuns"
     public const val EXTRA_CODING_ALERT_REQUEST_ID: String = "$PKG.CODING_ALERT_REQUEST_ID"
     public const val EXTRA_CODING_ALERT_OPTION_TEXT: String = "$PKG.extra.CODING_ALERT_OPTION_TEXT"
     public const val REMOTE_INPUT_REPLY: String = "oc.codingAlertReply"

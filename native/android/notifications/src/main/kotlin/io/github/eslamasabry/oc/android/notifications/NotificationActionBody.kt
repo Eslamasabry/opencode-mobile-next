@@ -3,6 +3,7 @@ package io.github.eslamasabry.oc.android.notifications
 import android.content.Intent
 import android.os.Build
 import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.FeatureId
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
@@ -30,6 +31,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  *   gone dismisses the alert quietly (B-CHAT-076).
  * - Any other failure, or no answer within [answerDeadline], reposts the alert in plain words with
  *   no buttons.
+ * - **Pause this automation** (B-620) is bound the same way: the tapped alert's token authorizes one call to the
+ *   server's API. A pause that is refused, failed or timed out reposts the alert with Open only, never "paused"; a
+ *   pause that took clears the automation's whole group. It needs the unlocked phone, as Allow once does.
  * - **No activity is ever started from here** (no trampoline; `NoTrampolineTest`).
  */
 public class NotificationActionBody(
@@ -37,12 +41,18 @@ public class NotificationActionBody(
     private val answerer: ShadeAnswerer,
     private val stopper: ReplyStopper,
     private val lock: DeviceLock,
-    private val answerDeadline: Duration = 15.seconds,
     /** The person swiped the status row away (S11-9): reply watch ends for that run only. */
     private val onRowDismissed: (run: ReplyRun) -> Unit = {},
+    /** B-620: Pause this automation through the server's API; unbound, it fails and the alert stays. */
+    private val automationPauser: AutomationPauser = AutomationPauser { _, _, _ ->
+        Outcome.Failed(Failure.Unavailable(FeatureId("serverAutomations")))
+    },
 ) {
     /** Told when a Stop is tapped and when its call ends, so the row can say "Stopping…" and settle. */
     public var onStop: StopObserver = StopObserver.None
+
+    /** How long an answer, a stop or a pause may take before the alert is reposted with Open only. */
+    public var answerDeadline: Duration = DEFAULT_DEADLINE
 
     private data class AnswerClaim(
         val profile: String,
@@ -64,6 +74,7 @@ public class NotificationActionBody(
         // Open buttons are activity PendingIntents; a stray "open" broadcast does nothing (and
         // never starts one).
         if (tap.decision == ShadeDecision.Open) return ShadeOutcome.Ignored
+        if (tap.decision == ShadeDecision.PauseAutomation) return pauseAutomation(tap)
         if (!tap.kind.isRequest) return ShadeOutcome.Ignored
         val reply = replyOf(tap) ?: return ShadeOutcome.Ignored
         if (tap.requestId.isBlank() || tap.profileId.isBlank()) return repost(tap)
@@ -151,8 +162,36 @@ public class NotificationActionBody(
             ShadeDecision.Reply,
             ShadeDecision.Option ->
                 tap.replyText?.trim()?.takeIf { it.isNotEmpty() }?.let { ShadeReply.Text(it) }
-            ShadeDecision.Open -> null
+            ShadeDecision.Open,
+            ShadeDecision.PauseAutomation -> null
         }
+
+    /** **Pause this automation** (B-620): the tap's token authorizes one call to the server. */
+    private suspend fun pauseAutomation(tap: ShadeTap): ShadeOutcome {
+        if (!canPauseFromShade(tap)) return repost(tap)
+        val paused =
+            withTimeoutOrNull(answerDeadline) {
+                automationPauser.pause(ProfileId(tap.profileId), tap.requestId, tap.actionToken)
+            }
+        return finishPause(tap, paused is Outcome.Ok)
+    }
+
+    /** A pause that was refused or failed leaves the alert, as Open only; a pause that took clears the group. */
+    private fun finishPause(tap: ShadeTap, paused: Boolean): ShadeOutcome {
+        if (!paused) return repost(tap)
+        shade.dismissGroup(tap.automationGroup.ifBlank { tap.key })
+        return ShadeOutcome.AutomationPaused
+    }
+
+    /**
+     * The tap names an automation, a server and the exact posted alert, and the phone is unlocked where Android
+     * does not ask for the unlock itself (CR16-7).
+     */
+    private fun canPauseFromShade(tap: ShadeTap): Boolean =
+        tap.namesAnAutomation() && !(lock.sdkInt < Build.VERSION_CODES.S && lock.isLocked())
+
+    private fun ShadeTap.namesAnAutomation(): Boolean =
+        kind.isAutomation && requestId.isNotBlank() && profileId.isNotBlank() && actionToken.isNotBlank()
 
     private fun repost(tap: ShadeTap): ShadeOutcome {
         shade.showOpenOnlyIfCurrent(tap)
@@ -164,6 +203,10 @@ public class NotificationActionBody(
 
     private fun release(request: AnswerClaim) {
         synchronized(inFlight) { inFlight.remove(request) }
+    }
+
+    private companion object {
+        val DEFAULT_DEADLINE: Duration = 15.seconds
     }
 }
 

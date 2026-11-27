@@ -15,7 +15,12 @@ public enum class AlertKind(public val wire: String) {
     TeamDecision("team_decision"),
     TeamReview("team_review"),
     TeamRunFailed("team_run_failed"),
-    TeamCompleted("team_completed");
+    TeamCompleted("team_completed"),
+
+    /** Server automations (B-620): a run left a message to read, a run failed, or the server paused it. */
+    AutomationMessage("automation_message"),
+    AutomationFailed("automation_failed"),
+    AutomationPaused("automation_paused");
 
     public val isRequest: Boolean
         get() = this == Permission || this == Question
@@ -25,6 +30,14 @@ public enum class AlertKind(public val wire: String) {
 
     public val isQuota: Boolean
         get() = this == Quota || this == QuotaReset
+
+    /** B-620: an automation's alert, grouped per automation with Open and Pause this automation. */
+    public val isAutomation: Boolean
+        get() = this == AutomationMessage || this == AutomationFailed || this == AutomationPaused
+
+    /** B-620: an automation's message to read or failed run: it asks for the person, as a request does. */
+    public val isAutomationFinding: Boolean
+        get() = this == AutomationMessage || this == AutomationFailed
 
     public companion object {
         public fun fromWire(value: String?): AlertKind? = entries.firstOrNull { it.wire == value }
@@ -68,11 +81,18 @@ public data class CodingAlert(
     val allowActions: Boolean = true,
     /** Opaque identity of this one posted request; never request content or a credential. */
     val actionToken: String = "",
+    /** B-620: the automation's group (`AlertGroups.automation`); blank for every other kind. */
+    val automationGroup: String = "",
+    /** B-620: how many runs the group covers; its summary says it. */
+    val automationCoveredRuns: Int = 1,
+    /** B-620: the group's visible slots are full and this alert only replaces one: post it without a sound. */
+    val automationSilentUpdate: Boolean = false,
 ) {
     /** Validity (plan 11 §10.4, ported from `validCodingAlert`). */
     public val isValid: Boolean
         get() {
-            if (sessionId.isBlank() || key.isBlank()) return false
+            if (sessionId.isBlank() || key.isBlank() || (kind.isAutomation && automationGroup.isBlank()))
+                return false
             if (!kind.isQuota) return true
             return sessionId == "quota" &&
                 profileId.isNotBlank() &&
@@ -102,6 +122,7 @@ public data class AlertButton(
         AllowOnce,
         Reject,
         Open,
+        PauseAutomation,
     }
 }
 
@@ -109,7 +130,8 @@ public data class AlertButton(
  * Which buttons an alert carries: at most two (plan 11 §10.4, port of `AlertButtons.plan`, commit
  * b8c07f3e0). A permission whose exact command or file is readable in the body offers exactly
  * **Allow once** (phone unlocked) and **Reject**; **Always allow** is never offered. A question
- * opens the app; its ≤ 3 short options are one text line.
+ * opens the app; its ≤ 3 short options are one text line. An automation's alert (B-620) opens its chat and
+ * offers **Pause this automation** (phone unlocked) while it names an automation and carries its action token.
  */
 public object AlertButtons {
     public fun plan(alert: CodingAlert): List<AlertButton> =
@@ -128,6 +150,19 @@ public object AlertButtons {
                     listOf(AlertButton(ShadeDecision.Open, AlertButton.Label.Open))
                 }
             AlertKind.Question -> listOf(AlertButton(ShadeDecision.Open, AlertButton.Label.Open))
+            AlertKind.AutomationMessage, AlertKind.AutomationFailed, AlertKind.AutomationPaused ->
+                if (AlertCopy.pausable(alert)) {
+                    listOf(
+                        AlertButton(ShadeDecision.Open, AlertButton.Label.Open),
+                        AlertButton(
+                            ShadeDecision.PauseAutomation,
+                            AlertButton.Label.PauseAutomation,
+                            authRequired = true,
+                        ),
+                    )
+                } else {
+                    listOf(AlertButton(ShadeDecision.Open, AlertButton.Label.Open))
+                }
             else -> emptyList()
         }
 }
@@ -171,6 +206,13 @@ public object AlertCopy {
             alert.requestId.isNotBlank() &&
             alert.ask != null &&
             alert.ask.target.isNotBlank()
+
+    /** B-620: the alert names an automation to pause, may be answered, and carries the token that authorizes it. */
+    public fun pausable(alert: CodingAlert): Boolean =
+        alert.kind.isAutomation &&
+            alert.allowActions &&
+            alert.requestId.isNotBlank() &&
+            alert.actionToken.isNotBlank()
 
     /** The body line for a question: its few short choices joined by " · ", else nothing. */
     public fun choices(raw: List<String>): String {
@@ -278,20 +320,23 @@ public object AlertPolicy {
             return AlertRoute.Skip(SkipWhy.SubAgent)
         if (alert.kind.isQuota && facts.wifiOnly && facts.onWifi != true)
             return AlertRoute.Skip(SkipWhy.NotOnWifi)
+        // An automation's alerts sit in the alert's own group, one per automation (B-620).
+        val group = if (alert.kind.isAutomation) alert.automationGroup else groupOf(alert.kind)
         val loud =
-            alert.kind.isRequest || alert.kind == AlertKind.Error ||
+            alert.kind.isRequest || alert.kind == AlertKind.Error || alert.kind.isAutomationFinding ||
                 alert.kind == AlertKind.TeamDecision || alert.kind == AlertKind.TeamRunFailed
         if (facts.quietHours) {
             // Requests and failures post silently; a finished reply is never posted nor queued
             // (`alerts.dart:292`);
             // no check-in reminder during quiet hours (B-ANDR-059); quota alerts are held by the
-            // monitor (B-ANDR-097).
-            if (!loud) return AlertRoute.Skip(SkipWhy.QuietHours)
-            return AlertRoute.Post(NotifyChannel.CodingActionQuiet, groupOf(alert.kind))
+            // monitor (B-ANDR-097). An automation's pause is kept too, silently (B-620): a nightly
+            // check runs in these hours, and its pause must still be there in the morning.
+            if (!loud && alert.kind != AlertKind.AutomationPaused) return AlertRoute.Skip(SkipWhy.QuietHours)
+            return AlertRoute.Post(NotifyChannel.CodingActionQuiet, group)
         }
         return AlertRoute.Post(
             if (loud) NotifyChannel.CodingAction else NotifyChannel.CodingStatus,
-            groupOf(alert.kind),
+            group,
         )
     }
 

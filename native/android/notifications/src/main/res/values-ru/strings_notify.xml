@@ -83,4 +83,21 @@
     </plurals>
     <string name="notify_alert_reason_sign_in_again">%1$s: нужно войти снова.</string>
     <string name="notify_alert_reason_sign_in_again_any">Агент просит войти снова.</string>
+    <!-- Server automations (B-620). -->
+    <string name="notify_automation">Автоматизация</string>
+    <string name="notify_automation_message_body">Запуск завершён, есть что прочитать.</string>
+    <string name="notify_automation_failed_title">%1$s: запуск не удался</string>
+    <string name="notify_automation_failed_body">Запуск автоматизации не удался.</string>
+    <string name="notify_automation_paused_title">Пауза: %1$s</string>
+    <string name="notify_automation_paused_body">Эта автоматизация приостановлена.</string>
+    <string name="notify_automation_pause">Приостановить эту автоматизацию</string>
+    <string name="notify_automation_pause_failed_title">Не удалось приостановить автоматизацию</string>
+    <string name="notify_automation_pause_failed_body">Откройте OpenCode, чтобы приостановить её там.</string>
+    <string name="notify_public_automation">Автоматизация требует вашего внимания</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="one">%1$s · %2$s запуск</item>
+        <item quantity="few">%1$s · %2$s запуска</item>
+        <item quantity="many">%1$s · %2$s запусков</item>
+        <item quantity="other">%1$s · %2$s запуска</item>
+    </plurals>
 </resources>

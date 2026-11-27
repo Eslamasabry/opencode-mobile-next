@@ -78,4 +78,21 @@
     <string name="notify_answer_in_app">Open OpenCode to answer</string>
     <string name="notify_reply_watch_title">Still working on your reply</string>
     <string name="notify_status_public_working">OpenCode · working</string>
+    <!-- Server automations (B-620): a run left a message to read, a run failed, or the server paused the automation.
+         %1$s is the automation's name; the summary counts the runs its alerts cover. -->
+    <string name="notify_automation">Automation</string>
+    <string name="notify_automation_message_body">Finished its run with something to read.</string>
+    <string name="notify_automation_failed_title">%1$s failed</string>
+    <string name="notify_automation_failed_body">The automation run failed.</string>
+    <string name="notify_automation_paused_title">%1$s paused</string>
+    <string name="notify_automation_paused_body">This automation was paused.</string>
+    <string name="notify_automation_pause">Pause this automation</string>
+    <string name="notify_automation_pause_failed_title">Could not pause the automation</string>
+    <string name="notify_automation_pause_failed_body">Open OpenCode to pause it there.</string>
+    <!-- The lock screen's fixed, nameless words for every automation alert. -->
+    <string name="notify_public_automation">An automation needs you</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="one">%1$s · %2$s run</item>
+        <item quantity="other">%1$s · %2$s runs</item>
+    </plurals>
 </resources>

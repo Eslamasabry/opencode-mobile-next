@@ -71,4 +71,18 @@
     </plurals>
     <string name="notify_alert_reason_sign_in_again">%1$sにもう一度サインインする必要があります。</string>
     <string name="notify_alert_reason_sign_in_again_any">エージェントにもう一度サインインする必要があります。</string>
+    <!-- Server automations (B-620). -->
+    <string name="notify_automation">オートメーション</string>
+    <string name="notify_automation_message_body">実行を終え、確認できる内容があります。</string>
+    <string name="notify_automation_failed_title">%1$sが失敗</string>
+    <string name="notify_automation_failed_body">オートメーションの実行に失敗しました。</string>
+    <string name="notify_automation_paused_title">%1$sは一時停止中</string>
+    <string name="notify_automation_paused_body">このオートメーションは一時停止中です。</string>
+    <string name="notify_automation_pause">このオートメーションを一時停止</string>
+    <string name="notify_automation_pause_failed_title">オートメーションを一時停止できませんでした</string>
+    <string name="notify_automation_pause_failed_body">OpenCodeを開いて、そこで一時停止してください。</string>
+    <string name="notify_public_automation">オートメーションの確認が必要です</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="other">%1$s · %2$s回の実行</item>
+    </plurals>
 </resources>

@@ -79,4 +79,20 @@
     </plurals>
     <string name="notify_alert_reason_sign_in_again">%1$s precisa que você faça login de novo.</string>
     <string name="notify_alert_reason_sign_in_again_any">O agente precisa que você faça login de novo.</string>
+    <!-- Server automations (B-620). -->
+    <string name="notify_automation">Automação</string>
+    <string name="notify_automation_message_body">Terminou a execução com algo para ler.</string>
+    <string name="notify_automation_failed_title">%1$s falhou</string>
+    <string name="notify_automation_failed_body">A execução da automação falhou.</string>
+    <string name="notify_automation_paused_title">%1$s em pausa</string>
+    <string name="notify_automation_paused_body">Esta automação foi pausada.</string>
+    <string name="notify_automation_pause">Pausar esta automação</string>
+    <string name="notify_automation_pause_failed_title">Não foi possível pausar a automação</string>
+    <string name="notify_automation_pause_failed_body">Abra o OpenCode para pausá-la lá.</string>
+    <string name="notify_public_automation">Uma automação precisa de você</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="one">%1$s · %2$s execução</item>
+        <item quantity="many">%1$s · %2$s execuções</item>
+        <item quantity="other">%1$s · %2$s execuções</item>
+    </plurals>
 </resources>

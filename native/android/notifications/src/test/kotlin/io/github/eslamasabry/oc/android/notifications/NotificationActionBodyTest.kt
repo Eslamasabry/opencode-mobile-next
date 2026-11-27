@@ -53,6 +53,10 @@ class NotificationActionBodyTest {
             dismissed += key
         }
 
+        override fun dismissGroup(group: String) {
+            dismissed += group
+        }
+
         override fun dismissIfCurrent(tap: ShadeTap): Boolean { dismiss(tap.key); return true }
 
         override fun showOpenOnlyIfCurrent(tap: ShadeTap): AlertShown = showOpenOnly(tap)

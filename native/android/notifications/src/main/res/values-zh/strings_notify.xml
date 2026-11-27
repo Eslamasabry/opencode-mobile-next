@@ -71,4 +71,18 @@
     </plurals>
     <string name="notify_alert_reason_sign_in_again">%1$s 需要你重新登录。</string>
     <string name="notify_alert_reason_sign_in_again_any">智能体需要你重新登录。</string>
+    <!-- Server automations (B-620). -->
+    <string name="notify_automation">自动化</string>
+    <string name="notify_automation_message_body">运行结束，有内容需要查看。</string>
+    <string name="notify_automation_failed_title">%1$s 运行失败</string>
+    <string name="notify_automation_failed_body">自动化运行失败。</string>
+    <string name="notify_automation_paused_title">%1$s 已暂停</string>
+    <string name="notify_automation_paused_body">此自动化已暂停。</string>
+    <string name="notify_automation_pause">暂停此自动化</string>
+    <string name="notify_automation_pause_failed_title">无法暂停自动化</string>
+    <string name="notify_automation_pause_failed_body">打开 OpenCode，在那里暂停它。</string>
+    <string name="notify_public_automation">一个自动化需要你处理</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="other">%1$s · %2$s 次运行</item>
+    </plurals>
 </resources>

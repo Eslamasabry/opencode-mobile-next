@@ -132,11 +132,34 @@ public enum class AlertKind(public val wire: String) {
     TeamCompleted("team_completed"),
     TeamProgress("team_progress"),
     Test("test"),
+
+    /** A server automation (B-620): a run left a message to read, a run failed, or the server paused it. */
+    AutomationMessage("automation_message"),
+    AutomationFailed("automation_failed"),
+    AutomationPaused("automation_paused"),
     ;
 
     public companion object {
         public fun fromWire(value: String): AlertKind? = entries.firstOrNull { it.wire == value }
     }
+}
+
+/**
+ * B-620: the session id an automation's alert carries when it has no chat to open (a pause made on the server, a
+ * failure seen only on the automation's row). A safe identifier, so the reader keeps the tap; the decider sends it to
+ * the server list, where the automation's row is. A session id never starts with `automation.`.
+ */
+public object AutomationAlertSession {
+    private const val PREFIX: String = "automation"
+    private const val MAX_LENGTH: Int = 128
+    private val UNSAFE: Regex = Regex("[^A-Za-z0-9._-]")
+
+    /** The id for the automation [automationId] names: the prefix, a dot, then the id's safe characters. */
+    public fun of(automationId: String): String = "$PREFIX." + UNSAFE.replace(automationId, "").take(MAX_LENGTH)
+
+    /** True for an id [of] made, and for the `automation:<id>` form the backlog's row writes. */
+    public fun isNoChat(sessionId: String?): Boolean =
+        sessionId != null && (sessionId.startsWith("$PREFIX.") || sessionId.startsWith("$PREFIX:"))
 }
 
 /** `^[a-f0-9]{64}$`, checked by the parser; the stored-token match is the effect's job. Never logged. */

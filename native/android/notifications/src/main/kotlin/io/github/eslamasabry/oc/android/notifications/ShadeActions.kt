@@ -28,14 +28,17 @@ public enum class ShadeDecision(public val wire: String) {
     /**
      * Legacy option button (`option0`…): answers with its own label, exactly like a typed reply.
      */
-    Option("option");
+    Option("option"),
+
+    /** B-620: Pause this automation; it changes the server, so it needs the unlocked phone (as Allow once does). */
+    PauseAutomation("pause_automation");
 
     /**
      * Android asks for the unlocked phone first (CR16-7, D16-3, B-SEC-184). Reject stays without
      * (harmless).
      */
     public val needsUnlock: Boolean
-        get() = this == Allow || this == Reply || this == Option
+        get() = this == Allow || this == Reply || this == Option || this == PauseAutomation
 
     public companion object {
         public fun fromWire(value: String): ShadeDecision? =
@@ -54,6 +57,8 @@ public data class ShadeTap(
     /** Legacy reply text or the legacy option's label. Never logged. */
     val replyText: String?,
     val actionToken: String = "",
+    /** B-620: the automation group a Pause this automation tap clears. */
+    val automationGroup: String = "",
 ) {
     override fun toString(): String =
         "ShadeTap(kind=$kind, decision=$decision, request=${requestId.isNotEmpty()})"
@@ -95,6 +100,8 @@ public data class ShadeTap(
                 replyText = reply,
                 actionToken =
                     intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_TOKEN).orEmpty(),
+                automationGroup =
+                    intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_GROUP).orEmpty(),
             )
         }
     }
@@ -142,6 +149,15 @@ public fun interface ReplyStopper {
 }
 
 /**
+ * The seam for **Pause this automation** (B-620): pauses one automation of one saved server through the B-605 client.
+ * `Ok` = paused on the server; anything else reposts the alert with Open only, since nothing may pretend paused.
+ * [actionToken] names the exact posted alert and authorizes one call: a replay is `Refused(StaleScope)`.
+ */
+public fun interface AutomationPauser {
+    public suspend fun pause(profile: ProfileId, automationId: String, actionToken: String): Outcome<Unit>
+}
+
+/**
  * Whether the phone is locked now (`KeyguardManager.isDeviceLocked`) and the SDK level, for CR16-7.
  */
 public interface DeviceLock {
@@ -167,6 +183,8 @@ public enum class ShadeOutcome {
     StopSent,
     StopFailed,
     RowDismissed,
+    /** B-620: the server paused the automation; the alert's whole group is gone. */
+    AutomationPaused,
 }
 
 internal fun Failure.meansGone(): Boolean =

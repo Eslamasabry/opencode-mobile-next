@@ -70,4 +70,18 @@
     <string name="notify_status_public_working">OpenCode · bekerja</string>
     <string name="notify_alert_reason_sign_in_again">%1$s meminta Anda masuk lagi.</string>
     <string name="notify_alert_reason_sign_in_again_any">Agen meminta Anda masuk lagi.</string>
+    <!-- Server automations (B-620). -->
+    <string name="notify_automation">Otomatisasi</string>
+    <string name="notify_automation_message_body">Selesai prosesnya dengan sesuatu untuk dibaca.</string>
+    <string name="notify_automation_failed_title">%1$s gagal</string>
+    <string name="notify_automation_failed_body">Proses otomatisasi gagal.</string>
+    <string name="notify_automation_paused_title">%1$s dijeda</string>
+    <string name="notify_automation_paused_body">Otomatisasi ini dijeda.</string>
+    <string name="notify_automation_pause">Jeda otomatisasi ini</string>
+    <string name="notify_automation_pause_failed_title">Tidak dapat menjeda otomatisasi</string>
+    <string name="notify_automation_pause_failed_body">Buka OpenCode untuk menjedanya di sana.</string>
+    <string name="notify_public_automation">Otomatisasi butuh Anda</string>
+    <plurals name="notify_automation_runs">
+        <item quantity="other">%1$s · %2$s proses</item>
+    </plurals>
 </resources>

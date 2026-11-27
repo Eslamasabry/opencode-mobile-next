@@ -26,6 +26,7 @@ import io.github.eslamasabry.oc.android.notifications.AlertPolicy
 import io.github.eslamasabry.oc.android.notifications.AlertRoute
 import io.github.eslamasabry.oc.android.notifications.AlertShown
 import io.github.eslamasabry.oc.android.notifications.AndroidAlertShade
+import io.github.eslamasabry.oc.android.notifications.AutomationPauser
 import io.github.eslamasabry.oc.android.notifications.ChannelRegistry
 import io.github.eslamasabry.oc.android.notifications.CodingAlert
 import io.github.eslamasabry.oc.android.notifications.DeviceLock
@@ -64,6 +65,7 @@ import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.attempt
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
@@ -72,6 +74,9 @@ import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
+import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
 import io.github.eslamasabry.oc.core.model.transcript.Role
@@ -125,10 +130,12 @@ import java.util.UUID
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -137,6 +144,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
@@ -352,6 +360,17 @@ class PlatformHub(
     private val channels =
         ChannelRegistry(application.getSystemService(NotificationManager::class.java), words)
     val shade = AndroidAlertShade(application, words, channels)
+    // B-620: automation alerts on the hub's own shade. Taken from the graph on first use, after the graph exists;
+    // automation alerts are outcomes of runs, so the person's finished-runs switch governs them.
+    private val automationAlerts: AutomationAlertsCoordinator by lazy {
+        AutomationAlertsCoordinator(
+            shade = shade,
+            source = (application.appGraph as ServerAutomationsAccessors).serverAutomations,
+            serverName = { profile -> serverNames()[profile].orEmpty() },
+            alertFacts = { currentFacts(visible.value > 0).copy(serverAlertsOn = choice(FINISHED_ON)) },
+            redact = ::shadeText,
+        )
+    }
     private val widgets = AndroidWidgetSurface(application, widgetPersistence)
     private val widgetPresentation = WidgetPresentation(application, redactor)
     private val widgetSafe = io.github.eslamasabry.oc.engine.attention.widget.WidgetText(redactor)
@@ -484,6 +503,11 @@ class PlatformHub(
                         application.getSystemService(KeyguardManager::class.java)?.isDeviceLocked ==
                             true
                 },
+            // B-620: Pause this automation goes through the B-605 client, bound to the exact posted alert.
+            automationPauser =
+                AutomationPauser { profile, automationId, actionToken ->
+                    automationAlerts.pauseFromShade(profile, automationId, actionToken)
+                },
         )
             .also { body ->
                 body.onStop =
@@ -513,6 +537,7 @@ class PlatformHub(
         appScope.launch { watchFeed() }
         appScope.launch { watchRunEvents() }
         appScope.launch { watchProfiles() }
+        appScope.launch { watchAutomations() }
         appScope.launch { rereadAsksOnResume() }
         // A pin or active-server change need not change any feed row. Observe the acknowledged
         // preference save too.
@@ -609,6 +634,16 @@ class PlatformHub(
         )?.let { team ->
             alertTap(intent) // consumes the extras
             if (trusted) navigator.open(team)
+            return
+        }
+        // B-620: an automation's alert opens the chat of its run, or the server list when it has none (a pause).
+        automationAlertTap(
+            AlertKind.fromWire(intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_KIND)),
+            intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_SESSION_ID),
+            intent.getStringExtra(FrozenExtras.EXTRA_CODING_ALERT_PROFILE_ID),
+        )?.let { tap ->
+            alertTap(intent) // consumes the extras
+            if (trusted) openAutomationAlert(tap)
             return
         }
         alertTap(intent)?.takeIf { trusted }?.let { ref ->
@@ -753,6 +788,7 @@ class PlatformHub(
         for (key in statusPosted) shade.dismiss(key)
         statusPosted.clear()
         alerted.clear()
+        automationAlerts.alertsSeen()
     }
 
     // ---- Feed: alerts, widgets, tile
@@ -829,10 +865,17 @@ class PlatformHub(
                             }
                             .collect { widgetDetailsChanged() }
                     }
+                    launch { followAutomations(id, graph) }
                     graph.session.server.events.all.collect { envelope ->
                         if (registry.live.value[id] !== graph) return@collect
                         when (val event = envelope.event) {
-                            is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.MessageUpserted,
+                            is GatewayEvent.MessageUpserted -> {
+                                // B-620: a server automation's prompt (metadata.automation) marks its session.
+                                event.message.automation?.let {
+                                    automationAlerts.onAutomationMessage(id, event.message.sessionId, it)
+                                }
+                                widgetDetailsChanged()
+                            }
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.PartUpserted,
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.TranscriptStale ->
                                 widgetDetailsChanged()
@@ -861,6 +904,7 @@ class PlatformHub(
                                 if (failed != null)
                                     endedReasons[ref] = StoppedAlertRules.stopReason(failed)
                                 alerts(runtime.snapshot.value, lastWaiting, visible.value > 0)
+                                automationRunEnded(id, event)
                             }
                             else -> Unit
                         }
@@ -868,6 +912,95 @@ class PlatformHub(
                 }
             }
         }
+    }
+
+    /**
+     * B-620: while this server's event stream stays connected its automations are told up or down. The read that
+     * follows a (re)connect is a baseline, so nothing from the gap arrives as a late alert.
+     */
+    private suspend fun followAutomations(id: ProfileId, graph: ConnectionGraph) {
+        try {
+            graph.session.server.events.status.collect { status ->
+                automationAlerts.setConnected(id, status == StreamStatus.Connected)
+            }
+        } finally {
+            automationAlerts.setConnected(id, false)
+        }
+    }
+
+    /**
+     * B-620: the app is away and live connections exist: every server with automations is read at once (a baseline, as
+     * the person just left its rows) and then once a minute, for what the stream does not carry (a pause made on the
+     * server). Leaving the screen again, or a server coming or going, starts over.
+     */
+    private suspend fun watchAutomations() {
+        combine(visible, registry.live) { shown, live -> (shown == 0) to live.keys }
+            .distinctUntilChanged()
+            .collectLatest { (away, _) ->
+                if (!away) return@collectLatest
+                readAutomations(baseline = true)
+                while (isActive) {
+                    delay(AUTOMATION_POLL_MS)
+                    readAutomations(baseline = false)
+                }
+            }
+    }
+
+    private suspend fun readAutomations(baseline: Boolean) {
+        for ((id, graph) in registry.live.value) {
+            if (graph.session.capabilities.value.serverAutomations) {
+                attempt({ Failure.Unexpected() }) { automationAlerts.pollAutomations(id, baseline) }
+            }
+        }
+    }
+
+    /**
+     * B-620: a run of an automation's session ended. A failure tells at once; a finished run tells with its reply's
+     * first line (read as the finished alert reads it, B-ANDR-048); a run the person stopped tells nothing.
+     */
+    private fun automationRunEnded(profile: ProfileId, event: GatewayEvent.RunEnded) {
+        val session = event.sessionId.raw
+        if (!automationAlerts.isAutomationSession(profile, session)) return
+        when (event.outcome) {
+            is RunOutcome.Failed ->
+                automationAlerts.onSessionRunEnded(
+                    profile,
+                    session,
+                    failed = true,
+                    interrupted = false,
+                    replyExcerpt = "",
+                )
+            is RunOutcome.Interrupted ->
+                automationAlerts.onSessionRunEnded(
+                    profile,
+                    session,
+                    failed = false,
+                    interrupted = true,
+                    replyExcerpt = "",
+                )
+            else -> appScope.launch { toldWithExcerpt(profile, event.sessionId) }
+        }
+    }
+
+    private suspend fun toldWithExcerpt(profile: ProfileId, session: SessionId) {
+        val ref = ConversationRef(profile, session)
+        val line = withTimeoutOrNull(EXCERPT_WAIT_MS) { lastReplyLine(ref) }.orEmpty()
+        // A late excerpt may not tell a run that a newer one has started in the same chat.
+        if (ref !in eventStarted) {
+            automationAlerts.onSessionRunEnded(
+                profile,
+                session.raw,
+                failed = false,
+                interrupted = false,
+                replyExcerpt = line,
+            )
+        }
+    }
+
+    private fun openAutomationAlert(tap: AutomationAlertTap) {
+        val session = tap.session
+        if (session == null) navigator.open(ServersRoute.Home)
+        else openChatFromNotification(ConversationRef(tap.profile, session)) { navigator.openChat(it) }
     }
 
     private suspend fun watchProfiles() {
@@ -882,6 +1015,7 @@ class PlatformHub(
                 AttentionTileCache.clearOwner(application, id.raw)
                 PinnedShortcuts.withdrawProfile(application, id.raw)
                 clearProfile(id)
+                automationAlerts.forget(id)
             }
         }
     }
@@ -1443,19 +1577,8 @@ class PlatformHub(
         pruneRequestTokens()
         wasVisible = appVisible
         val items = feed.items.associateBy { it.ref }
-        val names = stores.profiles.profiles.value.associate { it.id to it.profile.name }
-        val facts =
-            AlertFacts(
-                liveModeActive = background.live.value.enabled && background.live.value.active,
-                // Plan 11 §9.3: the short service that keeps a running reply watched after the person left.
-                replyWatchActive = replyWatch.active.value,
-                appVisible = appVisible,
-                permissionGranted = notificationsAllowed(),
-                serverAlertsOn = true, // narrowed per kind below by the person's Settings choices
-                quietHours = quietNow(),
-                onWifi = null,
-                wifiOnly = false,
-            )
+        val names = serverNames()
+        val facts = currentFacts(appVisible)
         val requestsOn = choice(REQUESTS_ON)
         val finishedOn = choice(FINISHED_ON)
         // Requests: one alert per conversation, for its oldest waiting request (B-ANDR-011).
@@ -1575,6 +1698,24 @@ class PlatformHub(
             (choice(REQUESTS_ON) || (choice(FINISHED_ON) && !quietNow()))
 
     private fun shadeText(value: String): String = NotificationText.redact(redactor.redact(value))
+
+    /** The posting facts now; `serverAlertsOn` is true here and narrowed per kind by the person's Settings choices. */
+    private fun currentFacts(appVisible: Boolean): AlertFacts =
+        AlertFacts(
+            liveModeActive = background.live.value.enabled && background.live.value.active,
+            // Plan 11 §9.3: the short service that keeps a running reply watched after the person left.
+            replyWatchActive = replyWatch.active.value,
+            appVisible = appVisible,
+            permissionGranted = notificationsAllowed(),
+            serverAlertsOn = true,
+            quietHours = quietNow(),
+            onWifi = null,
+            wifiOnly = false,
+        )
+
+    /** Every saved server's name, as an alert's subtext says it. */
+    private fun serverNames(): Map<ProfileId, String> =
+        stores.profiles.profiles.value.associate { it.id to it.profile.name }
 
     private fun requestAlert(
         key: String,
@@ -1829,6 +1970,7 @@ class PlatformHub(
         const val REQUESTS_ON = "oc.notify.requests"
         const val FINISHED_ON = "oc.notify.finishedRuns"
         const val PINS_PREFIX = "oc.sessionPins."
+        const val AUTOMATION_POLL_MS = 60_000L
         val FILE_KEYS = listOf("filePath", "filepath", "file_path", "path", "file")
     }
 }
