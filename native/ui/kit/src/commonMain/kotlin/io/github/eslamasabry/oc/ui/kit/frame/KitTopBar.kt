@@ -408,15 +408,14 @@ public fun KitTopBar(
                         }
                     }
                 }
-        if (backBesideTitle) {
-            // E20-S13: one block. Back (or gutter start), then the title with its line tight under it (2 dp step),
-            // then the actions; Back and the actions centre on the block.
+        if (back && backBesideTitle) {
+            // E20-S13: one block. Back, then the title with its line tight under it (the kit's 2 dp step), then the
+            // actions; Back and the actions centre on the block.
             Row(
                 Modifier.fillMaxWidth().heightIn(min = tokens.minTarget.dp).testTag("kit-top-bar-compact"),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (back && onExit != null) ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
-                else Box(Modifier.width(titleStart))
+                ExitButton(ExitGlyph.Back, exitLabel.orEmpty(), onExit, -1f)
                 // Large text: the block outgrows the 48 dp row and its 4 dp step is all that is left above the words (audit
                 // 2: at 1.3x the title's first line sat 15 px under the bar's rim); keep the roomier step there.
                 Column(Modifier.weight(1f).padding(vertical = if (kitFontScale() >= LARGE_BAR_SCALE) Space.S2.dp else Space.S1.dp)) {

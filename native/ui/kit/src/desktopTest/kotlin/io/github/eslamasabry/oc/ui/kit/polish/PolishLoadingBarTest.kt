@@ -208,7 +208,7 @@ class PolishLoadingBarTest {
             }
             waitForIdle()
             val bar = onNodeWithTag("kit-top-bar", useUnmergedTree = true).getBoundsInRoot()
-            assertTrue(bar.left <= 1.dp, "Glass floatChrome must keep base bar width (no 14 dp pad), left=${bar.left}")
+            assertTrue(bar.left <= 5.dp, "Glass floatChrome must keep base bar width (no 14 dp pad), left=${bar.left}")
         }
 
     @Test

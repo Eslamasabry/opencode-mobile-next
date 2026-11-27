@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.ui.kit.motion.KitMotion
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 
@@ -103,7 +102,7 @@ internal const val GLYPH_INK: Float = .82f
 @Composable
 internal fun StillOutline(color: Color, size: Dp) {
     Canvas(Modifier.size(size)) {
-        val stroke = KitStepLightLap.FILL_STROKE.dp.toPx()
+        val stroke = KitStepLightLap.FILL_STROKE
         val inset = stroke / 2f // F: lib/ui/kit/chat/kit_step_light.dart:322
         val s = this.size.minDimension
         val r = maxOf(0f, stepTileRadius(s) - inset)

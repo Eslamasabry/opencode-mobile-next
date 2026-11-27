@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -29,6 +30,8 @@ import io.github.eslamasabry.oc.ui.kit.row.KitRow
 import io.github.eslamasabry.oc.ui.kit.row.KitRowGroup
 import io.github.eslamasabry.oc.ui.kit.row.KitRowLeading
 import io.github.eslamasabry.oc.ui.kit.row.KitRowTrailing
+import io.github.eslamasabry.oc.ui.kit.row.LocalKitOnRail
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitStyle
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTokens
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.chatTurnAllFiles
@@ -60,11 +63,13 @@ internal fun TurnChangedFiles(
         if (files.size > shown.size)
             pluralStringResource(Res.plurals.chatTurnAllFilesMore, files.size - shown.size, files.size - shown.size)
         else stringResource(Res.string.chatTurnAllFiles)
-    // The reply column (plan 09 R13): 700 dp cap. KitRowGroup draws the kit panel surface inset 8 dp, and each row
-    // aligns its glyph at 16 dp from the column edge, matching the "All files" glyph below (B-580).
+    // The reply column (plan 09 R13): 700 dp cap. In flat styles KitRowGroup draws flat without a box (Owner #2);
+    // in paneled styles its panel sits at 8 dp and each row aligns its glyph at 16 dp, matching "All files" (B-580).
     val tokens = LocalKitTokens.current
+    val flat = LocalKitStyle.current.spec.tokens.flatLists
     val glyphInset = ((tokens.iconTile - KitIconSize.Large.dp) / 2).dp
-    val rowEnd = (Space.S4.dp - Space.S2.dp - kitPaneInset()).coerceAtLeast(0.dp)
+    val panelMargin = if (flat) 0.dp else Space.S2.dp
+    val rowEnd = (Space.S4.dp - panelMargin - kitPaneInset()).coerceAtLeast(0.dp)
     val rowStart = (rowEnd - glyphInset).coerceAtLeast(0.dp)
     val rowPad = PaddingValues(start = rowStart, end = rowEnd, top = Space.S2.dp, bottom = Space.S2.dp)
     Column(
@@ -72,24 +77,26 @@ internal fun TurnChangedFiles(
     ) {
         // F: kit_turn.dart:498 space3 from the reply's last block, plus chat_files.dart:356 `margin: top space2`; the
         // reply block above already brings space1.
-        KitRowGroup(surface = true, modifier = Modifier.padding(top = Space.S4.dp)) {
-            for (file in shown) {
-                val counts =
-                    listOfNotNull(
-                        file.added?.takeIf { it > 0 }?.let { "+$it" },
-                        file.removed?.takeIf { it > 0 }?.let { "−$it" },
+        CompositionLocalProvider(LocalKitOnRail provides !flat) {
+            KitRowGroup(Modifier.padding(top = Space.S4.dp, start = panelMargin, end = panelMargin)) {
+                for (file in shown) {
+                    val counts =
+                        listOfNotNull(
+                            file.added?.takeIf { it > 0 }?.let { "+$it" },
+                            file.removed?.takeIf { it > 0 }?.let { "−$it" },
+                        )
+                    KitRow(
+                        title = file.name,
+                        titleIsFileName = true,
+                        leading = KitRowLeading.Glyph(KitIcons.fileText),
+                        trailing =
+                            if (counts.isEmpty()) KitRowTrailing.Chevron
+                            else KitRowTrailing.Value(counts.joinToString(" ")),
+                        onClick = onOpenFile?.let { open -> { open(ToolArtifact(file.path, null, null, file.name)) } },
+                        padding = rowPad,
+                        modifier = Modifier.testTag("chat-turn-file-${file.path}"),
                     )
-                KitRow(
-                    title = file.name,
-                    titleIsFileName = true,
-                    leading = KitRowLeading.Glyph(KitIcons.fileText),
-                    trailing =
-                        if (counts.isEmpty()) KitRowTrailing.Chevron
-                        else KitRowTrailing.Value(counts.joinToString(" ")),
-                    onClick = onOpenFile?.let { open -> { open(ToolArtifact(file.path, null, null, file.name)) } },
-                    padding = rowPad,
-                    modifier = Modifier.testTag("chat-turn-file-${file.path}"),
-                )
+                }
             }
         }
         if (onAllFiles != null)

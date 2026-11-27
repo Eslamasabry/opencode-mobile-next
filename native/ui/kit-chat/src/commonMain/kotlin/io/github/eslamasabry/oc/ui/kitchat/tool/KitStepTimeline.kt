@@ -254,11 +254,8 @@ internal class StepRail {
     var root: LayoutCoordinates? = null
     val centres = mutableStateMapOf<Any, Float>()
 
-    /** Each node's top and bottom on the rail, px from the timeline's top: the rail stops clear of each box. */
+    /** Each node's top and bottom on the rail, px from the timeline's top: the step light runs between them. */
     val spans = mutableStateMapOf<Any, ClosedFloatingPointRange<Float>>()
-
-    /** Each node's actual box top and bottom, px from the timeline's top: the step light runs between boxes. */
-    val nodeSpans = mutableStateMapOf<Any, ClosedFloatingPointRange<Float>>()
 
     /** Each node's centre across, px from the list's left edge: a run's own steps stand one step in from the rail. */
     val columns = mutableStateMapOf<Any, Float>()
@@ -278,10 +275,10 @@ internal class StepRail {
     /** The light's rail for the node [key] (Dart `_LightPainter.paint`, kit_step_light.dart:378-401). */
     fun light(key: Any, tail: Float): StepLightRail =
         StepLightRail(
-            above = { nodeSpans[key]?.let { it.start - startOf(key, it.start) } ?: 0f },
+            above = { spans[key]?.let { it.start - startOf(key, it.start) } ?: 0f },
             below = { belowOf(key, tail) },
-            last = { nodeSpans[key]?.let { nextTop(key, it.endInclusive) == null } ?: true },
-            drawn = { p -> lit[key] = LitFrame(nodeSpans[key]?.let { startOf(key, it.start) } ?: headerStart, p) },
+            last = { spans[key]?.let { nextTop(key, it.endInclusive) == null } ?: true },
+            drawn = { p -> lit[key] = LitFrame(spans[key]?.let { startOf(key, it.start) } ?: headerStart, p) },
             ended = {
                 lastLit = key
                 lit.remove(key)
@@ -291,7 +288,7 @@ internal class StepRail {
     private fun inView(key: Any): Boolean = (shares[key]?.invoke() ?: 1f) > LIGHT_START_SHARE
 
     private fun prevBottom(key: Any, top: Float): Float? =
-        nodeSpans.entries
+        spans.entries
             .filter { (k, span) -> k != key && inView(k) && span.endInclusive <= top + EDGE_SLOP }
             .maxOfOrNull { it.value.endInclusive }
 
@@ -299,18 +296,18 @@ internal class StepRail {
         val fromLast =
             lastLit
                 ?.takeIf { it != key && inView(it) }
-                ?.let { nodeSpans[it]?.endInclusive }
+                ?.let { spans[it]?.endInclusive }
                 ?.takeIf { it <= top + EDGE_SLOP }
         return fromLast ?: prevBottom(key, top) ?: headerStart
     }
 
     private fun nextTop(key: Any, bottom: Float): Float? {
-        val mine = nodeSpans[key]
-        return nodeSpans.values.filter { it.start >= bottom - EDGE_SLOP && it != mine }.minOfOrNull { it.start }
+        val mine = spans[key]
+        return spans.values.filter { it.start >= bottom - EDGE_SLOP && it != mine }.minOfOrNull { it.start }
     }
 
     private fun belowOf(key: Any, tail: Float): Float {
-        val mine = nodeSpans[key] ?: return 0f
+        val mine = spans[key] ?: return 0f
         return nextTop(key, mine.endInclusive)?.let { it - mine.endInclusive } ?: tail
     }
 
@@ -403,14 +400,12 @@ internal fun RailNode(
         onDispose {
             rail.centres.remove(key)
             rail.spans.remove(key)
-            rail.nodeSpans.remove(key)
             rail.columns.remove(key)
             rail.shares.remove(key)
         }
     }
     val density = LocalDensity.current
-    val nodeHalf = with(density) { (half ?: (m.glyph / 2 + RAIL_NODE_GAP)).toPx() }
-    val boxHalf = with(density) { (half?.let { minOf(it, m.glyph / 2) } ?: (m.glyph / 2)).toPx() }
+    val nodeHalf = with(density) { (half ?: m.glyph / 2).toPx() }
     // F: kit_step_light.dart:367 the last step's light runs a 14 dp tail below its node
     val light = remember(rail, key) { rail.light(key, with(density) { 14.dp.toPx() }) }
     // A row in a fold that moves (opening, folding, arriving) is drawn by how much of it is in view: a row the fold's
@@ -446,7 +441,6 @@ internal fun RailNode(
                         val centre = at.y // F: lib/ui/kit/chat/kit_step_node.dart:72
                         rail.centres[key] = centre
                         rail.spans[key] = (centre - nodeHalf)..(centre + nodeHalf)
-                        rail.nodeSpans[key] = (centre - boxHalf)..(centre + boxHalf)
                         rail.columns[key] = at.x
                     }
                 },
@@ -491,8 +485,12 @@ public fun KitStepItem(
 /** How far a run's own steps stand in from the rail, dp: one step of the spacing scale. */
 public const val STEP_RUN_INSET: Int = Space.S4
 
-/** Clearance kept between the step rail and every node's box edge (B-568). */
-internal val RAIL_NODE_GAP: Dp = 2.dp
+/**
+ * How far a still glyph's rail reaches into its node, as a share of the node's half: the glyph is drawn at
+ * [GLYPH_SHARE] of the node and its ink fills about 80 % of that, so the rail meets the ink (about a dp clear of it)
+ * instead of the node's empty box edge, and two glyph rows 32 dp apart are joined by one line, not an 8 dp dash.
+ */
+internal const val GLYPH_RAIL_REACH: Float = .78f
 
-/** The half height of a node on the rail, stopping clear of its box edge. */
-internal fun railGlyphHalf(m: RailMeasures): Dp = m.glyph / 2 + RAIL_NODE_GAP
+/** The half height of a still glyph's node on the rail (a node drawn in an outline keeps its whole box). */
+internal fun railGlyphHalf(m: RailMeasures): Dp = m.glyph * GLYPH_RAIL_REACH / 2
