@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Translated with native/tools/strings/translate; English is the source. -->
 <resources>
-    <string name="helpLinuxSpeedTitle">端末の Linux 速度</string>
+    <string name="helpLinuxSpeedTitle">スマートフォンのLinux速度</string>
     <string name="helpLinuxSpeedFast">高速</string>
     <string name="helpLinuxSpeedCompatible">互換モード（低速）</string>
     <string name="helpLinuxSpeedChecking">確認中…</string>
     <string name="helpLinuxSpeedFastSummary">高速モードで動作しています。</string>
     <string name="helpLinuxSpeedFastRestored">高速モードが再び有効になりました。</string>
     <string name="helpLinuxSpeedCompatibleSummary">互換モードに切り替わっているため、エージェントの起動が遅くなります。</string>
-    <string name="helpLinuxSpeedStayedCompatible">この端末では引き続き互換モードが必要です。</string>
+    <string name="helpLinuxSpeedStayedCompatible">このスマートフォンでは引き続き互換モードが必要です。</string>
     <string name="helpLinuxSpeedRetryFailed">現在、高速モードをテストできませんでした。互換モードを維持します。</string>
     <string name="helpLinuxSpeedTryFast">高速モードをもう一度試す</string>
     <string name="helpLinuxSpeedTryFastSummary">高速モードをテストし、必要なら自動で元に戻します。</string>
-    <string name="helpLinuxSpeedTryingFast">この端末で高速モードをテストしています…</string>
+    <string name="helpLinuxSpeedTryingFast">このスマートフォンで高速モードをテストしています…</string>
 </resources>
