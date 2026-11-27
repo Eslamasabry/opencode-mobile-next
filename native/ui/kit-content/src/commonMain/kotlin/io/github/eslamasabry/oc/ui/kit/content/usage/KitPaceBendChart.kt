@@ -485,6 +485,8 @@ public data class PaceGuideLayoutInput(
     val evenPaceSize: PaceLabelSize?,
     val pad: Float,
     val minGap: Float,
+    /** Radius of the now dot's ring, in the same units as the rest; 0 when there is no dot the labels must avoid. */
+    val nowDotRadius: Float = 0f,
 )
 
 /** Placed guide labels inside the plot; either slot is null when absent or dropped for space. */
@@ -635,7 +637,8 @@ private const val HATCH_STROKE_DP = 2f
 private const val NONE_LEFT_ROW_GAP_DP = 4f
 private const val OUT_LABEL_PAD_DP = 6f
 private const val MIN_OUT_SPAN_RATIO = 0.9f
-private const val NOW_RING_DP = 6.5f
+/** The now dot's ring, in dp; the chart's rules keep guide labels clear of it. */
+internal const val NOW_RING_DP = 6.5f
 private const val NOW_DOT_DP = 4.5f
 private const val DOT_SIZE_DP = 8f
 private const val DOT_TOP_OFFSET_DP = 7f

@@ -44,7 +44,16 @@ class KitPaceBendChartRulesTest {
             evenPaceSize = PaceLabelSize(width = 56f * scale, height = 16f * scale),
             pad = 8f,
             minGap = 6f,
+            nowDotRadius = NOW_RING_DP,
         )
+
+    /** The box the landing label must keep clear of the now dot: its ring, grown by the gap on every side. */
+    private fun nowDotBox(input: PaceGuideLayoutInput): PaceLabelRect {
+        val cx = PaceBendRules.xForFraction(input.elapsed, input.x0, input.x1, input.rtl)
+        val cy = PaceBendRules.yForLeft(input.left, input.top, input.plotHeight)
+        val half = NOW_RING_DP + input.minGap
+        return PaceLabelRect(cx - half, cy - half, cx + half, cy + half)
+    }
 
     @Test
     fun `B-508 x coordinate mirrors cleanly in RTL and y maps full to top and empty to base`() {
@@ -89,17 +98,30 @@ class KitPaceBendChartRulesTest {
                 atReset = 0.50f,
                 evenPaceSize = null,
             )
+        // The same short chart at the height a landing label gives it, the dot mid-way between start and reset,
+        // where the label fits on neither side of it.
+        val fiveHourMidDot =
+            claudeWeeklyInput(scale = 1.3f).copy(
+                plotHeight = 2f * (16f * 1.3f + NOW_RING_DP + 6f) + 6f,
+                elapsed = 0.50f,
+                left = 0.55f,
+                atReset = 0.45f,
+                evenPaceSize = null,
+            )
         val cases =
             listOf(
                 claudeWeeklyInput(scale = 1.0f),
                 claudeWeeklyInput(scale = 1.3f),
                 claudeWeeklyInput(scale = 1.3f, rtl = true),
                 fiveHour,
+                fiveHourMidDot,
             )
         for (input in cases) {
             val placed = PaceBendRules.placeGuideLabels(input)
             val landing = assertNotNull(placed.landing, "landing label must be placed for $input")
             assertGuideRectValid(landing, input, "landing")
+            val dot = nowDotBox(input)
+            assertFalse(landing.overlaps(dot), "landing $landing must stay clear of the now dot $dot for $input")
             placed.evenPace?.let { even ->
                 assertGuideRectValid(even, input, "evenPace")
                 assertFalse(

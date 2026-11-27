@@ -183,5 +183,16 @@ class LimitPaceForecastTest {
         assertTrue(claudeRunsOutWindows.any { it.forecast is PaceForecast.Lasts })
         assertTrue(claudeRunsOutWindows.any { it.forecast is PaceForecast.RunsOut })
         assertNull(LimitPaceMath.bestSwitchHint(runsOutUi.accounts, exceptKey = "codex"))
+
+        // Nothing left in a window that has no forecast to say so (no reset time): still a used-up account.
+        val claudeNoReset =
+            claudeWithOut.copy(
+                windows = listOf(UsageWindow("five_hour", 100.0, 18_000, resetsAt = null), claudeWeekly),
+            )
+        val noResetUi = limitsUi(UsageSnapshot(listOf(codex, claudeNoReset), loaded = true), false, now, "UTC")
+        val claudeNoResetWindows = noResetUi.accounts.first { it.key == "claude" }.groups.flatMap { it.windows }
+        assertTrue(claudeNoResetWindows.any { it.forecast is PaceForecast.Lasts })
+        assertTrue(claudeNoResetWindows.any { it.forecast == null && it.leftPercent == 0 })
+        assertNull(LimitPaceMath.bestSwitchHint(noResetUi.accounts, exceptKey = "codex"))
     }
 }
