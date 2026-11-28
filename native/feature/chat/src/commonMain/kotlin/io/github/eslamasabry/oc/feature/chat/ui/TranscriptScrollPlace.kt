@@ -173,18 +173,38 @@ internal object ScrollPlaceRules {
         list.scrollToNewest()
     }
 
-    /** Puts the list on the place the entry opens on ([opening]) before its first measure; false: nothing to put. */
-    fun restoreOnFirstFrame(list: TranscriptListState, opening: KeptPlace?, keys: List<String>): Boolean {
-        val saved = opening?.place ?: return false
+    private const val FOLLOW_DEFER_FRAMES = 2
+
+    /** Puts the list on the place the entry opens on ([opening]) before its first measure, deferring follow-off. */
+    fun restoreOnFirstFrame(
+        list: TranscriptListState,
+        opening: KeptPlace?,
+        keys: List<String>,
+        restored: BooleanArray,
+        deferredFollow: Array<Boolean?>,
+    ) {
+        val saved = opening?.place ?: return
         val canSync = list.anchor != TranscriptAnchor.Hybrid && keys.isNotEmpty()
         val found = if (canSync) target(saved, keys) else null
         val follow = found != null && opening.following && found.first == 0
         val applied = found != null && (!follow || found.second == 0)
         if (applied) {
-            list.following = follow
+            restored[0] = true
+            deferredFollow[0] = follow
             list.lazy.requestScrollToItem(list.lazyIndex(found.first), found.second)
         }
-        return applied
+    }
+
+    /** Turns following off once the first layout frame has measured the bottom chrome and settled the edge check. */
+    suspend fun finishDeferredFollow(list: TranscriptListState, deferredFollow: Array<Boolean?>) {
+        val follow = deferredFollow[0] ?: return
+        deferredFollow[0] = null
+        if (follow) {
+            list.following = true
+        } else {
+            repeat(FOLLOW_DEFER_FRAMES) { withFrameNanos { } }
+            if (!list.atLiveEdge) list.following = false
+        }
     }
 
     suspend fun restoreAsync(
@@ -242,20 +262,23 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     keysState.value = keys
     val current by keysState
     val restored = remember(list) { booleanArrayOf(false) }
+    val deferredFollow = remember(list) { arrayOfNulls<Boolean>(1) }
     // What this entry opens on: the place saved for it or kept for the conversation in this run, read once, before the
     // collector below takes the entry's own places. Those say where the list already is and are never put back.
     val taken = remember { booleanArrayOf(false) }
     val opening = remember(list) { ScrollPlaceRules.opening(holder, taken) }
     SideEffect {
-        if (!restored[0] && resets == 0 && ScrollPlaceRules.restoreOnFirstFrame(list, opening, keys)) {
-            restored[0] = true
+        if (!restored[0] && resets == 0) {
+            ScrollPlaceRules.restoreOnFirstFrame(list, opening, keys, restored, deferredFollow)
         }
     }
     LaunchedEffect(list, resets) {
         if (resets > 0) {
             restored[0] = false
+            deferredFollow[0] = null
             ScrollPlaceRules.reset(list, holder)
         }
+        ScrollPlaceRules.finishDeferredFollow(list, deferredFollow)
         val saved = if (restored[0] || resets > 0) null else opening
         if (saved != null) {
             ScrollPlaceRules.restoreAsync(list, saved, restored) { current }

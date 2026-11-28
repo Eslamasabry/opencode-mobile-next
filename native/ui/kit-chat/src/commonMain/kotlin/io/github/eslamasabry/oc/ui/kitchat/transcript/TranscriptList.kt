@@ -145,9 +145,6 @@ internal constructor(
     /** True while a Hybrid jump-to-newest glide is flipping back to reversed and animating. */
     internal var jumping by mutableStateOf(false)
 
-    /** True once initial layout has settled so the bottom chrome height is known before mounting the jump dock. */
-    internal var dockReady by mutableStateOf(false)
-
     /** True while Hybrid holds normal order so a toggled fold expands downward while following stays on. */
     internal var foldHeld by mutableStateOf(false)
 
@@ -402,14 +399,17 @@ public fun KitTranscriptList(
     val isHybrid = state.anchor == TranscriptAnchor.Hybrid
     val normal = state.orderNormal
     val recorded = TranscriptPlumbing.record(isHybrid, state, content)
-    val lastKey = remember { arrayOfNulls<String>(1) }
+    val lastKey = remember { arrayOf<Any?>(TranscriptPlumbing.UNSET_KEY) }
     SideEffect {
         if (isHybrid) state.composedNormal = normal
         // Runs after this composition applies and before its layout: same frame as the insert (§7.3
-        // rule 2).
-        if (newestKey != lastKey[0]) {
+        // rule 2). Skip the initial composition so a first-frame saved-place restore is not undone.
+        val prev = lastKey[0]
+        if (newestKey != prev) {
             lastKey[0] = newestKey
-            if (state.following && newestKey != null) state.requestScrollToNewest()
+            if (prev !== TranscriptPlumbing.UNSET_KEY && state.following && newestKey != null) {
+                state.requestScrollToNewest()
+            }
         }
     }
     val density = LocalDensity.current
@@ -500,12 +500,6 @@ private object TranscriptPlumbing {
      */
     @Composable
     fun FollowEffects(state: TranscriptListState, personScroll: PersonScroll) {
-        LaunchedEffect(state) {
-            if (!state.dockReady) {
-                repeat(DOCK_READY_FRAMES) { withFrameNanos { } }
-                state.dockReady = true
-            }
-        }
         if (state.anchor == TranscriptAnchor.Hybrid) {
             LaunchedEffect(state) {
                 snapshotFlow { state.lazy.isScrollInProgress }.collect { scrolling ->
@@ -571,7 +565,7 @@ private object TranscriptPlumbing {
                 }
             )
 
-    private const val DOCK_READY_FRAMES = 2
+    val UNSET_KEY: Any = Any()
     private const val FOLD_QUIET_FRAMES = 8
     private const val FOLD_MAX_FRAMES = 45
     private const val LAYOUT_HASH_MUL = 31L
@@ -1197,7 +1191,7 @@ private fun BoxScope.KitJumpDock(
     dockLive: KitTranscriptDockLive?,
     lift: () -> Dp,
 ) {
-    if (state.following || !state.dockReady) return
+    if (state.following) return
     val minTarget = LocalKitTokens.current.minTarget.dp
     // The status in its parts, made anew only when the words or their rail are new.
     val lead = if (dockLive?.onRail == true) railMeasures().column else FlutterKitTokens.LIVE_DOT.dp + Space.S2.dp
@@ -1342,7 +1336,7 @@ private fun Modifier.clearBandForDock(
             val brush = DockFadeBrush()
             onDrawWithContent {
                 if (flat) clipRect { this@onDrawWithContent.drawContent() } else drawContent()
-                if (state.following || !state.dockReady) return@onDrawWithContent
+                if (state.following) return@onDrawWithContent
                 // The two paddings the docked row stands on, in whole pixels.
                 val rest = (chrome.calculateBottomPadding() + contentPadding.calculateBottomPadding()).roundToPx()
                 val bandTop = (size.height.roundToInt() - rest - target.roundToPx()).coerceAtLeast(0)
@@ -1368,8 +1362,7 @@ private fun Modifier.clearBandForDock(
     return if (flat) this.then(draw)
     else graphicsLayer {
         // Offscreen only while the band shows over a live background: the clearing works on the list's own pixels.
-        val hidden = state.following || !state.dockReady
-        compositingStrategy = if (hidden) CompositingStrategy.Auto else CompositingStrategy.Offscreen
+        compositingStrategy = if (state.following) CompositingStrategy.Auto else CompositingStrategy.Offscreen
     }.then(draw)
 }
 
