@@ -1347,20 +1347,32 @@ private class AndroidLinuxSpeedSetting(
         }
     }
 
+    /** What runs in compatible mode, read before the saved mode is touched; null when Linux is not installed. */
+    private suspend fun compatibleRunning(): Outcome<LinuxFastRetry.Running?> =
+        withContext(dispatchers.io) {
+            attempt(::classifyRuntime) {
+                val linux = io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(application)
+                if (linux.installed) linux.compatibleRunning() else null
+            }
+        }
+
     override suspend fun tryFastMode():
-        Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> {
-        // Read before the saved mode is touched: what runs compatible, and whether the phone's work is idle.
-        val before =
-            withContext(dispatchers.io) {
-                attempt(::classifyRuntime) {
-                    val linux = io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(application)
-                    if (linux.installed) linux.compatibleRunning() else null
+        Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> =
+        when (val before = compatibleRunning()) {
+            is Outcome.Failed -> before
+            is Outcome.Ok -> {
+                // Decided before anything is touched: what runs compatible, and whether the phone's work is idle.
+                val plan = before.value?.let { LinuxFastRetry.plan(it, builtinRuntime.value.mayUpdate()) }
+                when {
+                    plan == null -> notTested()
+                    !plan.probe -> keptCompatible()
+                    else -> afterProbe(plan)
                 }
             }
-        if (before is Outcome.Failed) return before
-        val running = (before as Outcome.Ok).value ?: return notTested()
-        val plan = LinuxFastRetry.plan(running, builtinRuntime.value.mayUpdate())
-        if (!plan.probe) return keptCompatible()
+        }
+
+    private suspend fun afterProbe(plan: LinuxFastRetry.Plan):
+        Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> {
         val probe =
             withContext(dispatchers.io) {
                 attempt(::classifyRuntime) {
