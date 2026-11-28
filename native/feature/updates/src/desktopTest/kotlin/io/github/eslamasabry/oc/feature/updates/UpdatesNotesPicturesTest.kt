@@ -23,7 +23,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -147,7 +146,7 @@ internal data class DrawnLink(
     val last: Int,
     /** The link on the screen, in dp from the window's corner. */
     val box: DpRect,
-    /** The middle of its first letter, in dp from the window's corner: where a finger lands. */
+    /** The middle of its first letter, in pixels from the window's corner: where a finger lands. */
     val tap: Offset,
     /** The part of its paragraph the window shows, in dp from the window's corner. */
     val seenText: DpRect,
@@ -196,11 +195,11 @@ internal fun ComposeUiTest.drawnNoteLink(): DrawnLink {
     val layout = results.single()
     val text = layout.layoutInput.text
     val link = text.getLinkAnnotations(0, text.length).single()
-    var glyphs = layout.getBoundingBox(link.start)
-    for (at in link.start + 1 until link.end) glyphs = glyphs.expandToInclude(layout.getBoundingBox(at))
+    // Semantics and text layouts measure in pixels; the paragraph's own density turns them into dp.
+    val perDp = layout.layoutInput.density.density
     val origin = node.positionInRoot
-    val perDp = density.density
-    val letter = layout.getBoundingBox(link.start)
+    val seen = node.boundsInRoot
+    val glyphs = (link.start until link.end).map(layout::getBoundingBox)
     return DrawnLink(
         annotation = link.item as LinkAnnotation.Clickable,
         layout = layout,
@@ -208,13 +207,19 @@ internal fun ComposeUiTest.drawnNoteLink(): DrawnLink {
         last = link.end - 1,
         box =
             DpRect(
-                origin.x + (glyphs.left / perDp).dp,
-                origin.y + (glyphs.top / perDp).dp,
-                origin.x + (glyphs.right / perDp).dp,
-                origin.y + (glyphs.bottom / perDp).dp,
+                ((origin.x + glyphs.minOf { it.left }) / perDp).dp,
+                ((origin.y + glyphs.minOf { it.top }) / perDp).dp,
+                ((origin.x + glyphs.maxOf { it.right }) / perDp).dp,
+                ((origin.y + glyphs.maxOf { it.bottom }) / perDp).dp,
             ),
-        tap = Offset(origin.x + (letter.center.x / perDp).dp, origin.y + (letter.center.y / perDp).dp),
-        seenText = node.boundsInRoot,
+        tap = origin + glyphs.first().center,
+        seenText =
+            DpRect(
+                (seen.left / perDp).dp,
+                (seen.top / perDp).dp,
+                (seen.right / perDp).dp,
+                (seen.bottom / perDp).dp,
+            ),
     )
 }
 

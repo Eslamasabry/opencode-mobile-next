@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -57,7 +56,6 @@ import io.github.eslamasabry.oc.feature.updates.ui.UpdateNotice
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateOfferSheet
 import io.github.eslamasabry.oc.feature.updates.ui.UpdatePromptSheet
 import io.github.eslamasabry.oc.feature.updates.ui.UpdatesScreen
-import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
@@ -533,7 +531,8 @@ class UpdatesScreenUiTest {
                 setContent { Phone(v) { UpdatesScreen(updatesUi(withNotes, now), actions) } }
                 waitForIdle()
                 val link = assertNoteLinkShown(v.tag)
-                onRoot().performTouchInput { click(Offset(link.tap.x.toPx(), link.tap.y.toPx())) }
+                onRoot().performTouchInput { click(link.tap) }
+                waitForIdle()
                 assertEquals(listOf("noteLink:$NOTE_LINK_URL"), actions.calls, "${v.tag}: a tap on the link")
             }
         }
