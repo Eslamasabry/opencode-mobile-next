@@ -736,17 +736,17 @@
     <string name="appUpdateCheckSwitchBody">应用会向 GitHub 询问最新的版本号，且不会发送任何关于你的信息。</string>
     <string name="appUpdateCheckNow">立即检查</string>
     <string name="appUpdateTryAgain">重试</string>
-    <string name="appUpdateFailNetwork">无法连接到 GitHub，请检查网络连接后重试。</string>
-    <string name="appUpdateFailNoFile">此版本尚无适用于你手机的文件，请稍后再试。</string>
-    <string name="appUpdateFailChecksum">下载文件的校验和不匹配，请重新下载。</string>
-    <string name="appUpdateFailSigner">此下载包的签名与当前应用不一致，请在 GitHub 查看该版本或安装匹配的版本。</string>
-    <string name="appUpdateFailPackage">此下载包属于其他应用，请在 GitHub 查看该版本以核对安装包。</string>
-    <string name="appUpdateFailVersion">此下载包不比当前应用更新，请在 GitHub 查看该版本以核对版本号。</string>
-    <string name="appUpdateFailStorage">存储空间不足，无法保存下载文件，请清理空间后重试。</string>
-    <string name="appUpdateFailInstaller">Android 未能完成安装，请重新尝试安装。</string>
+    <string name="appUpdateFailNetwork">无法连接到 GitHub。请检查网络连接后重试。</string>
+    <string name="appUpdateFailNoFile">此版本还没有适用于你手机的文件。</string>
+    <string name="appUpdateFailChecksum">下载内容与其校验和不符，所以没有安装。</string>
+    <string name="appUpdateFailSigner">此下载的签名与你的应用不同，所以没有安装。</string>
+    <string name="appUpdateFailPackage">此下载属于另一个应用，所以没有安装。</string>
+    <string name="appUpdateFailVersion">此下载并不比你的应用更新，所以没有安装。</string>
+    <string name="appUpdateFailStorage">没有足够的空间保存下载内容。</string>
+    <string name="appUpdateFailInstaller">Android 未能完成安装。请重试。</string>
     <string name="appUpdateCurrentVersion">版本 %1$s</string>
     <string name="appUpdateBuildLabel">构建</string>
-    <string name="appUpdateOpenRelease">在 GitHub 查看版本</string>
+    <string name="appUpdateOpenRelease">在 GitHub 上打开</string>
     <string name="appUpdateNotInstalled">无法安装 %1$s</string>
     <string name="browserModeIntro">这是在网页浏览器中运行的 OpenCode Mobile。远程 OpenCode 服务器的用法与手机应用中相同。需要手机本身的功能在这里不提供。</string>
     <string name="browserModeAvailableHeading">浏览器中可用</string>
@@ -804,9 +804,4 @@
     <string name="languageNameChinese">中文</string>
     <string name="languageNameItalian">意大利语</string>
     <string name="notifySendTestBlockedDetail">通知关闭时仍保持可用，方便你检查 Android 设置。</string>
-    <string name="appUpdateTestBuildLine">测试版本</string>
-    <string name="appUpdateTestBuildNotice">这是测试版本，无法直接覆盖安装公开更新。请安装下一个测试版本，或卸载此应用后安装公开版本（这会清除应用数据）。</string>
-    <string name="appUpdateOwnSignature">此应用的签名</string>
-    <string name="appUpdateFileSignature">更新包的签名</string>
-    <string name="appUpdateNoBrowser">此设备上没有可打开该链接的浏览器。</string>
 </resources>

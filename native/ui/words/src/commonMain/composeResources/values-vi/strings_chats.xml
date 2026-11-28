@@ -64,7 +64,7 @@
     <string name="handoffUiUnavailableDirectory">Máy chủ không báo thư mục dự án của cuộc trò chuyện này, nên không có thư mục nào để mở. Hãy tải lại cuộc trò chuyện và thử lại.</string>
     <string name="handoffUiUnavailableWorkspace">Cuộc trò chuyện này chạy trong một môi trường đám mây. Thư mục của nó thuộc về máy chủ của môi trường đó, nên một lệnh terminal thông thường không mở được. Hãy xuất rồi nhập cuộc trò chuyện.</string>
     <string name="handoffUiUnavailableReference">Không thể đưa mã của cuộc trò chuyện này vào lệnh một cách an toàn.</string>
-    <string name="handoffUiPhoneTitle">Tiếp tục trên điện thoại khác</string>
+    <string name="handoffUiPhoneTitle">Mở trên điện thoại khác</string>
     <string name="handoffUiPhoneIntro">Quét bằng OpenCode Mobile trên điện thoại kia. Mã chỉ chứa ID của máy chủ và cuộc trò chuyện.</string>
     <string name="handoffUiPhoneQrLabel">Mã QR để mở cuộc trò chuyện này trên điện thoại khác</string>
     <string name="handoffUiPhoneLinkLabel">Liên kết</string>
@@ -295,7 +295,7 @@
     <string name="inboxEmptyTitle">Không có gì đang chờ bạn</string>
     <string name="inboxFinishedLabel">Đã xong, chưa mở</string>
     <string name="inboxOpenLabel">Mở %1$s</string>
-    <string name="inboxOpenOnServer">Mở yêu cầu trên %1$s</string>
+    <string name="inboxOpenOnServer">Mở trên %1$s</string>
     <string name="inboxWaitingForAnswer">Đang chờ câu trả lời của bạn</string>
     <string name="inboxAsksPermission">Xin quyền của bạn</string>
     <string name="inboxAsksQuestion">Hỏi bạn một câu</string>

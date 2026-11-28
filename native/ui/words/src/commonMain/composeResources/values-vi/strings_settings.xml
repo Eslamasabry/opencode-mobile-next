@@ -733,17 +733,17 @@
     <string name="appUpdateCheckSwitchBody">Ứng dụng hỏi GitHub số phiên bản mới nhất và không gửi bất cứ thông tin nào về bạn.</string>
     <string name="appUpdateCheckNow">Kiểm tra ngay</string>
     <string name="appUpdateTryAgain">Thử lại</string>
-    <string name="appUpdateFailNetwork">Không thể kết nối GitHub, nên hãy kiểm tra mạng và thử lại.</string>
-    <string name="appUpdateFailNoFile">Bản phát hành này chưa có tệp cho điện thoại của bạn, nên hãy thử lại sau.</string>
-    <string name="appUpdateFailChecksum">Tệp tải xuống không khớp mã kiểm tra, nên hãy thử tải lại.</string>
-    <string name="appUpdateFailSigner">Tệp tải xuống không có cùng chữ ký với ứng dụng của bạn, nên hãy xem bản phát hành trên GitHub hoặc cài bản tương thích.</string>
-    <string name="appUpdateFailPackage">Tệp tải xuống dành cho ứng dụng khác, nên hãy xem bản phát hành trên GitHub để kiểm tra gói.</string>
-    <string name="appUpdateFailVersion">Tệp tải xuống không mới hơn ứng dụng của bạn, nên hãy xem bản phát hành trên GitHub để kiểm tra phiên bản.</string>
-    <string name="appUpdateFailStorage">Không đủ dung lượng để lưu tệp tải xuống, nên hãy giải phóng bộ nhớ và thử lại.</string>
-    <string name="appUpdateFailInstaller">Android không thể hoàn tất cài đặt, nên hãy thử cài đặt lại.</string>
+    <string name="appUpdateFailNetwork">Không kết nối được với GitHub. Hãy kiểm tra kết nối của bạn rồi thử lại.</string>
+    <string name="appUpdateFailNoFile">Bản phát hành này chưa có tệp cho điện thoại của bạn.</string>
+    <string name="appUpdateFailChecksum">Bản tải xuống không khớp với mã kiểm tra, nên chưa được cài.</string>
+    <string name="appUpdateFailSigner">Bản tải xuống này không được ký giống ứng dụng của bạn, nên chưa được cài.</string>
+    <string name="appUpdateFailPackage">Bản tải xuống này dành cho một ứng dụng khác, nên chưa được cài.</string>
+    <string name="appUpdateFailVersion">Bản tải xuống này không mới hơn ứng dụng của bạn, nên chưa được cài.</string>
+    <string name="appUpdateFailStorage">Không đủ chỗ để lưu bản tải xuống.</string>
+    <string name="appUpdateFailInstaller">Android không hoàn tất được việc cài đặt. Thử lại.</string>
     <string name="appUpdateCurrentVersion">Phiên bản %1$s</string>
     <string name="appUpdateBuildLabel">Bản dựng</string>
-    <string name="appUpdateOpenRelease">Xem bản phát hành trên GitHub</string>
+    <string name="appUpdateOpenRelease">Mở trên GitHub</string>
     <string name="appUpdateNotInstalled">Không cài được %1$s</string>
     <string name="browserModeIntro">Đây là OpenCode Mobile chạy trong trình duyệt web. Các máy chủ OpenCode từ xa hoạt động như trong ứng dụng điện thoại. Các tính năng cần chính chiếc điện thoại không có ở đây.</string>
     <string name="browserModeAvailableHeading">Có trong trình duyệt</string>
@@ -803,9 +803,4 @@
     <string name="languageNameChinese">Tiếng Trung</string>
     <string name="languageNameItalian">Tiếng Ý</string>
     <string name="notifySendTestBlockedDetail">Vẫn hoạt động khi thông báo đang tắt để bạn kiểm tra thiết lập Android.</string>
-    <string name="appUpdateTestBuildLine">Bản thử nghiệm</string>
-    <string name="appUpdateTestBuildNotice">Đây là bản thử nghiệm. Bản cập nhật công khai không thể cài đè lên bản này. Hãy cài bản thử nghiệm tiếp theo, hoặc gỡ ứng dụng này rồi cài bản công khai, việc này sẽ xóa dữ liệu của ứng dụng.</string>
-    <string name="appUpdateOwnSignature">Chữ ký ứng dụng này</string>
-    <string name="appUpdateFileSignature">Chữ ký bản cập nhật</string>
-    <string name="appUpdateNoBrowser">Không có trình duyệt nào trên thiết bị này mở được liên kết đó.</string>
 </resources>

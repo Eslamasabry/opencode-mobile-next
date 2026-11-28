@@ -1,12 +1,10 @@
 package io.github.eslamasabry.oc.feature.updates.presentation
 
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
-import io.github.eslamasabry.oc.engine.updates.InstalledApp
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.feature.updates.APK_SIZE
 import io.github.eslamasabry.oc.feature.updates.INSTALLED
-import io.github.eslamasabry.oc.feature.updates.PACKAGE
 import io.github.eslamasabry.oc.feature.updates.RELEASE
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -159,36 +157,5 @@ class UpdatesUiTest {
         assertEquals(OfferUi("2.2.0", "This release is faster."), offerUi(silenced))
         assertFalse(hasUpdateBadge(AppUpdateState()))
         assertNull(offerUi(AppUpdateState()))
-    }
-
-    @Test
-    fun `B-218 test build maps to TestBuild line with no action, no notes, and no badge`() {
-        val testState = available.copy(installed = InstalledApp(PACKAGE, "3.0.2-test.10142", 10142))
-        val ui = updatesUi(testState, now)
-        assertTrue(ui.isTestBuild)
-        assertEquals(UpdatesLine.TestBuild, ui.line)
-        assertEquals("3.0.2-test.10142", ui.version)
-        assertEquals("3.0.2-test.10142+10142", ui.build)
-        assertNull(ui.action)
-        assertNull(ui.notes)
-        assertFalse(ui.checkNowEnabled)
-        assertFalse(hasUpdateBadge(testState))
-        assertNull(offerUi(testState))
-        assertNull(noticeUi(testState))
-    }
-
-    @Test
-    fun `B-218 signer failure parses both signatures into SignerDetails and hides raw detail`() {
-        val ui =
-            updatesUi(
-                available.copy(
-                    phase = UpdatePhase.Failed,
-                    failure = UpdateFailure.Signer,
-                    detail = "signer UPDATE_HEX, expected OWN_HEX",
-                ),
-                now,
-            )
-        assertEquals(SignerDetails(own = "OWN_HEX", update = "UPDATE_HEX"), ui.signerDetails)
-        assertNull(ui.detail)
     }
 }

@@ -803,17 +803,17 @@
     <string name="appUpdateCheckSwitchBody">Приложение запрашивает у GitHub номер последней версии и ничего не отправляет о вас.</string>
     <string name="appUpdateCheckNow">Проверить сейчас</string>
     <string name="appUpdateTryAgain">Повторить</string>
-    <string name="appUpdateFailNetwork">Не удалось подключиться к GitHub — проверьте соединение и повторите попытку.</string>
-    <string name="appUpdateFailNoFile">Для вашего телефона в этом выпуске ещё нет файла, поэтому попробуйте позже.</string>
-    <string name="appUpdateFailChecksum">Контрольная сумма файла не совпала, поэтому скачайте его ещё раз.</string>
-    <string name="appUpdateFailSigner">Подпись этого файла отличается от подписи приложения, поэтому откройте выпуск на GitHub или установите совместимую сборку.</string>
-    <string name="appUpdateFailPackage">Этот файл предназначен для другого приложения, поэтому откройте выпуск на GitHub и проверьте пакет.</string>
-    <string name="appUpdateFailVersion">Этот файл не новее вашего приложения, поэтому откройте выпуск на GitHub и проверьте версию.</string>
-    <string name="appUpdateFailStorage">Недостаточно места для сохранения загрузки — освободите память и повторите попытку.</string>
-    <string name="appUpdateFailInstaller">Android не смог завершить установку, поэтому попробуйте установить ещё раз.</string>
+    <string name="appUpdateFailNetwork">Не удалось связаться с GitHub. Проверьте подключение и повторите попытку.</string>
+    <string name="appUpdateFailNoFile">У этого выпуска пока нет файла для вашего телефона.</string>
+    <string name="appUpdateFailChecksum">Загруженный файл не совпал с контрольной суммой, поэтому он не был установлен.</string>
+    <string name="appUpdateFailSigner">Подпись загруженного файла не совпадает с подписью вашего приложения, поэтому он не был установлен.</string>
+    <string name="appUpdateFailPackage">Загруженный файл относится к другому приложению, поэтому он не был установлен.</string>
+    <string name="appUpdateFailVersion">Загруженная версия не новее вашей, поэтому она не была установлена.</string>
+    <string name="appUpdateFailStorage">Не хватило места, чтобы сохранить загрузку.</string>
+    <string name="appUpdateFailInstaller">Android не смог завершить установку. Повторите попытку.</string>
     <string name="appUpdateCurrentVersion">Версия %1$s</string>
     <string name="appUpdateBuildLabel">Сборка</string>
-    <string name="appUpdateOpenRelease">Посмотреть выпуск на GitHub</string>
+    <string name="appUpdateOpenRelease">Открыть на GitHub</string>
     <string name="appUpdateNotInstalled">Не удалось установить %1$s</string>
     <string name="browserModeIntro">Это OpenCode Mobile, запущенный в веб-браузере. Удалённые серверы OpenCode работают так же, как в приложении на телефоне. Функции, которым нужен сам телефон, здесь недоступны.</string>
     <string name="browserModeAvailableHeading">Доступно в браузере</string>
@@ -873,9 +873,4 @@
     <string name="languageNameChinese">Китайский</string>
     <string name="languageNameItalian">Итальянский</string>
     <string name="notifySendTestBlockedDetail">Остаётся активной при отключённых уведомлениях, чтобы проверить настройку Android.</string>
-    <string name="appUpdateTestBuildLine">Тестовая сборка</string>
-    <string name="appUpdateTestBuildNotice">Это тестовая сборка. Публичные обновления нельзя установить поверх неё. Установите следующую тестовую сборку или удалите это приложение и установите публичную версию, что сотрёт его данные.</string>
-    <string name="appUpdateOwnSignature">Подпись этого приложения</string>
-    <string name="appUpdateFileSignature">Подпись обновления</string>
-    <string name="appUpdateNoBrowser">На этом устройстве нет браузера, который может открыть эту ссылку.</string>
 </resources>

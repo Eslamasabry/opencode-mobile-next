@@ -131,7 +131,7 @@
     <string name="handoffUiUnavailableDirectory">El servidor no informó una carpeta de proyecto para esta conversación, así que no hay carpeta donde abrirla. Vuelve a cargar la conversación e inténtalo de nuevo.</string>
     <string name="handoffUiUnavailableWorkspace">Esta conversación se ejecuta dentro de un entorno en la nube. Su carpeta pertenece al anfitrión del entorno, por lo que un comando de terminal normal no puede abrirla. Mejor exporta e importa la conversación.</string>
     <string name="handoffUiUnavailableReference">La referencia de esta conversación no se puede poner en un comando de forma segura.</string>
-    <string name="handoffUiPhoneTitle">Continuar en otro teléfono</string>
+    <string name="handoffUiPhoneTitle">Abrir en otro teléfono</string>
     <string name="handoffUiPhoneIntro">Escanea con OpenCode Mobile en el otro teléfono. El código solo contiene los ID del servidor y de la conversación.</string>
     <string name="handoffUiPhoneQrLabel">Código QR que abre esta conversación en otro teléfono</string>
     <string name="handoffUiPhoneLinkLabel">Enlace</string>
@@ -306,7 +306,7 @@
     <string name="inboxEmptyTitle">Nada te está esperando</string>
     <string name="inboxFinishedLabel">Terminado, aún sin abrir</string>
     <string name="inboxOpenLabel">Abrir %1$s</string>
-    <string name="inboxOpenOnServer">Abrir solicitud en %1$s</string>
+    <string name="inboxOpenOnServer">Abrir en %1$s</string>
     <string name="inboxWaitingForAnswer">Esperando tu respuesta</string>
     <string name="inboxAsksPermission">Pide tu permiso</string>
     <string name="inboxAsksQuestion">Te hace una pregunta</string>

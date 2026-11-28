@@ -284,9 +284,6 @@ public sealed interface UpdateState {
     public data object Installing : UpdateState
 
     public data class Failed(val why: UpdateFailure) : UpdateState
-
-    /** B-218: a test build that cannot install public releases over itself. */
-    public data object TestBuild : UpdateState
 }
 
 public data class UpdateFacts(

@@ -738,17 +738,17 @@
     <string name="appUpdateCheckSwitchBody">アプリがGitHubに最新バージョン番号を問い合わせます。利用者個人に関する情報は一切送信しません。</string>
     <string name="appUpdateCheckNow">今すぐ確認</string>
     <string name="appUpdateTryAgain">再試行</string>
-    <string name="appUpdateFailNetwork">GitHubに接続できなかったため、接続を確認してもう一度お試しください。</string>
-    <string name="appUpdateFailNoFile">このリリースにはこのスマートフォン向けのファイルがまだないため、あとでもう一度お試しください。</string>
-    <string name="appUpdateFailChecksum">ダウンロードしたファイルのチェックサムが一致しなかったため、もう一度ダウンロードしてください。</string>
-    <string name="appUpdateFailSigner">このダウンロードは現在のアプリと署名が異なるため、GitHubでリリースを確認するか一致するビルドをインストールしてください。</string>
-    <string name="appUpdateFailPackage">このダウンロードは別のアプリ向けのため、GitHubでリリースを開いてパッケージを確認してください。</string>
-    <string name="appUpdateFailVersion">このダウンロードは現在のアプリより新しくないため、GitHubでリリースを開いてバージョンを確認してください。</string>
-    <string name="appUpdateFailStorage">ダウンロードを保存する空き容量が足りないため、容量を空けてからもう一度お試しください。</string>
-    <string name="appUpdateFailInstaller">Androidでインストールを完了できなかったため、もう一度インストールをお試しください。</string>
+    <string name="appUpdateFailNetwork">GitHubに接続できませんでした。接続を確認してもう一度お試しください。</string>
+    <string name="appUpdateFailNoFile">このリリースにはこのスマートフォン用のファイルがまだありません。</string>
+    <string name="appUpdateFailChecksum">ダウンロードしたファイルのチェックサムが一致しなかったため、インストールされませんでした。</string>
+    <string name="appUpdateFailSigner">ダウンロードしたファイルの署名が現在のアプリと一致しないため、インストールされませんでした。</string>
+    <string name="appUpdateFailPackage">別のアプリ用のダウンロードだったため、インストールされませんでした。</string>
+    <string name="appUpdateFailVersion">お使いのアプリより新しいバージョンではないため、インストールされませんでした。</string>
+    <string name="appUpdateFailStorage">ダウンロードを保存する空き容量がありませんでした。</string>
+    <string name="appUpdateFailInstaller">Androidでインストールを完了できませんでした。もう一度お試しください。</string>
     <string name="appUpdateCurrentVersion">バージョン%1$s</string>
     <string name="appUpdateBuildLabel">ビルド</string>
-    <string name="appUpdateOpenRelease">GitHubでリリースを表示</string>
+    <string name="appUpdateOpenRelease">GitHubで開く</string>
     <string name="appUpdateNotInstalled">%1$sをインストールできませんでした</string>
     <string name="browserModeIntro">ウェブブラウザ上で動作しているOpenCode Mobileです。リモートのOpenCodeサーバーはスマートフォンアプリと同様に利用できますが、端末本体を必要とする機能ここでは提供されません。</string>
     <string name="browserModeAvailableHeading">ブラウザで利用可能</string>
@@ -804,9 +804,4 @@
     <string name="languageNameChinese">中国語</string>
     <string name="languageNameItalian">イタリア語</string>
     <string name="notifySendTestBlockedDetail">通知がオフでもAndroidの設定を確認できるよう有効なままです。</string>
-    <string name="appUpdateTestBuildLine">テストビルド</string>
-    <string name="appUpdateTestBuildNotice">これはテストビルドです。公開アップデートは上書きインストールできません。次のテストビルドをインストールするか、このアプリを削除して公開版をインストールしてください。削除するとデータは消去されます。</string>
-    <string name="appUpdateOwnSignature">このアプリの署名</string>
-    <string name="appUpdateFileSignature">アップデートの署名</string>
-    <string name="appUpdateNoBrowser">この端末にはそのリンクを開けるブラウザがありません。</string>
 </resources>

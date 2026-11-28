@@ -81,6 +81,3 @@ en	e7VoiceUiPrivacyDownload
 # 2026-11-20: Undo all says what it does (undo-truth-301-r2); the Privacy page's Google line says Google adds the install ID and model (umami-rich-301). Dropped es/zh/ar e7VoiceUiPrivacyDownload and ar settingsHubPrivacyRow: they match the ARB again.
 en	reviewUndoBody
 en	telemetryUsageDetail
-# 2026-11-27: B-627: every "Open on …" action names what you get there (Continue on another phone; Open request on %1$s).
-en	handoffUiPhoneTitle
-en	inboxOpenOnServer

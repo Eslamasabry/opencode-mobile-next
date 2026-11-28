@@ -69,8 +69,7 @@ internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions) {
             UpdateState.Checking,
             is UpdateState.UpToDate -> checkNow
             is UpdateState.Downloading,
-            UpdateState.Installing,
-            UpdateState.TestBuild -> null
+            UpdateState.Installing -> null
         }
     val secondary =
         when (u.state) {
@@ -80,30 +79,21 @@ internal fun ColumnScope.UpdatesBody(u: UpdateFacts, actions: SettingsActions) {
                 KitAction(stringResource(Res.string.appUpdateCancel), actions::onUpdateAction)
             else -> null
         }
-    if (u.state == UpdateState.TestBuild) {
-        KitNotice(
-            stringResource(Res.string.appUpdateTestBuildNotice),
-            Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp)
-                .testTag("updates-test-build"),
-        )
-    }
     KitActionBlock(
         modifier = Modifier.padding(horizontal = LocalKitTokens.current.gutter.dp),
         primary = primary,
         secondary = secondary,
         pair = primary != null && secondary != null,
     )
-    if (u.state != UpdateState.TestBuild) {
-        KitRowGroup {
-            KitSwitchRow(
-                title = stringResource(Res.string.appUpdateCheckSwitch),
-                checked = u.checksOn,
-                supporting = stringResource(Res.string.appUpdateCheckSwitchBody),
-                onCheckedChange = actions::onUpdateChecks,
-            )
-        }
-        if (!u.checksOn) KitGroupNote(stringResource(Res.string.appUpdateCheckingOff))
+    KitRowGroup {
+        KitSwitchRow(
+            title = stringResource(Res.string.appUpdateCheckSwitch),
+            checked = u.checksOn,
+            supporting = stringResource(Res.string.appUpdateCheckSwitchBody),
+            onCheckedChange = actions::onUpdateChecks,
+        )
     }
+    if (!u.checksOn) KitGroupNote(stringResource(Res.string.appUpdateCheckingOff))
     KitRowGroup {
         KitRow(
             title = stringResource(Res.string.appUpdateWhatsNew),
@@ -139,7 +129,6 @@ private fun updateLine(state: UpdateState): String =
             stringResource(Res.string.appUpdateInstallReadyTitle, state.version)
         UpdateState.Installing -> stringResource(Res.string.appUpdateInstalling)
         is UpdateState.Failed -> updateFailureWords(state.why)
-        UpdateState.TestBuild -> stringResource(Res.string.appUpdateTestBuildLine)
     }
 
 /**
@@ -227,11 +216,10 @@ internal fun ColumnScope.AboutBody(
                 )
             }
             updates?.let { update ->
-                val disabled =
+                val checking =
                     update.state == UpdateState.Checking ||
                         update.state is UpdateState.Downloading ||
-                        update.state == UpdateState.Installing ||
-                        update.state == UpdateState.TestBuild
+                        update.state == UpdateState.Installing
                 val line = aboutUpdateLine(update.state)
                 KitRow(
                     title =
@@ -245,8 +233,8 @@ internal fun ColumnScope.AboutBody(
                     leading = KitRowLeading.Glyph(KitIcons.download),
                     supporting = line,
                     supportingMaxLines = 2, // F: lib/ui/screens/about_screen.dart:389
-                    enabled = !disabled,
-                    disabledReason = line.takeIf { disabled },
+                    enabled = !checking,
+                    disabledReason = line.takeIf { checking },
                     onClick = {
                         if (
                             update.state is UpdateState.Available ||

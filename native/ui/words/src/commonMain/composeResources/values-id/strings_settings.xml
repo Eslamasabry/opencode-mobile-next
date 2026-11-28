@@ -733,17 +733,17 @@
     <string name="appUpdateCheckSwitchBody">Aplikasi menanyakan nomor versi terbaru ke GitHub dan tidak mengirim apa pun tentang Anda.</string>
     <string name="appUpdateCheckNow">Periksa sekarang</string>
     <string name="appUpdateTryAgain">Coba lagi</string>
-    <string name="appUpdateFailNetwork">Tidak dapat menghubungi GitHub, jadi periksa koneksi Anda lalu coba lagi.</string>
-    <string name="appUpdateFailNoFile">Rilis ini belum memiliki berkas untuk ponsel Anda, jadi coba lagi nanti.</string>
-    <string name="appUpdateFailChecksum">Unduhan tidak cocok dengan checksum-nya, jadi coba unduh ulang.</string>
-    <string name="appUpdateFailSigner">Unduhan ini tidak ditandatangani seperti aplikasi Anda, jadi lihat rilis di GitHub atau pasang versi yang cocok.</string>
-    <string name="appUpdateFailPackage">Unduhan ini untuk aplikasi lain, jadi lihat rilis di GitHub untuk memeriksa paketnya.</string>
-    <string name="appUpdateFailVersion">Unduhan ini tidak lebih baru dari aplikasi Anda, jadi lihat rilis di GitHub untuk memeriksa versinya.</string>
-    <string name="appUpdateFailStorage">Ruang penyimpanan tidak cukup untuk menyimpan unduhan, jadi kosongkan ruang lalu coba lagi.</string>
-    <string name="appUpdateFailInstaller">Android tidak dapat menyelesaikan pemasangan, jadi coba pasang lagi.</string>
+    <string name="appUpdateFailNetwork">GitHub tidak dapat dijangkau. Periksa koneksi Anda lalu coba lagi.</string>
+    <string name="appUpdateFailNoFile">Rilis ini belum memiliki file untuk ponsel Anda.</string>
+    <string name="appUpdateFailChecksum">Unduhan tidak cocok dengan checksum-nya, jadi tidak dipasang.</string>
+    <string name="appUpdateFailSigner">Unduhan ini tidak ditandatangani seperti aplikasi Anda, jadi tidak dipasang.</string>
+    <string name="appUpdateFailPackage">Unduhan ini untuk aplikasi yang berbeda, jadi tidak dipasang.</string>
+    <string name="appUpdateFailVersion">Unduhan ini tidak lebih baru dari aplikasi Anda, jadi tidak dipasang.</string>
+    <string name="appUpdateFailStorage">Tidak ada ruang untuk menyimpan unduhan.</string>
+    <string name="appUpdateFailInstaller">Android tidak dapat menyelesaikan pemasangan. Coba lagi.</string>
     <string name="appUpdateCurrentVersion">Versi %1$s</string>
     <string name="appUpdateBuildLabel">Build</string>
-    <string name="appUpdateOpenRelease">Lihat rilis di GitHub</string>
+    <string name="appUpdateOpenRelease">Buka di GitHub</string>
     <string name="appUpdateNotInstalled">%1$s tidak dapat dipasang</string>
     <string name="browserModeIntro">Ini OpenCode Mobile yang berjalan di browser web. Server OpenCode jarak jauh berfungsi seperti di aplikasi ponsel. Fitur yang membutuhkan ponsel itu sendiri tidak tersedia di sini.</string>
     <string name="browserModeAvailableHeading">Tersedia di browser</string>
@@ -803,9 +803,4 @@
     <string name="languageNameChinese">Tionghoa</string>
     <string name="languageNameItalian">Italia</string>
     <string name="notifySendTestBlockedDetail">Tetap aktif saat notifikasi mati agar kamu bisa memeriksa setelan Android.</string>
-    <string name="appUpdateTestBuildLine">Versi uji</string>
-    <string name="appUpdateTestBuildNotice">Ini adalah versi uji. Pembaruan publik tidak dapat dipasang di atasnya. Pasang versi uji berikutnya, atau hapus aplikasi ini lalu pasang versi publik, yang akan menghapus datanya.</string>
-    <string name="appUpdateOwnSignature">Tanda tangan aplikasi ini</string>
-    <string name="appUpdateFileSignature">Tanda tangan pembaruan</string>
-    <string name="appUpdateNoBrowser">Tidak ada peramban di perangkat ini yang dapat membuka tautan itu.</string>
 </resources>

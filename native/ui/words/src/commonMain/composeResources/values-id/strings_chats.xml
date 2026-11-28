@@ -64,7 +64,7 @@
     <string name="handoffUiUnavailableDirectory">Server tidak melaporkan folder proyek untuk percakapan ini, jadi tidak ada folder untuk membukanya. Muat ulang percakapan dan coba lagi.</string>
     <string name="handoffUiUnavailableWorkspace">Percakapan ini berjalan di lingkungan cloud. Foldernya milik host lingkungan tersebut, sehingga perintah terminal biasa tidak bisa membukanya. Ekspor dan impor percakapan ini sebagai gantinya.</string>
     <string name="handoffUiUnavailableReference">Referensi percakapan ini tidak bisa dimasukkan ke perintah dengan aman.</string>
-    <string name="handoffUiPhoneTitle">Lanjutkan di ponsel lain</string>
+    <string name="handoffUiPhoneTitle">Buka di ponsel lain</string>
     <string name="handoffUiPhoneIntro">Pindai dengan OpenCode Mobile di ponsel lain. Kode ini hanya berisi ID server dan percakapan.</string>
     <string name="handoffUiPhoneQrLabel">Kode QR untuk membuka percakapan ini di ponsel lain</string>
     <string name="handoffUiPhoneLinkLabel">Tautan</string>
@@ -295,7 +295,7 @@
     <string name="inboxEmptyTitle">Tidak ada yang menunggu Anda</string>
     <string name="inboxFinishedLabel">Selesai, belum dibuka</string>
     <string name="inboxOpenLabel">Buka %1$s</string>
-    <string name="inboxOpenOnServer">Buka permintaan di %1$s</string>
+    <string name="inboxOpenOnServer">Buka di %1$s</string>
     <string name="inboxWaitingForAnswer">Menunggu jawaban Anda</string>
     <string name="inboxAsksPermission">Meminta izin Anda</string>
     <string name="inboxAsksQuestion">Mengajukan pertanyaan</string>

@@ -2,14 +2,11 @@ package io.github.eslamasabry.oc.feature.updates
 
 import androidx.lifecycle.ViewModelStore
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
-import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ConversationRef
 import io.github.eslamasabry.oc.core.testing.TestClock
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
-import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkAction
-import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkPrompt
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesAction
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdatesLine
@@ -31,7 +28,6 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** The Updates page's ViewModel over a real AppUpdates engine and fake ports. */
@@ -39,23 +35,10 @@ import kotlin.test.assertTrue
 class UpdatesViewModelTest {
     private class Links : UpdateLinks {
         val opened = mutableListOf<String>()
-        val openedNotes = mutableListOf<String>()
-        var openNoteResult: Outcome<Unit> = Outcome.Ok(Unit)
 
         override suspend fun openReleasePage(url: String): Outcome<Unit> {
             opened += url
             return Outcome.Ok(Unit)
-        }
-
-        override fun inspectNoteLink(url: String): NoteLinkPrompt? {
-            if (!url.startsWith("https://")) return null
-            val host = url.removePrefix("https://").substringBefore('/').substringBefore('?')
-            return if (host.isBlank()) null else NoteLinkPrompt(url, host)
-        }
-
-        override suspend fun openNoteLink(url: String): Outcome<Unit> {
-            if (openNoteResult is Outcome.Ok) openedNotes += url
-            return openNoteResult
         }
     }
 
@@ -204,57 +187,5 @@ class UpdatesViewModelTest {
         assertEquals(null, vm.state.value.action)
         assertEquals(UpdatesLine.NeverChecked, vm.state.value.line)
         assertFalse(rig.updates.state.value.noticeVisible)
-    }
-
-    @Test
-    fun `B-628 What's new safe https link asks first and opens outside the app after confirmation`() = runTest {
-        val rig = UpdateRig(clock)
-        val vm = started(rig)
-        val url = "https://github.com/Eslamasabry/opencode-mobile-next/releases/tag/v3.0.3"
-        vm.onNoteLink(NoteLinkAction.Open(url))
-        assertEquals(NoteLinkPrompt(url, "github.com"), vm.state.value.linkPrompt)
-        assertTrue(links.openedNotes.isEmpty(), "must wait for confirmation before opening")
-        vm.onNoteLink(NoteLinkAction.DismissPrompt)
-        assertNull(vm.state.value.linkPrompt)
-        assertTrue(links.openedNotes.isEmpty())
-
-        vm.onNoteLink(NoteLinkAction.Open(url))
-        vm.onNoteLink(NoteLinkAction.Confirm)
-        assertNull(vm.state.value.linkPrompt)
-        assertEquals(listOf(url), links.openedNotes)
-        assertFalse(vm.state.value.noBrowser)
-    }
-
-    @Test
-    fun `B-628 unsafe or non-https What's new links never prompt, open or crash`() = runTest {
-        val rig = UpdateRig(clock)
-        val vm = started(rig)
-        val unsafe =
-            listOf(
-                "http://example.com",
-                "javascript:alert(1)",
-                "intent://scan/#Intent;end",
-                "file:///etc/passwd",
-                "",
-            )
-        for (bad in unsafe) {
-            vm.onNoteLink(NoteLinkAction.Open(bad))
-            assertNull(vm.state.value.linkPrompt, "refused link must not prompt: $bad")
-            assertTrue(links.openedNotes.isEmpty())
-            assertFalse(vm.state.value.noBrowser)
-        }
-    }
-
-    @Test
-    fun `B-628 missing browser shows one plain notice that can be dismissed`() = runTest {
-        val rig = UpdateRig(clock)
-        links.openNoteResult = Outcome.Failed(Failure.Device())
-        val vm = started(rig)
-        val url = "https://example.com/guide"
-        vm.onNoteLink(NoteLinkAction.Open(url))
-        vm.onNoteLink(NoteLinkAction.Confirm)
-        assertTrue(vm.state.value.noBrowser)
-        vm.onNoteLink(NoteLinkAction.DismissNoBrowser)
-        assertFalse(vm.state.value.noBrowser)
     }
 }

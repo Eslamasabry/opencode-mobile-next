@@ -850,17 +850,17 @@
     <string name="appUpdateCheckSwitchBody">يسأل التطبيق GitHub عن رقم أحدث نسخة ولا يرسل أي شيء عنك.</string>
     <string name="appUpdateCheckNow">افحص الآن</string>
     <string name="appUpdateTryAgain">حاول مرة أخرى</string>
-    <string name="appUpdateFailNetwork">تعذّر الوصول إلى GitHub، فتحقّق من الاتصال وحاول مجدداً.</string>
-    <string name="appUpdateFailNoFile">لا يوجد ملف لهذا الإصدار لهاتفك بعد، فحاول لاحقاً.</string>
-    <string name="appUpdateFailChecksum">لم يطابق التنزيل قيمة التحقّق، فأعد التنزيل مرة أخرى.</string>
-    <string name="appUpdateFailSigner">هذا التنزيل ليس موقّعاً مثل تطبيقك، فاعرض الإصدار على GitHub أو ثبّت نسخة مطابقة.</string>
-    <string name="appUpdateFailPackage">هذا التنزيل لتطبيق مختلف، فاعرض الإصدار على GitHub للتحقّق من الحزمة.</string>
-    <string name="appUpdateFailVersion">هذا التنزيل ليس أحدث من تطبيقك، فاعرض الإصدار على GitHub للتحقّق من الإصدار.</string>
-    <string name="appUpdateFailStorage">لا توجد مساحة كافية لحفظ التنزيل، فأفرغ مساحة وحاول مجدداً.</string>
-    <string name="appUpdateFailInstaller">تعذّر على Android إكمال التثبيت، فحاول التثبيت مجدداً.</string>
+    <string name="appUpdateFailNetwork">تعذّر الوصول إلى GitHub. تحقق من اتصالك وحاول مرة أخرى.</string>
+    <string name="appUpdateFailNoFile">هذا الإصدار لا يحتوي بعد على ملف لهاتفك.</string>
+    <string name="appUpdateFailChecksum">لم يطابق التنزيل مجموعه الاختباري، لذا لم يُثبَّت.</string>
+    <string name="appUpdateFailSigner">هذا التنزيل غير موقّع مثل تطبيقك، لذا لم يُثبَّت.</string>
+    <string name="appUpdateFailPackage">هذا التنزيل لتطبيق آخر، لذا لم يُثبَّت.</string>
+    <string name="appUpdateFailVersion">هذا التنزيل ليس أحدث من تطبيقك، لذا لم يُثبَّت.</string>
+    <string name="appUpdateFailStorage">لا توجد مساحة كافية لحفظ التنزيل.</string>
+    <string name="appUpdateFailInstaller">لم يتمكن أندرويد من إكمال التثبيت. حاول مرة أخرى.</string>
     <string name="appUpdateCurrentVersion">نسخة %1$s</string>
     <string name="appUpdateBuildLabel">رقم البناء</string>
-    <string name="appUpdateOpenRelease">عرض الإصدار على GitHub</string>
+    <string name="appUpdateOpenRelease">افتح على GitHub</string>
     <string name="appUpdateNotInstalled">تعذّر تثبيت %1$s</string>
     <string name="browserModeIntro">هذا تطبيق OpenCode Mobile يعمل داخل متصفح الويب. تعمل خوادم OpenCode البعيدة كما في تطبيق الهاتف. أما الميزات التي تحتاج إلى الهاتف نفسه فلا تُعرض هنا.</string>
     <string name="browserModeAvailableHeading">متاح في المتصفح</string>
@@ -919,9 +919,4 @@
     <string name="languageNameChinese">الصينية</string>
     <string name="languageNameItalian">الإيطالية</string>
     <string name="notifySendTestBlockedDetail">يبقى نشطًا أثناء إيقاف الإشعارات لتتحقّق من إعداد Android.</string>
-    <string name="appUpdateTestBuildLine">نسخة تجريبية</string>
-    <string name="appUpdateTestBuildNotice">هذه نسخة تجريبية. لا يمكن تثبيت التحديثات العامة فوقها. ثبّت النسخة التجريبية التالية، أو أزل هذا التطبيق وثبّت النسخة العامة مع العلم أن ذلك يمسح بياناته.</string>
-    <string name="appUpdateOwnSignature">توقيع هذا التطبيق</string>
-    <string name="appUpdateFileSignature">توقيع التحديث</string>
-    <string name="appUpdateNoBrowser">لا يوجد متصفح على هذا الجهاز لفتح هذا الرابط.</string>
 </resources>

@@ -65,7 +65,7 @@
     <string name="handoffUiUnavailableDirectory">لم يُبلغ الخادم عن مجلد مشروع لهذه المحادثة، لذلك لا يوجد مجلد لفتحها فيه. أعد تحميل المحادثة وحاول مرة أخرى.</string>
     <string name="handoffUiUnavailableWorkspace">تعمل هذه المحادثة داخل بيئة سحابية. مجلدها يخص مضيف البيئة، لذلك لا يمكن لأمر طرفية عادي فتحها. صدّر المحادثة ثم استوردها بدلًا من ذلك.</string>
     <string name="handoffUiUnavailableReference">لا يمكن وضع مرجع هذه المحادثة في أمر بشكل آمن.</string>
-    <string name="handoffUiPhoneTitle">المتابعة على هاتف آخر</string>
+    <string name="handoffUiPhoneTitle">الفتح على هاتف آخر</string>
     <string name="handoffUiPhoneIntro">امسح هذا الرمز بتطبيق OpenCode Mobile على الهاتف الآخر. لا يحمل الرمز سوى معرّف هذا الخادم المحفوظ ومعرّف المحادثة: لا رسائل ولا عنوان ولا كلمة مرور. يجب أن يكون هذا الخادم محفوظًا مسبقًا على الهاتف الآخر.</string>
     <string name="handoffUiPhoneQrLabel">رمز QR يفتح هذه المحادثة على هاتف آخر</string>
     <string name="handoffUiPhoneLinkLabel">الرابط</string>
@@ -317,7 +317,7 @@
     <string name="inboxEmptyTitle">لا شيء ينتظرك</string>
     <string name="inboxFinishedLabel">انتهت ولم تُفتح بعد</string>
     <string name="inboxOpenLabel">فتح %1$s</string>
-    <string name="inboxOpenOnServer">فتح الطلب على %1$s</string>
+    <string name="inboxOpenOnServer">فتح على %1$s</string>
     <string name="inboxWaitingForAnswer">ينتظر إجابتك</string>
     <string name="inboxAsksPermission">يطلب إذنك</string>
     <string name="inboxAsksQuestion">يسألك سؤالًا</string>

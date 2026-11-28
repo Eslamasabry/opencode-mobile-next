@@ -797,17 +797,17 @@
     <string name="appUpdateCheckSwitchBody">La app le pide a GitHub el número de la última versión y no envía nada sobre ti.</string>
     <string name="appUpdateCheckNow">Comprobar ahora</string>
     <string name="appUpdateTryAgain">Inténtalo de nuevo</string>
-    <string name="appUpdateFailNetwork">No se pudo conectar con GitHub, así que comprueba tu conexión e inténtalo de nuevo.</string>
-    <string name="appUpdateFailNoFile">Esta versión todavía no tiene un archivo para tu teléfono, así que inténtalo más tarde.</string>
-    <string name="appUpdateFailChecksum">La descarga no coincidió con su suma de comprobación, así que vuelve a descargarla.</string>
-    <string name="appUpdateFailSigner">Esta descarga no tiene la misma firma que tu app, así que mira la versión en GitHub o instala una compilación compatible.</string>
-    <string name="appUpdateFailPackage">Esta descarga es para otra app, así que mira la versión en GitHub para comprobar el paquete.</string>
-    <string name="appUpdateFailVersion">Esta descarga no es más nueva que tu app, así que mira la versión en GitHub para comprobarla.</string>
-    <string name="appUpdateFailStorage">No había suficiente espacio para guardar la descarga, así que libera espacio e inténtalo de nuevo.</string>
-    <string name="appUpdateFailInstaller">Android no pudo completar la instalación, así que intenta instalarla de nuevo.</string>
+    <string name="appUpdateFailNetwork">No se pudo llegar a GitHub. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="appUpdateFailNoFile">Esta versión aún no tiene un archivo para tu teléfono.</string>
+    <string name="appUpdateFailChecksum">La descarga no coincidió con su suma de verificación, así que no se instaló.</string>
+    <string name="appUpdateFailSigner">Esta descarga no está firmada como tu app, así que no se instaló.</string>
+    <string name="appUpdateFailPackage">Esta descarga es de otra app, así que no se instaló.</string>
+    <string name="appUpdateFailVersion">Esta descarga no es más reciente que tu app, así que no se instaló.</string>
+    <string name="appUpdateFailStorage">No había espacio para guardar la descarga.</string>
+    <string name="appUpdateFailInstaller">Android no pudo terminar la instalación. Inténtalo de nuevo.</string>
     <string name="appUpdateCurrentVersion">Versión %1$s</string>
     <string name="appUpdateBuildLabel">Compilación</string>
-    <string name="appUpdateOpenRelease">Ver versión en GitHub</string>
+    <string name="appUpdateOpenRelease">Abrir en GitHub</string>
     <string name="appUpdateNotInstalled">No se pudo instalar %1$s</string>
     <string name="browserModeIntro">Esta es OpenCode Mobile ejecutándose en un navegador web. Los servidores remotos de OpenCode funcionan igual que en la app del teléfono. Las funciones que necesitan el teléfono en sí no se ofrecen aquí.</string>
     <string name="browserModeAvailableHeading">Disponible en el navegador</string>
@@ -851,9 +851,4 @@
     <string name="languageNameChinese">Chino</string>
     <string name="languageNameItalian">Italiano</string>
     <string name="notifySendTestBlockedDetail">Sigue activo con las notificaciones desactivadas para comprobar el ajuste de Android.</string>
-    <string name="appUpdateTestBuildLine">Compilación de prueba</string>
-    <string name="appUpdateTestBuildNotice">Esta es una compilación de prueba. Las actualizaciones públicas no se pueden instalar encima. Instala la siguiente compilación de prueba o elimina esta app e instala la versión pública, lo que borra sus datos.</string>
-    <string name="appUpdateOwnSignature">Firma de esta app</string>
-    <string name="appUpdateFileSignature">Firma de la actualización</string>
-    <string name="appUpdateNoBrowser">Ningún navegador en este dispositivo puede abrir ese enlace.</string>
 </resources>
