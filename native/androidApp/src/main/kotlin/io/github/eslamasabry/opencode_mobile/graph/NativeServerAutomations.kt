@@ -24,8 +24,10 @@ import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.ServerAutomation
+import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -35,6 +37,7 @@ import io.github.eslamasabry.oc.engine.attention.automation.AutomationAlertReaso
 import io.github.eslamasabry.oc.engine.attention.automation.AutomationAlertTracker
 import io.github.eslamasabry.oc.engine.attention.automation.AutomationNotification
 import io.github.eslamasabry.oc.engine.attention.automation.AutomationRun
+import io.github.eslamasabry.oc.engine.attention.automation.isAutomationSession
 import io.github.eslamasabry.oc.engine.connection.ConnectionGraph
 import io.github.eslamasabry.oc.engine.connection.ConnectionRegistry
 import io.github.eslamasabry.oc.engine.entry.AutomationAlertSession
@@ -43,6 +46,12 @@ import java.util.UUID
 import kotlinx.collections.immutable.ImmutableList
 
 private const val MAX_KEPT_ROWS = 256
+
+/** How many pages of its chat a finished run's reply is looked for in, from the newest back. */
+private const val MAX_REPLY_PAGES = 10
+
+/** How many notice message ids one server keeps: a notice's message follows its notice at once. */
+private const val NOTICES_KEPT = 32
 
 /** Live server automation controls wired for a saved server profile (B-605). */
 @ContributesBinding(AppScope::class, binding = binding<ServerAutomationsSource>())
@@ -110,8 +119,29 @@ class NativeServerAutomations(
 
 // ---- B-620: the alerts of the automations the client above reads ----
 
-/** One saved server's tracker. */
-private class Tracked(val tracker: AutomationAlertTracker)
+/** One saved server's tracker, and which of its chats' user messages are notices the server wrote. */
+private class Tracked(val tracker: AutomationAlertTracker) {
+    private val notices = ArrayDeque<String>()
+
+    /** The server wrote a notice into a chat as message [messageId]: that message is nobody's prompt. */
+    fun onNotice(messageId: String) {
+        notices.addLast(messageId)
+        while (notices.size > NOTICES_KEPT) notices.removeFirst()
+    }
+
+    /**
+     * The live stream showed [message]. A user message that is no notice is a prompt: an automation's
+     * (`metadata.automation`) begins its run, and a person's own takes the chat back from an automation's run.
+     */
+    fun onMessage(message: MessageInfo) {
+        val automation = message.automation
+        when {
+            message.role != Role.User || message.id in notices -> Unit
+            automation != null -> tracker.onAutomationMessage(message.sessionId, automation, message.id)
+            else -> tracker.onPersonPrompt(message.sessionId, message.id)
+        }
+    }
+}
 
 /** The pause the alert in one row of the shade may ask for: its token, the automation, and the group it clears. */
 private class Pause(val token: String, val automationId: String, val group: String)
@@ -176,17 +206,36 @@ private class Pauses {
 private fun MessageWithParts.isPrompt(): Boolean =
     info.role == Role.User && (parts.isEmpty() || parts.any { it.type != PartType.Notice })
 
+/** Where this run's own prompt is in [messages] (its message id, else the same `metadata.automation`), or -1. */
+private fun AutomationRun.promptIndex(messages: List<MessageWithParts>): Int {
+    val byId = messages.indexOfLast { promptId.isNotBlank() && it.info.id == promptId }
+    return if (byId >= 0) byId else messages.indexOfLast { it.info.automation == prompt }
+}
+
 /**
- * The first line of [run]'s own reply (B-620), from a page of its chat, oldest first. Only the assistant messages
- * after the run's own prompt and before the next prompt speak for it. A page that does not hold that prompt gives
- * nothing: an older reply is never told as a new finding.
+ * The first line of [run]'s own reply (B-620). [page] reads the run's chat a page at a time, oldest first within a
+ * page: the newest page for a null cursor, then the page before it for the cursor the last one gave; null when the
+ * chat cannot be read. The pages are followed back until one holds the run's own prompt, [MAX_REPLY_PAGES] at most,
+ * so a run of many steps is still found. Only the assistant messages after that prompt and before the next prompt
+ * speak for the run. When the prompt is not found nothing is told: an older reply is never a new finding.
  */
-private fun runReplyLine(run: AutomationRun, messages: List<MessageWithParts>): String {
-    val byId = messages.indexOfLast { run.promptId.isNotBlank() && it.info.id == run.promptId }
-    val at = if (byId >= 0) byId else messages.indexOfLast { it.info.automation == run.prompt }
-    if (at < 0) return ""
-    val own = messages.drop(at + 1).takeWhile { !it.isPrompt() }
-    return NotificationText.firstReplyLine(PlatformRules.replyTexts(own))
+internal suspend fun runReplyLine(
+    run: AutomationRun,
+    page: suspend (cursor: String?) -> ServerPage<MessageWithParts>?,
+): String {
+    var read = page(null)
+    var pages = 1
+    var newer = emptyList<MessageWithParts>()
+    var own: List<MessageWithParts>? = null
+    while (read != null && own == null) {
+        val at = run.promptIndex(read.items)
+        if (at >= 0) own = read.items.drop(at + 1) + newer
+        newer = read.items + newer
+        val older = read.nextCursor.takeIf { own == null && pages < MAX_REPLY_PAGES }
+        read = older?.let { page(it) }
+        pages++
+    }
+    return NotificationText.firstReplyLine(PlatformRules.replyTexts(own.orEmpty().takeWhile { !it.isPrompt() }))
 }
 
 /**
@@ -198,8 +247,8 @@ private fun runReplyLine(run: AutomationRun, messages: List<MessageWithParts>): 
  *
  * A run of an automation's prompt has this one way to the shade: from its prompt until its chat starts another run
  * [isAutomationSession] is true, and the hub's own finished and stopped alerts stand down for that chat. What a
- * finished run found is read from [replies] (a page of its chat, oldest first; empty when it cannot be read) and
- * only from that run's own reply.
+ * finished run found is read through [replies] (one page of a server's chat for a cursor, as [runReplyLine] asks
+ * for them; null when it cannot be read) and only from that run's own reply.
  *
  * Calls arrive on the hub's main lane; only the pause tokens are kept under a lock.
  */
@@ -209,7 +258,7 @@ class AutomationAlertsCoordinator(
     private val serverName: (ProfileId) -> String,
     private val alertFacts: () -> AlertFacts,
     private val redact: (String) -> String,
-    private val replies: suspend (ProfileId, String) -> List<MessageWithParts>,
+    private val replies: suspend (ProfileId, String, String?) -> ServerPage<MessageWithParts>?,
 ) {
     private val servers = mutableMapOf<ProfileId, Tracked>()
     private val pauses = Pauses()
@@ -233,15 +282,20 @@ class AutomationAlertsCoordinator(
         post(profile, tracker.observeAutomations(listed.value))
     }
 
-    /** The live stream showed [message]: a server automation's prompt (`metadata.automation`) begins its run. */
-    fun onMessage(profile: ProfileId, message: MessageInfo) {
-        val automation = message.automation ?: return
-        servers.tracked(profile).tracker.onAutomationMessage(message.sessionId, automation, message.id)
-    }
-
-    /** [sessionId] started a run: after an automation's run ended there, this one is the chat's own again. */
-    fun onRunStarted(profile: ProfileId, sessionId: String) {
-        servers[profile]?.tracker?.onRunStarted(sessionId)
+    /**
+     * One event of [profile]'s live stream, every one of them and in the stream's order. A prompt begins an
+     * automation's run or, when a person sent it, takes the chat back; a notice the server writes is nobody's
+     * prompt; a run that starts after an automation's run ended is the chat's own again. A run's end comes through
+     * [onRunEnded].
+     */
+    fun onEvent(profile: ProfileId, event: GatewayEvent) {
+        val server = servers.tracked(profile)
+        when (event) {
+            is GatewayEvent.Notice -> event.messageId?.let { server.onNotice(it.raw) }
+            is GatewayEvent.MessageUpserted -> server.onMessage(event.message)
+            is GatewayEvent.RunStarted -> server.tracker.onRunStarted(event.sessionId.raw)
+            else -> Unit
+        }
     }
 
     /**
@@ -261,7 +315,8 @@ class AutomationAlertsCoordinator(
         val run = tracker.endRun(sessionId) ?: return
         val failed = outcome is RunOutcome.Failed
         val interrupted = outcome is RunOutcome.Interrupted
-        val line = if (failed || interrupted) "" else runReplyLine(run, replies(profile, sessionId))
+        val line =
+            if (failed || interrupted) "" else runReplyLine(run) { cursor -> replies(profile, sessionId, cursor) }
         // The read took time: a server forgotten meanwhile has no alerts left to post.
         if (servers[profile]?.tracker === tracker) post(profile, tracker.tellRun(run, failed, interrupted, line))
     }

@@ -53,6 +53,19 @@ public data class AutomationAlertDiff(
         get() = post.isEmpty() && dismissKeys.isEmpty() && dismissGroups.isEmpty()
 }
 
+/** Where an automation's run stands in its chat. */
+internal enum class RunStage {
+    /** Its prompt waits behind a run that is no automation's and is still going: that run's end is not its end. */
+    Queued,
+
+    /** The run it waited behind ended; its own run has not started, so another end is still that other run's. */
+    Next,
+
+    /** It runs, or its prompt arrived in a chat where nothing else was going. */
+    Going,
+    Ended,
+}
+
 /**
  * One run of an automation's prompt in a session (B-620), from the prompt until the session starts its next run.
  * [promptId] is the prompt's message id and [prompt] its `metadata.automation`: a reply is this run's own only when
@@ -63,14 +76,15 @@ public class AutomationRun internal constructor(
     public val prompt: MessageAutomation,
     public val promptId: String,
     internal val automationId: String,
-    internal val stretch: Int,
+    internal var stage: RunStage,
 ) {
-    internal var ended: Boolean = false
     internal var told: Boolean = false
 
     /** True when [automation] in message [messageId] is this run's own prompt, shown again. */
     internal fun isPrompt(automation: MessageAutomation, messageId: String): Boolean =
-        (messageId.isNotBlank() && messageId == promptId) || (automation.run != null && automation == prompt)
+        isPromptId(messageId) || (automation.run != null && automation == prompt)
+
+    internal fun isPromptId(messageId: String): Boolean = messageId.isNotBlank() && messageId == promptId
 }
 
 /**
@@ -82,7 +96,8 @@ public class AutomationRun internal constructor(
  * The live stream and the polled rows are read as one story, run by run: a run either of them told is not told
  * again by the other, in whichever order they arrive, and a told run never hides another run. Nothing is told while
  * the connection is down, and the first read after every (re)connect is a baseline, so runs that happened while
- * offline stay on the automation's row, never late alerts.
+ * offline stay on the automation's row, never late alerts. A run that was going when the connection changed is kept:
+ * its chat stays the automation's, and its end, when the stream brings it after the reconnect, is told once.
  */
 public class AutomationAlertTracker(
     profileId: String,
@@ -90,14 +105,22 @@ public class AutomationAlertTracker(
 ) {
     private val rows = AutomationRows(profileId, maxVisiblePerAutomation.coerceAtLeast(1))
     private val runs: MutableMap<String, AutomationRun> = mutableMapOf()
-    private var connected: Boolean = false
 
-    /** Counts the connected stretches: a run of an earlier stretch is never told in a later one. */
-    private var stretch: Int = 0
+    /** The sessions where a run that is no automation's is going now. */
+    private val busy: MutableSet<String> = mutableSetOf()
+    private var connected: Boolean = false
 
     /** True while the server's event stream is up; nothing is read or told otherwise. */
     public val isConnected: Boolean
         get() = connected
+
+    /**
+     * The sessions whose run is an automation's, going or ended: that run tells through the automation's alert only,
+     * so the chat's own finished and stopped alerts stand down for it. A session whose automation prompt still waits
+     * behind another run is not among them.
+     */
+    public val automationSessions: Set<String>
+        get() = runs.filterValues { it.stage != RunStage.Queued }.keys
 
     /**
      * One read of the server's automations. Offline, or the first read of a connected stretch, posts nothing: what is
@@ -108,13 +131,28 @@ public class AutomationAlertTracker(
 
     /**
      * The live stream showed a run's prompt (`metadata.automation`) in message [messageId]: the session's run is that
-     * automation's run until the session starts another one. The same prompt shown again changes nothing. A prompt
-     * that names no automation id still notifies, but cannot offer to pause it.
+     * automation's run until the session starts another one. In a chat where a run that is no automation's is still
+     * going the prompt is queued behind it: that run ends and tells as the chat's own, and the automation's run is
+     * the one after it. The same prompt shown again changes nothing. A prompt that names no automation id still
+     * notifies, but cannot offer to pause it.
      */
     public fun onAutomationMessage(sessionId: String, automation: MessageAutomation, messageId: String = "") {
         if (!connected || runs[sessionId]?.isPrompt(automation, messageId) == true) return
         val id = automation.id?.takeIf { it.isNotBlank() } ?: (UNNAMED_PREFIX + automation.name)
-        runs[sessionId] = AutomationRun(sessionId, automation, messageId, id, stretch)
+        val stage = if (sessionId in busy) RunStage.Queued else RunStage.Going
+        runs[sessionId] = AutomationRun(sessionId, automation, messageId, id, stage)
+    }
+
+    /**
+     * The live stream showed, in message [messageId], a prompt that no automation sent: a person's own. A run of an
+     * automation that is going or ended there gives the chat back, so a run kept from before a reconnect never
+     * outlives the chat's next real run: what ends there next tells through the chat's own alerts. The run's own
+     * prompt shown again, and a prompt behind an automation's run that has not started, change nothing.
+     */
+    public fun onPersonPrompt(sessionId: String, messageId: String) {
+        val run = runs[sessionId]?.takeUnless { it.isPromptId(messageId) } ?: return
+        if (run.stage == RunStage.Going) busy += sessionId
+        if (run.stage == RunStage.Going || run.stage == RunStage.Ended) runs.remove(sessionId)
     }
 
     /**
@@ -122,29 +160,36 @@ public class AutomationAlertTracker(
      * is the chat's next run (a person's own prompt), and the session is no longer the automation's.
      */
     public fun onRunStarted(sessionId: String) {
-        if (runs[sessionId]?.ended == true) runs.remove(sessionId)
+        val run = runs[sessionId]
+        // The run an automation's prompt waited behind has ended: this start is the automation's own run.
+        if (run?.stage == RunStage.Next) run.stage = RunStage.Going
+        if (run == null || run.stage == RunStage.Ended) {
+            runs.remove(sessionId)
+            busy += sessionId
+        }
     }
 
     /**
-     * True while [sessionId]'s run is an automation's, ended or not: that run tells through the automation's alert
-     * only, so the chat's own finished and stopped alerts stand down for it.
-     */
-    public fun isAutomationSession(sessionId: String): Boolean = sessionId in runs
-
-    /**
-     * The automation's run in [sessionId] ended: returns it, once, for [tellRun]. Null for any other session, for a
-     * second end of the same run (the idle that follows a failure), and while offline.
+     * A run ended in [sessionId]. When it is the automation's run it is returned, once, for [tellRun]. Null for any
+     * other session, for the end of the run an automation's prompt waits behind, for a second end of the same run
+     * (the idle that follows every end), and while offline.
      */
     public fun endRun(sessionId: String): AutomationRun? {
-        val run = runs[sessionId]?.takeIf { connected && !it.ended } ?: return null
-        run.ended = true
-        return run
+        val run = runs[sessionId]
+        if (run == null || run.stage == RunStage.Queued) {
+            // The run that ended is the chat's own; a prompt that waited behind it has the next run.
+            busy -= sessionId
+            run?.stage = RunStage.Next
+        }
+        val going = run?.takeIf { connected && it.stage == RunStage.Going }
+        going?.stage = RunStage.Ended
+        return going
     }
 
     /**
      * Tells an ended [run], once. A failure notifies; a finished run notifies when its own reply has a readable first
-     * line ([replyExcerpt], which is masked here); a run the person stopped stays quiet. A run the read already told,
-     * or one of an earlier connected stretch, tells nothing.
+     * line ([replyExcerpt], which is masked here); a run the person stopped stays quiet. A run the read already told
+     * tells nothing.
      */
     public fun tellRun(
         run: AutomationRun,
@@ -152,7 +197,7 @@ public class AutomationAlertTracker(
         interrupted: Boolean,
         replyExcerpt: String,
     ): AutomationAlertDiff {
-        if (!connected || run.stretch != stretch || run.told) return AutomationAlertDiff()
+        if (!connected || run.told) return AutomationAlertDiff()
         run.told = true
         val line = NotificationText.redact(replyExcerpt)
         val reason = when {
@@ -176,15 +221,16 @@ public class AutomationAlertTracker(
         get() = rows.groups()
 
     /**
-     * The connection's state. Going offline, or coming back, forgets the baseline and the runs in flight: what happened
-     * in between is never told.
+     * The connection's state. Going offline, or coming back, forgets the baseline: the next read tells nothing of what
+     * happened in between. A run that is going, or ended, keeps its chat the automation's; a prompt that had not got
+     * its run yet is forgotten, as is which chats were busy, since their ends may have been missed.
      */
     public fun setConnected(value: Boolean) {
         if (connected == value) return
         connected = value
-        stretch++
         rows.rebase()
-        runs.clear()
+        runs.values.removeAll { it.stage == RunStage.Queued || it.stage == RunStage.Next }
+        busy.clear()
     }
 
     /** The next read is a baseline again: what the person could already see never notifies (B-ANDR-011). */
@@ -202,6 +248,9 @@ public class AutomationAlertTracker(
         public const val DEFAULT_VISIBLE_SLOTS: Int = 3
     }
 }
+
+/** True while [sessionId] is one of the tracker's [AutomationAlertTracker.automationSessions]. */
+public fun AutomationAlertTracker.isAutomationSession(sessionId: String): Boolean = sessionId in automationSessions
 
 /**
  * [AutomationAlertTracker.endRun] and [AutomationAlertTracker.tellRun] in one step, for a caller that already holds

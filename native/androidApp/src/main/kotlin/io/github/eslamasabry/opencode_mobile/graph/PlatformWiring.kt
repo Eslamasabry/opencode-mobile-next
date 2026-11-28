@@ -75,6 +75,7 @@ import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -370,7 +371,9 @@ class PlatformHub(
             serverName = { profile -> serverNames()[profile].orEmpty() },
             alertFacts = { currentFacts(visible.value > 0).copy(serverAlertsOn = choice(FINISHED_ON)) },
             redact = ::shadeText,
-            replies = { profile, session -> automationChatPage(ConversationRef(profile, SessionId(session))) },
+            replies = { profile, session, cursor ->
+                automationChatPage(ConversationRef(profile, SessionId(session)), cursor)
+            },
         )
     }
     private val widgets = AndroidWidgetSurface(application, widgetPersistence)
@@ -870,12 +873,10 @@ class PlatformHub(
                     launch { followAutomations(id, graph) }
                     graph.session.server.events.all.collect { envelope ->
                         if (registry.live.value[id] !== graph) return@collect
+                        // B-620: every event, in order: prompts, notices and run starts say whose run a chat's is.
+                        automationAlerts.onEvent(id, envelope.event)
                         when (val event = envelope.event) {
-                            is GatewayEvent.MessageUpserted -> {
-                                // B-620: a server automation's prompt (metadata.automation) begins its run.
-                                automationAlerts.onMessage(id, event.message)
-                                widgetDetailsChanged()
-                            }
+                            is GatewayEvent.MessageUpserted,
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.PartUpserted,
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.TranscriptStale ->
                                 widgetDetailsChanged()
@@ -887,8 +888,6 @@ class PlatformHub(
                                 postedReasons.remove(ref)
                                 runEvents.remove(ref)
                                 shade.dismiss(AlertKeys.status(id.raw, event.sessionId.raw))
-                                // B-620: after an automation's run ended, the chat's next run is its own again.
-                                automationAlerts.onRunStarted(id, event.sessionId.raw)
                             }
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunEnded -> {
                                 val ref = ConversationRef(id, event.sessionId)
@@ -961,16 +960,17 @@ class PlatformHub(
     }
 
     /**
-     * B-620: the newest messages of an automation's chat, oldest first, for reading what a finished run found. The
-     * page is wide enough to hold the run's own prompt; empty when the server is gone or does not answer in time.
+     * B-620: one page of an automation's chat, for reading what a finished run found: the newest messages for a null
+     * [cursor], then the page before it for the cursor the last page gave. Null when the server is gone, refuses, or
+     * does not answer in time: the read back then stops and nothing is told.
      */
-    private suspend fun automationChatPage(ref: ConversationRef): List<MessageWithParts> {
-        val graph = registry.live.value[ref.profileId] ?: return emptyList()
+    private suspend fun automationChatPage(ref: ConversationRef, cursor: String?): ServerPage<MessageWithParts>? {
+        val graph = registry.live.value[ref.profileId] ?: return null
         val page =
             withTimeoutOrNull(EXCERPT_WAIT_MS) {
-                graph.session.server.messagePage(ref.sessionId, limit = AUTOMATION_PAGE_MESSAGES)
+                graph.session.server.messagePage(ref.sessionId, cursor, AUTOMATION_PAGE_MESSAGES)
             }
-        return (page as? Outcome.Ok)?.value?.items.orEmpty()
+        return (page as? Outcome.Ok)?.value
     }
 
     private fun openAutomationAlert(tap: AutomationAlertTap) {
