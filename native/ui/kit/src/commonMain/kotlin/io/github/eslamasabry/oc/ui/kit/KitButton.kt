@@ -121,9 +121,11 @@ public data class KitAction(
      */
     val shortcut: String? = null,
     /**
-     * Other labels this button may swap to in place: when non-empty, the label slot reserves the tallest height across
-     * all of them at the current width and text scale so wrapping swaps never move the button. Empty keeps default
-     * sizing for every existing caller.
+     * The opt-in for a label that changes in place: the other labels this button may swap to. When non-empty, a change
+     * of [label] cross-fades (QUICK; instant under reduced motion) and the label slot reserves the tallest height
+     * across all of them at the current width and text scale, so a wrapping swap never moves the button. Empty (the
+     * default) keeps every other caller as it was: the button sizes to its words and a new label replaces the old one
+     * at once.
      */
     val swapLabels: List<String> = emptyList(),
 ) {
@@ -146,7 +148,8 @@ public data class KitAction(
  * fast spatial spring, then springs back; reduced motion keeps the ripple only.
  *
  * States: default, pressed, disabled, working Text: frame Cap: Control Motion: fill eases between
- * enabled and disabled (QUICK); Off = instant; the working mark is still under Off Replaces:
+ * enabled and disabled (QUICK); the words of an action that opts in with [KitAction.swapLabels] cross-fade (QUICK),
+ * every other button's words change at once; Off = instant; the working mark is still under Off Replaces:
  * KitButton, KitButton.primary/secondary/tertiary (lib/ui/kit/kit_buttons.dart)
  */
 @Composable
@@ -520,9 +523,11 @@ private fun KitTextColored(text: String, color: Color, maxLines: Int, underline:
         )
     val swapLabels = LocalKitButtonSwapLabels.current
     if (swapLabels.isEmpty()) {
-        ButtonSwapSlot.Swap(text, style, maxLines)
+        // The default: the words are drawn as they are, and a new label replaces the old one at once.
+        ButtonLine(text, style, maxLines)
         return
     }
+    // Opted in ([KitAction.swapLabels]): the words cross-fade in a slot that keeps one height.
     ButtonSwapSlot.Reserved(text, style, maxLines, swapLabels)
 }
 
