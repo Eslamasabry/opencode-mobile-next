@@ -2,11 +2,14 @@ package io.github.eslamasabry.oc.feature.updates
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -15,6 +18,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -22,13 +26,17 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
@@ -49,12 +57,15 @@ import io.github.eslamasabry.oc.feature.updates.ui.UpdateNotice
 import io.github.eslamasabry.oc.feature.updates.ui.UpdateOfferSheet
 import io.github.eslamasabry.oc.feature.updates.ui.UpdatePromptSheet
 import io.github.eslamasabry.oc.feature.updates.ui.UpdatesScreen
+import io.github.eslamasabry.oc.ui.design.effects.AppearanceMode
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
 import io.github.eslamasabry.oc.ui.design.motion.MotionLevel
 import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.modal.KitSheetHost
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
+import io.github.eslamasabry.oc.ui.kit.theme.KitWindowInfo
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
+import io.github.eslamasabry.oc.ui.kit.theme.LocalKitWindow
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
 import java.io.File
 import java.util.Locale
@@ -126,6 +137,26 @@ class UpdatesScreenUiTest {
             // The app provides its one redactor above every screen; Details passes the signatures through it.
             CompositionLocalProvider(LocalKitRedactor provides Redactor()) {
                 Box(Modifier.size(412.dp, 915.dp).background(LocalKitColors.current.ground)) { content() }
+            }
+        }
+    }
+
+    /** The page on a 360 dp screen, drawn as the pictures draw it: light or dark, text at 1.0 or 1.3. */
+    @Composable
+    private fun Phone(v: Variant, content: @Composable () -> Unit) {
+        CompositionLocalProvider(LocalDensity provides Density(DENSITY, v.scale)) {
+            KitTheme(
+                appearance = KitAppearance(mode = v.mode, motion = MotionLevel.Off),
+                platform = DesktopKitPlatform(),
+                localeTag = "en",
+                stillFrame = true,
+            ) {
+                CompositionLocalProvider(
+                    LocalKitWindow provides KitWindowInfo(WIDTH_DP.toFloat(), HEIGHT_DP.toFloat()),
+                    LocalKitRedactor provides Redactor(),
+                ) {
+                    Box(Modifier.fillMaxSize().background(LocalKitColors.current.ground)) { content() }
+                }
             }
         }
     }
@@ -492,6 +523,21 @@ class UpdatesScreenUiTest {
             linkAnnotation.linkInteractionListener?.onClick(linkAnnotation)
             assertEquals(listOf("noteLink:$url"), actions.calls)
         }
+
+    @Test
+    fun `B-628 What's new link is styled whole and tappable at 360 dp light and dark text 1_0 and 1_3`() {
+        val withNotes = available.copy(release = RELEASE.copy(notes = notesWithLink()))
+        for (v in VARIANTS) {
+            val actions = Recording()
+            runDesktopComposeUiTest((WIDTH_DP * DENSITY).toInt(), (HEIGHT_DP * DENSITY).toInt()) {
+                setContent { Phone(v) { UpdatesScreen(updatesUi(withNotes, now), actions) } }
+                waitForIdle()
+                val link = assertNoteLinkShown(v.tag)
+                onRoot().performTouchInput { click(Offset(link.tap.x.toPx(), link.tap.y.toPx())) }
+                assertEquals(listOf("noteLink:$NOTE_LINK_URL"), actions.calls, "${v.tag}: a tap on the link")
+            }
+        }
+    }
 
     @Test
     fun `B-628 link confirmation names the host and missing browser shows one plain dismissible message`() =
