@@ -102,6 +102,7 @@ import io.github.eslamasabry.oc.engine.profiles.LoadedProfile
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.updates.AppUpdateState
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
+import io.github.eslamasabry.oc.engine.updates.UpdatePolicy
 import io.github.eslamasabry.oc.engine.updates.UpdateFailure
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.feature.chat.world.ChatGraphAccessors
@@ -111,6 +112,7 @@ import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFacts
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateFailure as SettingsUpdateFailure
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateSettings
 import io.github.eslamasabry.oc.feature.settings.presentation.UpdateState as SettingsUpdateState
+import io.github.eslamasabry.oc.feature.updates.presentation.NoteLinkPrompt
 import io.github.eslamasabry.oc.feature.updates.presentation.UpdateLinks
 import io.github.eslamasabry.oc.ui.routes.TeamRoute
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
@@ -188,6 +190,8 @@ object PlatformBindings {
             clock,
             // Release builds only (Flutter #126): a debuggable build cannot take a release APK.
             supported = AppUpdates.supportedOn(build.debuggable),
+            // B-218: only builds signed with the public CI key can install public GitHub releases.
+            policy = UpdatePolicy(publicSignerSha256 = AppUpdates.PUBLIC_RELEASE_SIGNER_SHA256),
         )
 }
 
@@ -223,9 +227,9 @@ class AppUpdateDoor(
 }
 
 /**
- * The release page of a waiting update (Open on GitHub after a signer / package / version refusal).
- * The address comes from the network, so it must be this project's GitHub release page and pass
- * ExternalLinkPolicy (AGENTS.md).
+ * Opens links from the Updates page (View release on GitHub after a refusal, and `https` links
+ * inside What's new release notes). Every address comes from the network, so it goes through
+ * ExternalLinkPolicy → ExternalLinkOpener (AGENTS.md).
  */
 @ContributesBinding(AppScope::class)
 @Inject
@@ -239,6 +243,28 @@ class ReleasePageLinks(private val opener: ExternalLinkOpener) : UpdateLinks {
         // The app's one opener: browsable intents only, security failures become a Failure (AGENTS
         // rule 8).
         return opener.open(link)
+    }
+
+    override fun inspectNoteLink(url: String): NoteLinkPrompt? =
+        noteLink(policy, url)?.let { NoteLinkPrompt(it.link.uri, it.shownHost) }
+
+    override suspend fun openNoteLink(url: String): Outcome<Unit> {
+        val link =
+            noteLink(policy, url)?.link
+                ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
+        return opener.open(link)
+    }
+
+    companion object {
+        /**
+         * A link inside GitHub release notes ("What's new", B-628): only `https` web links pass
+         * [ExternalLinkPolicy] under [LinkOrigin.Markdown]; plain `http`, non-web schemes,
+         * credentials, and malformed URLs are refused.
+         */
+        fun noteLink(policy: ExternalLinkPolicy, url: String): LinkDecision.AskFirst? {
+            val decision = policy.check(url, LinkOrigin.Markdown)
+            return if (decision is LinkDecision.AskFirst && !decision.insecure) decision else null
+        }
     }
 }
 
@@ -2014,29 +2040,34 @@ internal object PlatformRules {
 
     /** The Settings Updates page's view of the updater. */
     fun updateFacts(u: AppUpdateState, build: AppBuildInfo, date: (Long) -> String): UpdateFacts {
+        val testBuild =
+            u.isTestBuild ||
+                (u.installed == null && build.versionName.contains("-test.", ignoreCase = true))
         val version = u.release?.version.orEmpty()
         val state =
-            when (u.phase) {
-                UpdatePhase.Checking -> SettingsUpdateState.Checking
-                UpdatePhase.Available ->
-                    SettingsUpdateState.Available(version, u.downloadSize?.let { mb(it) }.orEmpty())
-                UpdatePhase.Downloading,
-                UpdatePhase.Verifying ->
-                    SettingsUpdateState.Downloading(
-                        version,
-                        ((u.progress ?: 0f) * 100).toInt().coerceIn(0, 100),
-                    )
-                UpdatePhase.ReadyToInstall -> SettingsUpdateState.Downloaded(version)
-                UpdatePhase.Installing -> SettingsUpdateState.Installing
-                UpdatePhase.Failed ->
-                    SettingsUpdateState.Failed(
-                        SettingsUpdateFailure.valueOf((u.failure ?: UpdateFailure.Network).name)
-                    )
-                UpdatePhase.None ->
-                    u.checkedAt?.let {
-                        SettingsUpdateState.UpToDate(date(it.toEpochMilliseconds()))
-                    } ?: SettingsUpdateState.NeverChecked
-            }
+            if (testBuild) SettingsUpdateState.TestBuild
+            else
+                when (u.phase) {
+                    UpdatePhase.Checking -> SettingsUpdateState.Checking
+                    UpdatePhase.Available ->
+                        SettingsUpdateState.Available(version, u.downloadSize?.let { mb(it) }.orEmpty())
+                    UpdatePhase.Downloading,
+                    UpdatePhase.Verifying ->
+                        SettingsUpdateState.Downloading(
+                            version,
+                            ((u.progress ?: 0f) * 100).toInt().coerceIn(0, 100),
+                        )
+                    UpdatePhase.ReadyToInstall -> SettingsUpdateState.Downloaded(version)
+                    UpdatePhase.Installing -> SettingsUpdateState.Installing
+                    UpdatePhase.Failed ->
+                        SettingsUpdateState.Failed(
+                            SettingsUpdateFailure.valueOf((u.failure ?: UpdateFailure.Network).name)
+                        )
+                    UpdatePhase.None ->
+                        u.checkedAt?.let {
+                            SettingsUpdateState.UpToDate(date(it.toEpochMilliseconds()))
+                        } ?: SettingsUpdateState.NeverChecked
+                }
         return UpdateFacts(
             current = u.installed?.version ?: build.versionName,
             build = (u.installed?.build ?: build.versionCode).toString(),

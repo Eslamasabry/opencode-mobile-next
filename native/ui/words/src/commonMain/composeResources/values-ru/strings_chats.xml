@@ -115,7 +115,7 @@
     <string name="handoffUiUnavailableDirectory">Сервер не сообщил папку проекта для этого чата, поэтому открыть его в папке нельзя. Перезагрузите чат и повторите.</string>
     <string name="handoffUiUnavailableWorkspace">Этот чат работает в облачной среде. Его папка принадлежит хосту среды, поэтому обычная команда в терминале не может её открыть. Вместо этого экспортируйте и импортируйте чат.</string>
     <string name="handoffUiUnavailableReference">Ссылку на этот чат нельзя безопасно вставить в команду.</string>
-    <string name="handoffUiPhoneTitle">Открыть на другом телефоне</string>
+    <string name="handoffUiPhoneTitle">Продолжить на другом телефоне</string>
     <string name="handoffUiPhoneIntro">Отсканируйте код в OpenCode Mobile на другом телефоне. В коде только идентификаторы сервера и чата.</string>
     <string name="handoffUiPhoneQrLabel">QR-код, открывающий этот чат на другом телефоне</string>
     <string name="handoffUiPhoneLinkLabel">Ссылка</string>
@@ -309,7 +309,7 @@
     <string name="inboxEmptyTitle">Вас никто не ждёт</string>
     <string name="inboxFinishedLabel">Завершено, ещё не открыто</string>
     <string name="inboxOpenLabel">Открыть %1$s</string>
-    <string name="inboxOpenOnServer">Открыть на %1$s</string>
+    <string name="inboxOpenOnServer">Открыть запрос на %1$s</string>
     <string name="inboxWaitingForAnswer">Ждёт вашего ответа</string>
     <string name="inboxAsksPermission">Просит у вас разрешения</string>
     <string name="inboxAsksQuestion">Задаёт вам вопрос</string>

@@ -779,17 +779,17 @@
     <string name="appUpdateCheckSwitchBody">L’application demande à GitHub le dernier numéro de version et n’envoie rien à votre sujet.</string>
     <string name="appUpdateCheckNow">Vérifier maintenant</string>
     <string name="appUpdateTryAgain">Réessayer</string>
-    <string name="appUpdateFailNetwork">Impossible de joindre GitHub. Vérifiez votre connexion et réessayez.</string>
-    <string name="appUpdateFailNoFile">Cette version n’a pas encore de fichier pour votre téléphone.</string>
-    <string name="appUpdateFailChecksum">Le téléchargement ne correspond pas à sa somme de contrôle, il n’a donc pas été installé.</string>
-    <string name="appUpdateFailSigner">Ce téléchargement n’est pas signé comme votre application, il n’a donc pas été installé.</string>
-    <string name="appUpdateFailPackage">Ce téléchargement concerne une autre application, il n’a donc pas été installé.</string>
-    <string name="appUpdateFailVersion">Ce téléchargement n’est pas plus récent que votre application, il n’a donc pas été installé.</string>
-    <string name="appUpdateFailStorage">Il n’y avait pas assez de place pour enregistrer le téléchargement.</string>
-    <string name="appUpdateFailInstaller">Android n’a pas pu terminer l’installation. Réessayez.</string>
+    <string name="appUpdateFailNetwork">Impossible de joindre GitHub, vérifiez votre connexion puis réessayez.</string>
+    <string name="appUpdateFailNoFile">Cette version n'a pas encore de fichier pour votre téléphone, réessayez plus tard.</string>
+    <string name="appUpdateFailChecksum">Le téléchargement ne correspond pas à sa somme de contrôle, téléchargez-le à nouveau.</string>
+    <string name="appUpdateFailSigner">Ce téléchargement n'est pas signé comme votre appli, consultez la version sur GitHub ou installez une version compatible.</string>
+    <string name="appUpdateFailPackage">Ce téléchargement est destiné à une autre appli, consultez la version sur GitHub pour vérifier le paquet.</string>
+    <string name="appUpdateFailVersion">Ce téléchargement n'est pas plus récent que votre appli, consultez la version sur GitHub pour vérifier le numéro.</string>
+    <string name="appUpdateFailStorage">L'espace de stockage est insuffisant pour enregistrer le téléchargement, libérez de la place puis réessayez.</string>
+    <string name="appUpdateFailInstaller">Android n'a pas pu terminer l'installation, essayez de l'installer à nouveau.</string>
     <string name="appUpdateCurrentVersion">Version %1$s</string>
     <string name="appUpdateBuildLabel">Build</string>
-    <string name="appUpdateOpenRelease">Ouvrir sur GitHub</string>
+    <string name="appUpdateOpenRelease">Voir la version sur GitHub</string>
     <string name="appUpdateNotInstalled">%1$s n’a pas pu être installé</string>
     <string name="browserModeIntro">Voici OpenCode Mobile exécuté dans un navigateur web. Les serveurs OpenCode distants fonctionnent comme dans l’application du téléphone. Les fonctions qui nécessitent le téléphone lui-même ne sont pas proposées ici.</string>
     <string name="browserModeAvailableHeading">Disponible dans le navigateur</string>
@@ -849,4 +849,9 @@
     <string name="languageNameChinese">Chinois</string>
     <string name="languageNameItalian">Italien</string>
     <string name="notifySendTestBlockedDetail">Reste actif lorsque les notifications sont coupées afin de vérifier le réglage Android.</string>
+    <string name="appUpdateTestBuildLine">Version de test</string>
+    <string name="appUpdateTestBuildNotice">Il s'agit d'une version de test. Les mises à jour publiques ne peuvent pas s'installer par-dessus. Installez la version de test suivante, ou supprimez cette appli et installez la version publique, ce qui efface ses données.</string>
+    <string name="appUpdateOwnSignature">Signature de cette appli</string>
+    <string name="appUpdateFileSignature">Signature de la mise à jour</string>
+    <string name="appUpdateNoBrowser">Aucun navigateur sur cet appareil ne peut ouvrir ce lien.</string>
 </resources>

@@ -8,15 +8,24 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
+import io.github.eslamasabry.oc.core.common.Failure
+import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.engine.updates.AppUpdates
 import io.github.eslamasabry.oc.engine.updates.UpdatePhase
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
+
+private data class LocalLinkState(
+    val prompt: NoteLinkPrompt? = null,
+    val noBrowser: Boolean = false,
+)
 
 /**
  * The Updates page (Flutter `UpdatesScreen`). While it is open the app-wide notice steps aside (setPageOpen). Engine
@@ -33,13 +42,17 @@ public class UpdatesViewModel(
     private val clock: Clock,
     private val nav: AppNavigator,
 ) : ViewModel(), UpdatesActions {
+    private val localLinks = MutableStateFlow(LocalLinkState())
+
     init {
         updates.setPageOpen(true)
     }
 
     public val state: StateFlow<UpdatesUi> =
-        updates.state
-            .map { updatesUi(it, clock.now()) }
+        combine(updates.state, localLinks) { engine, linkState ->
+                updatesUi(engine, clock.now())
+                    .copy(linkPrompt = linkState.prompt, noBrowser = linkState.noBrowser)
+            }
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
@@ -69,7 +82,12 @@ public class UpdatesViewModel(
     override fun onOpenRelease() {
         val url = updates.state.value.release?.pageUrl.orEmpty()
         if (url.isEmpty()) return
-        viewModelScope.launch { links.openReleasePage(url) }
+        viewModelScope.launch {
+            val result = links.openReleasePage(url)
+            if (result is Outcome.Failed && result.failure is Failure.Device) {
+                localLinks.update { it.copy(noBrowser = true) }
+            }
+        }
     }
 
     override fun onCheckNow() {
@@ -78,6 +96,26 @@ public class UpdatesViewModel(
 
     override fun onChecks(on: Boolean) {
         appScope.launch { updates.setEnabled(on) }
+    }
+
+    override fun onNoteLink(action: NoteLinkAction) {
+        when (action) {
+            is NoteLinkAction.Open ->
+                links.inspectNoteLink(action.url)?.let { prompt ->
+                    localLinks.update { it.copy(prompt = prompt, noBrowser = false) }
+                }
+            NoteLinkAction.Confirm ->
+                localLinks.value.prompt?.let { prompt ->
+                    localLinks.update { it.copy(prompt = null) }
+                    viewModelScope.launch {
+                        if (links.openNoteLink(prompt.url) is Outcome.Failed) {
+                            localLinks.update { it.copy(noBrowser = true) }
+                        }
+                    }
+                }
+            NoteLinkAction.DismissPrompt -> localLinks.update { it.copy(prompt = null) }
+            NoteLinkAction.DismissNoBrowser -> localLinks.update { it.copy(noBrowser = false) }
+        }
     }
 
     override fun onCleared() {
