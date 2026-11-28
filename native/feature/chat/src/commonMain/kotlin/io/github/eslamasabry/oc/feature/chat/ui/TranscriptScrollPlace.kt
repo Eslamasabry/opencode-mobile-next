@@ -161,6 +161,10 @@ internal object ScrollPlaceRules {
     fun pendingPlace(holder: ScrollPlaceHolder): ScrollPlace? =
         if (holder.fromStore && holder.following) null else holder.place
 
+    /** The place an entry opens on; none once it has taken places of its own (a new list state keeps those). */
+    fun opening(holder: ScrollPlaceHolder, taken: BooleanArray): KeptPlace? =
+        if (taken[0]) null else pendingPlace(holder)?.let { KeptPlace(it, holder.following) }
+
     suspend fun reset(list: TranscriptListState, holder: ScrollPlaceHolder) {
         holder.place = null
         holder.fromStore = false
@@ -241,10 +245,7 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     // What this entry opens on: the place saved for it or kept for the conversation in this run, read once, before the
     // collector below takes the entry's own places. Those say where the list already is and are never put back.
     val taken = remember { booleanArrayOf(false) }
-    val opening =
-        remember(list) {
-            if (taken[0]) null else ScrollPlaceRules.pendingPlace(holder)?.let { KeptPlace(it, holder.following) }
-        }
+    val opening = remember(list) { ScrollPlaceRules.opening(holder, taken) }
     SideEffect {
         if (!restored[0] && resets == 0 && ScrollPlaceRules.restoreOnFirstFrame(list, opening, keys)) {
             restored[0] = true
