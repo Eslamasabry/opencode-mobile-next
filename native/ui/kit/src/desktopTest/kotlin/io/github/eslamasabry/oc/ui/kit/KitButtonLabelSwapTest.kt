@@ -32,14 +32,17 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** KitButton cross-fades label swaps via KitSwap at Full and swaps instantly at Off. */
+/**
+ * A KitButton whose action opts in with `swapLabels` cross-fades its words at Full and swaps them instantly at Off; a
+ * button that did not opt in changes its words at once, as every caller had before.
+ */
 @OptIn(ExperimentalTestApi::class)
 class KitButtonLabelSwapTest {
     private val width = 412
     private val height = 120
 
     @Composable
-    private fun Scene(motion: MotionLevel, label: String) {
+    private fun Scene(motion: MotionLevel, label: String, optIn: Boolean = true) {
         CompositionLocalProvider(LocalDensity provides Density(1f)) {
             KitTheme(
                 KitAppearance(mode = AppearanceMode.Dark, style = Style.Solid, motion = motion),
@@ -53,8 +56,7 @@ class KitButtonLabelSwapTest {
                         contentAlignment = Alignment.Center,
                     ) {
                         KitButton(
-                            label = label,
-                            onClick = {},
+                            action = KitAction(label, {}, swapLabels = if (optIn) SWAP_LABELS else emptyList()),
                             modifier = Modifier.fillMaxWidth(),
                             role = KitButtonRole.Secondary,
                         )
@@ -123,9 +125,36 @@ class KitButtonLabelSwapTest {
             assertEquals(0, changedPixels(afterOne, settled), "expected instant label swap under MotionLevel.Off")
         }
 
+    @Test
+    fun `B-KIT-011 a button that did not opt in changes its words at once at Full`() =
+        runDesktopComposeUiTest(width, height) {
+            var label by mutableStateOf("Not now")
+            setContent { Scene(MotionLevel.Full, label, optIn = false) }
+            waitForIdle()
+
+            mainClock.autoAdvance = false
+            label = "Keep these versions"
+            mainClock.advanceTimeByFrame()
+            val afterOne = onRoot().captureToImage().toPixelMap()
+            onNodeWithText("Keep these versions").assertExists()
+            onNodeWithText("Not now").assertDoesNotExist()
+
+            mainClock.autoAdvance = true
+            mainClock.advanceTimeBy(SETTLE_MS)
+            waitForIdle()
+            val settled = onRoot().captureToImage().toPixelMap()
+
+            assertEquals(
+                0,
+                changedPixels(afterOne, settled),
+                "expected a plain cut: a button without swapLabels must not cross-fade its words",
+            )
+        }
+
     private companion object {
         const val MID_SWAP_FRAMES = 4
         const val SETTLE_MS = 400L
         const val PIXEL_EPS = 0.02f
+        val SWAP_LABELS = listOf("Not now", "Keep these versions")
     }
 }
