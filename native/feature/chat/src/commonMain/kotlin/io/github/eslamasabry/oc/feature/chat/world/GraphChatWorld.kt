@@ -323,6 +323,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     private val mutableUndoing = MutableStateFlow(false)
     override val undoing: StateFlow<Boolean> = mutableUndoing.asStateFlow()
     private var activeUndo: CompletableDeferred<Unit>? = null
+    private var pendingBindRevertGate: CompletableDeferred<Unit>? = null
     private var stagedBoundary: String? = null
     override val capabilities: StateFlow<ServerCapabilities> = mutableCaps.asStateFlow()
     override val link: StateFlow<ChatLink> = mutableLink.asStateFlow()
@@ -1072,7 +1073,8 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         loadWaiting.value = false
     }
 
-    private fun bind(graph: ConnectionGraph?, revertGate: CompletableDeferred<Unit>? = null) {
+    private fun bind(graph: ConnectionGraph?) {
+        val revertGate = pendingBindRevertGate.also { pendingBindRevertGate = null }
         cancelFailedSettle()
         voiceGeneration++
         voiceLiveUsers.clear()
@@ -3504,12 +3506,17 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
                 lastRows = lastRows?.withoutUndoneFrom(from.raw)
                 publishShown()
                 handedOff = true
-                bind(graph, revertGate = gate)
+                rebindForRevert(graph, gate)
             }
             r
         } finally {
             if (!handedOff) finishUndoGate(gate)
         }
+    }
+
+    private fun rebindForRevert(graph: ConnectionGraph, gate: CompletableDeferred<Unit>) {
+        pendingBindRevertGate = gate
+        bind(graph)
     }
 
     private fun startUndoGate(): CompletableDeferred<Unit> {
@@ -3530,6 +3537,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     }
 
     private fun releaseUndoGate() {
+        val pending = pendingBindRevertGate
+        pendingBindRevertGate = null
+        pending?.complete(Unit)
         val gate = activeUndo
         activeUndo = null
         mutableUndoing.value = false
@@ -3562,7 +3572,7 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         } else {
             val rebind =
                 binding.graph.scope.launch(registry.mainContext) {
-                    if (currentAttached()?.graph === binding.graph) bind(binding.graph, revertGate = gate)
+                    if (currentAttached()?.graph === binding.graph) rebindForRevert(binding.graph, gate)
                     else finishUndoGate(gate)
                 }
             rebind.invokeOnCompletion { cause -> if (cause != null) finishUndoGate(gate) }

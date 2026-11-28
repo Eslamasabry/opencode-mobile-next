@@ -361,7 +361,8 @@ class UndoDirectChatTest {
                     replyMsg("a2", 4, "two"),
                 )
             val gateway = Oc2UndoGateway(base, history)
-            val (reg, world) = worldFixture(gateway, FakeOperationsGateway())
+            val ops = FakeOperationsGateway()
+            val (reg, world) = worldFixture(gateway, ops)
             val presenter = ChatPresenter(world, RecordingNavigator(), Immediate)
             val worlds =
                 object : ChatWorlds {
@@ -378,12 +379,14 @@ class UndoDirectChatTest {
             runCurrent()
             assertEquals(ChatLoad.Live, world.load.value)
 
-            // Real undo runs outside ChatWorld (via engine/review), then RevertChanged arrives while reread is held.
-            gateway.stageSessionRevert(ref.sessionId, MessageId("u2"), applyFiles = true)
+            // Real undo runs outside ChatWorld (via engine/review -> ops.revertSession), then RevertChanged arrives
+            // while the reread is held.
+            ops.revertSession(ref.sessionId, MessageId("u2"))
+            gateway.history = history.take(2)
             gateway.undoInProgress = true
             val reloadGate = CompletableDeferred<Unit>()
             gateway.holdNextHistory = reloadGate
-            base.events.emit(GatewayEvent.RevertChanged(ref.sessionId, RevertKind.Staged))
+            base.events.emit(GatewayEvent.RevertChanged(ref.sessionId, RevertKind.Committed))
             runCurrent()
 
             assertEquals(
