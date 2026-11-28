@@ -10,14 +10,19 @@ import io.github.eslamasabry.oc.android.notifications.ShadeTap
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
+import io.github.eslamasabry.oc.core.common.ids.MessageId
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.ids.SessionId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
+import io.github.eslamasabry.oc.core.domain.events.NoticeKind
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.AutomationAction
 import io.github.eslamasabry.oc.core.model.AutomationOutcome
 import io.github.eslamasabry.oc.core.model.AutomationStatus
 import io.github.eslamasabry.oc.core.model.AutomationTrigger
 import io.github.eslamasabry.oc.core.model.ServerAutomation
+import io.github.eslamasabry.oc.core.model.ServerPage
 import io.github.eslamasabry.oc.core.model.transcript.MessageAutomation
 import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
@@ -117,8 +122,9 @@ class AutomationAlertsCoordinatorTest {
         sessionId = "ses_9",
     )
 
-    /** The chat of the automation's runs, as the server would page it: oldest first. */
+    /** The chat of the automation's runs, oldest first; the server pages it from its newest end. */
     private val chat = mutableListOf<MessageWithParts>()
+    private var pagesRead = 0
 
     private fun coordinator(shade: FakeShade, server: MutableServerAutomations) =
         AutomationAlertsCoordinator(
@@ -127,10 +133,42 @@ class AutomationAlertsCoordinatorTest {
             serverName = { "Home server" },
             alertFacts = { backgroundFacts },
             redact = { it },
-            replies = { _, session -> chat.filter { it.info.sessionId == session } },
+            replies = { _, session, cursor -> page(session, cursor) },
         )
 
+    /** One page of the chat as the server reads it: the newest [PAGE] messages, then older ones by the cursor. */
+    private fun page(session: String, cursor: String?): ServerPage<MessageWithParts> {
+        pagesRead++
+        val all = chat.filter { it.info.sessionId == session }
+        val end = cursor?.toInt() ?: all.size
+        val start = maxOf(0, end - PAGE)
+        return ServerPage(all.subList(start, end).toImmutableList(), start.takeIf { it > 0 }?.toString())
+    }
+
+    private fun AutomationAlertsCoordinator.onMessage(profile: ProfileId, message: MessageInfo) {
+        onEvent(profile, GatewayEvent.MessageUpserted(message))
+    }
+
+    private fun AutomationAlertsCoordinator.onRunStarted(profile: ProfileId, session: String) {
+        onEvent(profile, GatewayEvent.RunStarted(SessionId(session)))
+    }
+
     private fun run(number: Int) = MessageAutomation(id = "aut_1", name = "Nightly check", run = number)
+
+    /** One step of a long run: an assistant message that only calls a tool, with nothing to read. */
+    private fun step(id: String) {
+        val info = MessageInfo(id = id, sessionId = "ses_9", role = Role.Assistant)
+        val tool = Part("prt_$id", id, sessionId = "ses_9", type = PartType.Tool, rawType = "tool")
+        chat += MessageWithParts(info, persistentListOf(tool))
+    }
+
+    /** A notice the server wrote into the chat as a user message; returns it as the stream shows it. */
+    private fun notice(id: String): MessageInfo {
+        val info = MessageInfo(id = id, sessionId = "ses_9", role = Role.User)
+        val part = Part("prt_$id", id, sessionId = "ses_9", type = PartType.Notice, rawType = "v2:notice")
+        chat += MessageWithParts(info, persistentListOf(part))
+        return info
+    }
 
     /** The automation's prompt of run [number], as the stream shows it and as the chat keeps it. */
     private fun prompt(number: Int): MessageInfo =
@@ -146,6 +184,12 @@ class AutomationAlertsCoordinatorTest {
         Part("prt_$message", message, sessionId = "ses_9", type = PartType.Text, rawType = "text", text = words)
 
     private val failure = RunOutcome.Failed(kind = null, tag = null, details = null)
+    private val instructions = NoticeKind.InstructionsUpdated
+
+    private companion object {
+        /** How many messages the fake server gives per page. */
+        const val PAGE = 24
+    }
 
     @Test
     fun `B-620 a failed automation run in the chat feed tells once on the automation's own alert`() = runTest {
@@ -212,11 +256,57 @@ class AutomationAlertsCoordinatorTest {
         assertTrue(shade.shown.isEmpty(), "run 1's words are not run 2's finding")
         assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "a quiet run has no finished alert either")
 
-        // A run whose prompt the page no longer holds has no reply to tell: nothing older speaks for it.
+        // A run whose prompt the chat does not hold anywhere has no reply to tell: nothing older speaks for it.
         val late = MessageInfo(id = "inb_3", sessionId = "ses_9", role = Role.User, automation = run(3))
         coordinator.onMessage(profile, late)
         coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
         assertTrue(shade.shown.isEmpty())
+    }
+
+    @Test
+    fun `B-620 a run longer than one page of its chat still tells its own reply's first line`() = runTest {
+        val shade = FakeShade()
+        val coordinator = coordinator(shade, MutableServerAutomations(sample(id = "aut_1", runCount = 1)))
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        // Run 1 found something earlier. Run 2 takes thirty steps before it says what it found, so its prompt
+        // is not among the newest messages of the chat when it ends.
+        prompt(1)
+        reply("msg_1", "Disk is almost full")
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunStarted(profile, "ses_9")
+        repeat(30) { step("stp_$it") }
+        // A notice the server writes into the chat mid-run is nobody's prompt: the run and its reply go on.
+        coordinator.onEvent(profile, GatewayEvent.Notice(SessionId("ses_9"), MessageId("msg_note"), instructions))
+        coordinator.onMessage(profile, notice("msg_note"))
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "a notice does not take the chat back")
+        reply("msg_2", "2 errors in logs\nSee the build page")
+        assertTrue(chat.size > PAGE + 2, "the prompt lies beyond the first page")
+
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
+        val posted = shade.shown.single().first
+        assertEquals(AlertKind.AutomationMessage, posted.kind)
+        assertEquals("2 errors in logs", posted.detail)
+        assertEquals(2, pagesRead, "read back only until the run's own prompt")
+    }
+
+    @Test
+    fun `B-620 a run whose prompt lies beyond the bound of pages tells nothing`() = runTest {
+        val shade = FakeShade()
+        val coordinator = coordinator(shade, MutableServerAutomations(sample(id = "aut_1", runCount = 1)))
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunStarted(profile, "ses_9")
+        repeat(10 * PAGE) { step("stp_$it") }
+        reply("msg_2", "2 errors in logs")
+
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
+        assertEquals(10, pagesRead, "the read back stops at its bound")
+        assertTrue(shade.shown.isEmpty(), "a reply that cannot be tied to the run's prompt is not told")
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "and the chat's finished alert stays down")
     }
 
     @Test

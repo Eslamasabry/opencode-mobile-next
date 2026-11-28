@@ -238,6 +238,27 @@ class AutomationAlertTrackerTest {
     }
 
     @Test
+    fun `B-620 a prompt no automation sent returns a kept run's chat to the chat's own alerts`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 4)))
+        // Run 5 is kept across a connection change, and its end was lost while offline.
+        tracker.onAutomationMessage("ses_1", prompt(run = 5), messageId = "inb_5")
+        tracker.setConnected(false)
+        tracker.setConnected(true)
+
+        // The run's own prompt shown again is not a person's prompt.
+        tracker.onPersonPrompt("ses_1", messageId = "inb_5")
+        assertTrue(tracker.isAutomationSession("ses_1"))
+
+        // A person's own prompt is: the stale run does not outlive the chat's next real run.
+        tracker.onPersonPrompt("ses_1", messageId = "inb_person")
+        assertFalse(tracker.isAutomationSession("ses_1"), "the chat's alerts speak for the person's run")
+        val persons = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertTrue(persons.post.isEmpty(), "a person's failed run is not the automation's failure")
+    }
+
+    @Test
     fun `B-620 an automation prompt queued behind a person's run waits for its own run`() {
         val tracker = AutomationAlertTracker(profileId = "p1")
         tracker.setConnected(true)
