@@ -62,14 +62,14 @@ class ColdStartLaunchTest {
 
             runCurrent()
             // At t = 0, OpenCode is still booting (blocked on openCodeGate), yet both sources are
-            // seeded and the helper + adoption have ALREADY started.
+            // seeded and the helper has ALREADY started. Adoption of a source not saved yet waits
+            // for the primary connection: a helper start it needs is refused before the activity resumed.
             assertTrue(helperJobRunning, "helper must start while OpenCode is still booting")
             assertEquals(
                 listOf(
                     0L to "seed:phone",
                     0L to "seed:phone-agents",
                     0L to "startHelper:phone-agents",
-                    0L to "adoptHelpers",
                     0L to "connectPrimary:phone",
                 ),
                 events,
@@ -83,8 +83,11 @@ class ColdStartLaunchTest {
 
             assertEquals(6_000L, openCodeReadyAt)
             assertEquals(6_000L, helperReadyAt, "helper finishes alongside OpenCode at 6 s")
-            assertTrue(events.any { it.second == "primaryComplete:ok" })
-            assertTrue(events.any { it.second == "syncRemaining" })
+            assertEquals(
+                listOf("primaryComplete:ok", "adoptHelpers", "syncRemaining"),
+                events.map { it.second }.filter { it in setOf("primaryComplete:ok", "adoptHelpers", "syncRemaining") },
+                "adoption follows the primary connection, before the remaining sources join",
+            )
         }
 
     @Test
@@ -105,6 +108,6 @@ class ColdStartLaunchTest {
                     syncRemaining = { events += "syncRemaining" },
                 ),
             )
-            assertEquals(listOf("adoptHelpers", "complete:empty", "syncRemaining"), events)
+            assertEquals(listOf("complete:empty", "adoptHelpers", "syncRemaining"), events)
         }
 }

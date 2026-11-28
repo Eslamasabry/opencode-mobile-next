@@ -102,4 +102,98 @@ class B486LinuxSpeedRetryTest {
         assertTrue(LinuxProotProbe.isCompatibleFallback(compatMarker = true, liveProotMode = "unknown"))
         assertTrue(LinuxProotProbe.isCompatibleFallback(compatMarker = false, liveProotMode = "ptrace"))
     }
+
+    private fun running(openCode: Boolean, helper: Boolean) =
+        LinuxFastRetry.Running(openCodeCompatible = openCode, helperCompatible = helper)
+
+    private fun plan(probe: Boolean, openCode: Boolean = false, helper: Boolean = false) =
+        LinuxFastRetry.Plan(probe = probe, restartOpenCode = openCode, restartHelper = helper)
+
+    @Test
+    fun `B-LINUX-486 a busy phone refuses the retry while OpenCode or the helper runs in compatible mode`() {
+        val refused = plan(probe = false)
+        assertEquals(refused, LinuxFastRetry.plan(running(openCode = true, helper = false), idle = false))
+        assertEquals(refused, LinuxFastRetry.plan(running(openCode = false, helper = true), idle = false))
+        assertEquals(refused, LinuxFastRetry.plan(running(openCode = true, helper = true), idle = false))
+    }
+
+    @Test
+    fun `B-LINUX-486 an idle phone tests fast mode and restarts everything that ran in compatible mode`() {
+        assertEquals(
+            plan(probe = true, openCode = true, helper = true),
+            LinuxFastRetry.plan(running(openCode = true, helper = true), idle = true),
+        )
+        assertEquals(
+            plan(probe = true, helper = true),
+            LinuxFastRetry.plan(running(openCode = false, helper = true), idle = true),
+        )
+        assertEquals(
+            plan(probe = true, openCode = true),
+            LinuxFastRetry.plan(running(openCode = true, helper = false), idle = true),
+        )
+    }
+
+    @Test
+    fun `B-LINUX-486 with nothing running in compatible mode the retry tests and restarts nothing`() {
+        val nothing = running(openCode = false, helper = false)
+        assertEquals(plan(probe = true), LinuxFastRetry.plan(nothing, idle = true))
+        assertEquals(plan(probe = true), LinuxFastRetry.plan(nothing, idle = false))
+    }
+
+    @Test
+    fun `B-LINUX-486 the row reads Fast only when everything that ran compatible was restarted`() {
+        val both = plan(probe = true, openCode = true, helper = true)
+        assertTrue(LinuxFastRetry.fastReached(both, openCodeRestarted = true, helperRestarted = true))
+        assertFalse(
+            "a helper still in compatible mode is not Fast",
+            LinuxFastRetry.fastReached(both, openCodeRestarted = true, helperRestarted = false),
+        )
+        assertFalse(
+            "an OpenCode still in compatible mode is not Fast",
+            LinuxFastRetry.fastReached(both, openCodeRestarted = false, helperRestarted = true),
+        )
+        assertTrue(LinuxFastRetry.fastReached(plan(probe = true), openCodeRestarted = false, helperRestarted = false))
+        assertFalse(LinuxFastRetry.fastReached(plan(probe = false), openCodeRestarted = false, helperRestarted = false))
+    }
+
+    @Test
+    fun `B-LINUX-486 what was started under the saved compatible mode counts as running compatible`() {
+        // The kernel does not always say how OpenCode runs (no filter count before Linux 5.9): the saved mode decides.
+        assertEquals(
+            running(openCode = true, helper = true),
+            LinuxFastRetry.running(
+                compatMarker = true,
+                liveProotMode = "unknown",
+                openCodeRunning = true,
+                helperRunning = true,
+            ),
+        )
+        assertEquals(
+            running(openCode = true, helper = false),
+            LinuxFastRetry.running(
+                compatMarker = false,
+                liveProotMode = "ptrace",
+                openCodeRunning = true,
+                helperRunning = true,
+            ),
+        )
+        assertEquals(
+            running(openCode = false, helper = false),
+            LinuxFastRetry.running(
+                compatMarker = false,
+                liveProotMode = "seccomp",
+                openCodeRunning = true,
+                helperRunning = true,
+            ),
+        )
+        assertEquals(
+            running(openCode = false, helper = false),
+            LinuxFastRetry.running(
+                compatMarker = true,
+                liveProotMode = "ptrace",
+                openCodeRunning = false,
+                helperRunning = false,
+            ),
+        )
+    }
 }
