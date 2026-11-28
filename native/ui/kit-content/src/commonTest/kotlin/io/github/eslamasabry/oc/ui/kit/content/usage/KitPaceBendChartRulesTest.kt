@@ -55,6 +55,68 @@ class KitPaceBendChartRulesTest {
         return PaceLabelRect(cx - half, cy - half, cx + half, cy + half)
     }
 
+    private fun nowDotBox(input: PaceNoneLeftInput, minGap: Float): PaceLabelRect {
+        val cx = PaceBendRules.xForFraction(input.elapsed, input.x0, input.x1, input.rtl)
+        val cy = PaceBendRules.yForLeft(0f, input.top, input.plotHeight)
+        val half = NOW_RING_DP + minGap
+        return PaceLabelRect(cx - half, cy - half, cx + half, cy + half)
+    }
+
+    /** True when the closed line segment from `(ax, ay)` to `(bx, by)` intersects [rect]. */
+    private fun segmentEntersRect(
+        ax: Float,
+        ay: Float,
+        bx: Float,
+        by: Float,
+        rect: PaceLabelRect,
+    ): Boolean {
+        val dx = bx - ax
+        val dy = by - ay
+        val (txMin, txMax) =
+            if (dx == 0f) {
+                if (ax < rect.left || ax > rect.right) return false
+                0f to 1f
+            } else {
+                val u1 = (rect.left - ax) / dx
+                val u2 = (rect.right - ax) / dx
+                minOf(u1, u2) to maxOf(u1, u2)
+            }
+        val (tyMin, tyMax) =
+            if (dy == 0f) {
+                if (ay < rect.top || ay > rect.bottom) return false
+                0f to 1f
+            } else {
+                val v1 = (rect.top - ay) / dy
+                val v2 = (rect.bottom - ay) / dy
+                minOf(v1, v2) to maxOf(v1, v2)
+            }
+        return maxOf(0f, txMin, tyMin) <= minOf(1f, txMax, tyMax)
+    }
+
+    private fun outCase(
+        plotHeight: Float,
+        elapsed: Float,
+        labelWidth: Float,
+        labelHeight: Float,
+        rtl: Boolean = false,
+    ): PaceNoneLeftInput {
+        val top = 8f + labelHeight
+        val canvasHeight = top + plotHeight + 10f + labelHeight + 4f + labelHeight + 6f
+        return PaceNoneLeftInput(
+            x0 = 21f,
+            x1 = 339f,
+            top = top,
+            plotHeight = plotHeight,
+            canvasHeight = canvasHeight,
+            rtl = rtl,
+            elapsed = elapsed,
+            labelSize = PaceLabelSize(labelWidth, labelHeight),
+            axisRowHeight = labelHeight,
+            axisLabelGap = 6f,
+            rowGap = 4f,
+        )
+    }
+
     @Test
     fun `B-508 x coordinate mirrors cleanly in RTL and y maps full to top and empty to base`() {
         assertEquals(10f, PaceBendRules.xForFraction(0f, 10f, 110f, rtl = false))
@@ -113,6 +175,10 @@ class KitPaceBendChartRulesTest {
                 claudeWeeklyInput(scale = 1.0f),
                 claudeWeeklyInput(scale = 1.3f),
                 claudeWeeklyInput(scale = 1.3f, rtl = true),
+                claudeWeeklyInput(scale = 1.0f).copy(left = 0.90f, atReset = 0.80f),
+                claudeWeeklyInput(scale = 1.3f).copy(left = 0.90f, atReset = 0.80f),
+                claudeWeeklyInput(scale = 1.0f, rtl = true).copy(left = 0.90f, atReset = 0.80f),
+                claudeWeeklyInput(scale = 1.3f, rtl = true).copy(left = 0.90f, atReset = 0.80f),
                 fiveHour,
                 fiveHourMidDot,
             )
@@ -122,6 +188,14 @@ class KitPaceBendChartRulesTest {
             assertGuideRectValid(landing, input, "landing")
             val dot = nowDotBox(input)
             assertFalse(landing.overlaps(dot), "landing $landing must stay clear of the now dot $dot for $input")
+            val nowX = PaceBendRules.xForFraction(input.elapsed, input.x0, input.x1, input.rtl)
+            val nowY = PaceBendRules.yForLeft(input.left, input.top, input.plotHeight)
+            val resetX = PaceBendRules.xForFraction(1f, input.x0, input.x1, input.rtl)
+            val landY = PaceBendRules.yForLeft(checkNotNull(input.atReset), input.top, input.plotHeight)
+            assertFalse(
+                segmentEntersRect(nowX, nowY, resetX, landY, landing),
+                "forecast segment must not enter landing $landing for $input",
+            )
             placed.evenPace?.let { even ->
                 assertGuideRectValid(even, input, "evenPace")
                 assertFalse(
@@ -129,6 +203,32 @@ class KitPaceBendChartRulesTest {
                     "landing $landing and evenPace $even must not overlap",
                 )
             }
+        }
+    }
+
+    @Test
+    fun `B-508 none-left label in the out state is clear of the even-pace line and the now dot`() {
+        val cases =
+            listOf(
+                outCase(plotHeight = 56f, elapsed = 0.40f, labelWidth = 57f, labelHeight = 16f),
+                outCase(plotHeight = 56f, elapsed = 0.40f, labelWidth = 72f, labelHeight = 20.8f),
+                outCase(plotHeight = 56f, elapsed = 0.40f, labelWidth = 72f, labelHeight = 20.8f, rtl = true),
+                outCase(plotHeight = 104f, elapsed = 0.50f, labelWidth = 57f, labelHeight = 16f),
+                outCase(plotHeight = 104f, elapsed = 0.50f, labelWidth = 72f, labelHeight = 20.8f),
+            )
+        for (input in cases) {
+            val rect = assertNotNull(PaceBendRules.placeNoneLeftLabel(input), "none-left label missing for $input")
+            val base = input.top + input.plotHeight
+            assertTrue(rect.left >= input.x0 && rect.right <= input.x1, "label $rect outside x bounds")
+            assertTrue(rect.top >= 0f && rect.bottom <= input.canvasHeight, "label $rect outside canvas")
+            val xStart = PaceBendRules.xForFraction(0f, input.x0, input.x1, input.rtl)
+            val xReset = PaceBendRules.xForFraction(1f, input.x0, input.x1, input.rtl)
+            assertFalse(
+                segmentEntersRect(xStart, input.top, xReset, base, rect),
+                "even-pace segment must not enter none-left label $rect for $input",
+            )
+            val dot = nowDotBox(input, minGap = 6f)
+            assertFalse(rect.overlaps(dot), "none-left label $rect must stay clear of now dot $dot for $input")
         }
     }
 }

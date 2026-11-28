@@ -508,6 +508,21 @@ public data class PaceGuidePlacement(
     val evenPace: PaceLabelRect?,
 )
 
+/** Geometry and label size needed to place the 'None left' label in the [KitPaceBendState.Out] state. */
+public data class PaceNoneLeftInput(
+    val x0: Float,
+    val x1: Float,
+    val top: Float,
+    val plotHeight: Float,
+    val canvasHeight: Float,
+    val rtl: Boolean,
+    val elapsed: Float,
+    val labelSize: PaceLabelSize,
+    val axisRowHeight: Float,
+    val axisLabelGap: Float,
+    val rowGap: Float,
+)
+
 /** Pure layout and coordinate rules behind [KitPaceBendChart], testable without Compose. */
 public object PaceBendRules {
     /** Maps window fraction `0..1` to horizontal coordinate, mirrored in RTL. */
@@ -575,6 +590,20 @@ public object PaceBendRules {
 
     private fun evenPaceY(x: Float, input: PaceGuideLayoutInput): Float =
         yForLeft(1f - fractionForX(x, input), input.top, input.plotHeight)
+
+    /** Places the 'None left' label for an exhausted ([KitPaceBendState.Out]) window. */
+    public fun placeNoneLeftLabel(input: PaceNoneLeftInput): PaceLabelRect? {
+        val size = input.labelSize
+        if (size.width <= 0f || size.height <= 0f) return null
+        val base = input.top + input.plotHeight
+        val xNow = xForFraction(input.elapsed, input.x0, input.x1, input.rtl)
+        val xReset = xForFraction(1f, input.x0, input.x1, input.rtl)
+        val center = (xNow + xReset) / 2f
+        val maxX = (input.x1 - size.width).coerceAtLeast(input.x0)
+        val left = (center - size.width / 2f).coerceIn(input.x0, maxX)
+        val y = (base - HATCH_HALF_DP - size.height - OUT_LABEL_PAD_DP).coerceAtLeast(input.top)
+        return PaceLabelRect(left = left, top = y, right = left + size.width, bottom = y + size.height)
+    }
 
     /**
      * Places axis labels in priority order, clamping every label inside `[x0, x1]` and dropping any
