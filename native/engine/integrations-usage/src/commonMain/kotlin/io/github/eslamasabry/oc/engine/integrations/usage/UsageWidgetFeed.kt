@@ -235,7 +235,6 @@ public class UsageWidgetFeed(
         thisPhone: Boolean = false,
     ) {
         if (!isAndroid || profileId.isEmpty()) return
-        history?.recordProviderReadings(profileId, readings)
         mutate(profileId, profileName, local = thisPhone) { rows ->
             rows.clear()
             for (reading in readings) {

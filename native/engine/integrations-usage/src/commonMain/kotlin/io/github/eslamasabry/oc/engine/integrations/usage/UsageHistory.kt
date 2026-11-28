@@ -46,6 +46,9 @@ public class UsageHistory(
     private val lock = Mutex()
     private val byConnection = LinkedHashMap<String, MutableMap<WindowKey, List<UsageSample>>>()
     private val loadedConnections = HashSet<String>()
+
+    /** Connections whose stored history the store refused to delete: never loaded, deleted on the next use. */
+    private val pendingRemovals = LinkedHashSet<String>()
     private val _samples = MutableStateFlow<Map<WindowKey, List<UsageSample>>>(emptyMap())
 
     /** Reactive view of every loaded window's ordered samples. */
@@ -57,11 +60,13 @@ public class UsageHistory(
 
     /** Loads persisted history for [connectionId] once under [lock]; corrupt/missing data is empty. */
     public suspend fun loadConnection(connectionId: String): Unit = lock.withLock {
+        retryHistoryRemovals(store, lane, pendingRemovals)
         ensureLoadedLocked(connectionId)
     }
 
     private fun ensureLoadedLocked(connectionId: String) {
-        if (connectionId.isEmpty() || !loadedConnections.add(connectionId)) return
+        val skipped = connectionId.isEmpty() || connectionId in pendingRemovals
+        if (skipped || !loadedConnections.add(connectionId)) return
         val decoded = decodeUsageHistoryConnection(store.string(key(connectionId)), MAX_SAMPLES_PER_WINDOW)
         pruneConnectionSlot(decoded, clock())
         trimConnectionWindows(decoded, MAX_WINDOWS_PER_CONNECTION)
@@ -81,7 +86,7 @@ public class UsageHistory(
         connectionId: String,
         key: WindowKey,
         sample: UsageSample,
-    ): Boolean = recordBatch(connectionId, listOf(key to sample))
+    ): Boolean = recordBatch(connectionId) { listOf(key to sample) }
 
     public suspend fun recordSample(
         connectionId: String,
@@ -91,31 +96,44 @@ public class UsageHistory(
         fetchedAt: Instant = clock(),
     ): Boolean = recordSample(connectionId, key, UsageSample(fetchedAt, usedPercent, resetsAt))
 
-    public suspend fun recordReadings(readings: List<UsageReading>) {
-        for ((connectionId, updates) in collectReadingSamples(readings)) {
-            recordBatch(connectionId, updates)
+    /**
+     * Records [readings]. [keep] is asked while the history is held for writing, so a reading whose
+     * profile or reader was removed while this call waited is left out.
+     */
+    public suspend fun recordReadings(
+        readings: List<UsageReading>,
+        keep: (UsageReading) -> Boolean = { true },
+    ) {
+        for ((connectionId, group) in readings.groupBy { it.connectionId }) {
+            recordBatch(connectionId) { collectReadingSamples(group.filter(keep)) }
         }
     }
 
+    /** Records [readings] of [connectionId] unless [allowed], asked while the history is held, says no. */
     public suspend fun recordProviderReadings(
         connectionId: String,
         readings: List<ProviderUsageReading>,
+        allowed: () -> Boolean = { true },
     ) {
-        val updates = collectProviderSamples(connectionId, readings)
-        if (updates.isNotEmpty()) recordBatch(connectionId, updates)
+        recordBatch(connectionId) {
+            if (allowed()) collectProviderSamples(connectionId, readings) else emptyList()
+        }
     }
 
     public suspend fun recordSnapshot(snapshot: UsageSnapshot) {
         for ((connectionId, updates) in collectSnapshotSamples(snapshot)) {
-            recordBatch(connectionId, updates)
+            recordBatch(connectionId) { updates }
         }
     }
 
-    /** Deletes persisted and in-memory history for [connectionId]. */
+    /**
+     * Deletes persisted and in-memory history for [connectionId]. When the store refuses, false is
+     * returned, the stored history is not loaded again, and the delete is tried on the next use.
+     */
     public suspend fun removeProfile(connectionId: String): Boolean = lock.withLock {
         byConnection.remove(connectionId)
         loadedConnections -= connectionId
-        val ok = store.commit(lane) { remove(key(connectionId)) } is Outcome.Ok
+        val ok = deleteStoredHistory(store, lane, pendingRemovals, connectionId)
         _samples.value =
             mergeUsageHistory(
                 byConnection,
@@ -151,16 +169,21 @@ public class UsageHistory(
         }
     }
 
+    /** Applies [updates], which is asked for under [lock], to [connectionId] and persists a change. */
     private suspend fun recordBatch(
         connectionId: String,
-        updates: List<Pair<WindowKey, UsageSample>>,
+        updates: () -> List<Pair<WindowKey, UsageSample>>,
     ): Boolean = lock.withLock {
+        retryHistoryRemovals(store, lane, pendingRemovals)
+        val batch = if (connectionId.isEmpty()) emptyList() else updates()
         var result = true
-        if (connectionId.isNotEmpty() && updates.isNotEmpty()) {
+        if (batch.isNotEmpty()) {
             ensureLoadedLocked(connectionId)
             val slot = byConnection.getOrPut(connectionId) { LinkedHashMap() }
-            if (applyWindowUpdates(slot, updates, clock())) {
+            if (applyWindowUpdates(slot, batch, clock())) {
                 result = persistConnection(store, lane, byConnection, connectionId)
+                // The new record replaced the one a refused delete had left behind.
+                if (result && pendingRemovals.remove(connectionId)) loadedConnections += connectionId
                 _samples.value =
                     mergeUsageHistory(
                         byConnection,
@@ -310,6 +333,28 @@ private suspend fun persistConnection(
         val payload = encodeUsageHistoryConnection(slot)
         store.commit(lane) { putString(storageKey, payload) } is Outcome.Ok
     }
+}
+
+/** Deletes [connectionId]'s stored history; a refused delete is remembered in [pending] for the next use. */
+private suspend fun deleteStoredHistory(
+    store: KeyValueStore,
+    lane: WriterLane,
+    pending: MutableSet<String>,
+    connectionId: String,
+): Boolean {
+    val storageKey = UsageHistory.key(connectionId)
+    val ok = store.string(storageKey) == null || store.commit(lane) { remove(storageKey) } is Outcome.Ok
+    if (ok) pending -= connectionId else pending += connectionId
+    return ok
+}
+
+private suspend fun retryHistoryRemovals(
+    store: KeyValueStore,
+    lane: WriterLane,
+    pending: MutableSet<String>,
+) {
+    if (pending.isEmpty()) return
+    for (connectionId in pending.toList()) deleteStoredHistory(store, lane, pending, connectionId)
 }
 
 private fun applyWindowUpdates(

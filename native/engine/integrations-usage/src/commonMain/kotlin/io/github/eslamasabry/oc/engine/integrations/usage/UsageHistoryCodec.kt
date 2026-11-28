@@ -4,9 +4,9 @@ import io.github.eslamasabry.oc.core.common.dart.DartJson
 import kotlin.time.Duration
 import kotlin.time.Instant
 
-private const val HISTORY_FORMAT_VERSION: Long = 1L
-private const val HISTORY_MAX_JSON_BYTES: Int = 524_288
-private const val HISTORY_MAX_WINDOWS: Int = UsageHistory.MAX_WINDOWS_PER_CONNECTION
+internal const val HISTORY_FORMAT_VERSION: Long = 1L
+internal const val HISTORY_MAX_JSON_BYTES: Int = 524_288
+internal const val HISTORY_MAX_WINDOWS: Int = UsageHistory.MAX_WINDOWS_PER_CONNECTION
 private const val HISTORY_MAX_SUB_KEY_LENGTH: Int = 192
 private const val HISTORY_MAX_WINDOW_ID_LENGTH: Int = 64
 private const val HISTORY_TUPLE_SIZE: Int = 3
@@ -22,14 +22,12 @@ internal fun providerWindowId(window: ProviderUsageWindowReading): String =
         else -> window.label.ifEmpty { "window" }
     }
 
-internal fun collectReadingSamples(
-    readings: List<UsageReading>,
-): Map<String, List<Pair<WindowKey, UsageSample>>> {
-    val grouped = LinkedHashMap<String, MutableList<Pair<WindowKey, UsageSample>>>()
+/** The samples of [readings], which all belong to one connection, in reading order. */
+internal fun collectReadingSamples(readings: List<UsageReading>): List<Pair<WindowKey, UsageSample>> {
+    val updates = ArrayList<Pair<WindowKey, UsageSample>>()
     for (reading in readings) {
         if (reading.hasNumbers && reading.problem != UsageProblem.Offline) {
             val subKey = usageSubscriptionKey(reading.providerId, reading.accountRef, reading.connectionId)
-            val updates = grouped.getOrPut(reading.connectionId) { ArrayList() }
             for (window in reading.windows) {
                 updates +=
                     UsageHistory.windowKey(subKey, window.id) to
@@ -37,7 +35,7 @@ internal fun collectReadingSamples(
             }
         }
     }
-    return grouped
+    return updates
 }
 
 internal fun collectProviderSamples(
@@ -82,31 +80,6 @@ internal fun collectSnapshotSamples(
         }
     }
     return grouped
-}
-
-internal fun encodeUsageHistoryConnection(windows: Map<WindowKey, List<UsageSample>>): String {
-    val bounded =
-        if (windows.size <= HISTORY_MAX_WINDOWS) {
-            windows
-        } else {
-            LinkedHashMap(windows).also { trimConnectionWindows(it, HISTORY_MAX_WINDOWS) }
-        }
-    val entries =
-        bounded.entries.map { (key, list) ->
-            linkedMapOf<String, Any?>(
-                "s" to UsageHistory.opaqueSubscriptionKey(key.subscriptionKey),
-                "i" to key.windowId,
-                "p" to
-                    list.map { sample ->
-                        listOf(
-                            sample.fetchedAt.toEpochMilliseconds(),
-                            sample.usedPercent,
-                            sample.resetsAt?.toEpochMilliseconds(),
-                        )
-                    },
-            )
-        }
-    return DartJson.encode(linkedMapOf("v" to HISTORY_FORMAT_VERSION, "w" to entries))
 }
 
 internal fun decodeUsageHistoryConnection(

@@ -307,7 +307,8 @@ public class UsageSubscriptionsEngine(
         refreshedAt = now
         loaded = true
         for (id in touched) saveCache(id)
-        if (recorded.isNotEmpty()) historyStore.recordReadings(recorded)
+        // A profile or reader removed while the cache was being saved gets no history from this read.
+        historyStore.recordReadings(recorded) { cache[it.connectionId]?.containsKey(it.providerId) == true }
         migrateOnce()
         rebuild(loaded = true)
         syncAlerts()
@@ -596,8 +597,11 @@ public class UsageSubscriptionsEngine(
         signIns.remove(profileId)
         authoritative -= profileId
         offline -= profileId
-        if (store.commit(lane) { remove(lastKey(profileId)) } !is Outcome.Ok) return false
-        if (!historyStore.removeProfile(profileId)) return false
+        // The history goes even when the cached numbers could not be deleted, and the other way round.
+        val cacheGone = store.commit(lane) { remove(lastKey(profileId)) } is Outcome.Ok
+        val historyGone = historyStore.removeProfile(profileId)
+        if (!historyGone) log.w { "usage history removal failed for $profileId" }
+        if (!cacheGone || !historyGone) return false
         rebuild(loaded)
         val alive = _snapshot.value.subscriptions.mapTo(HashSet()) { it.key }
         if (subscriptionAlerts?.prune(alive) == false) return false

@@ -1,5 +1,6 @@
 package io.github.eslamasabry.oc.engine.integrations.usage
 
+import io.github.eslamasabry.oc.core.common.AppLog
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.getOrNull
 import io.github.eslamasabry.oc.core.data.kv.KeyValueStore
@@ -55,6 +56,7 @@ public class PaseoUsageMonitor(
     private val readAt = HashMap<String, Instant>()
     private val last = HashMap<String, List<ProviderUsageReading>>()
     private val refreshing = Mutex()
+    private val log = AppLog.tagged("usage")
     private var history: UsageHistory? = null
     private var foreground = true
     private var backgroundAllowed = false
@@ -171,13 +173,27 @@ public class PaseoUsageMonitor(
         readAt[id] = clock()
         last[id] = readings
         widget?.recordReadings(id, profile?.name ?: "", readings, thisPhone = isPhone)
-        if (!current()) {
-            widget?.clearForProfile(id)
-            if (id in blocked || (!disposed && !enabled(id))) history?.removeProfile(id)
+        if (current()) {
+            recordHistory(id, readings) { current() }
         } else {
-            history?.recordProviderReadings(id, readings)
-            if (id in blocked || (!disposed && !enabled(id))) history?.removeProfile(id)
+            widget?.clearForProfile(id)
         }
+    }
+
+    /**
+     * The one history write of a read. [current] is asked again while the history is held, so a read that waited
+     * behind a removal writes nothing; a removal that arrived during the write is undone here, and a delete the
+     * store refuses is kept by [UsageHistory] for its next use.
+     */
+    private suspend fun recordHistory(
+        id: String,
+        readings: List<ProviderUsageReading>,
+        current: () -> Boolean,
+    ) {
+        val target = history ?: return
+        target.recordProviderReadings(id, readings, current)
+        val gone = id in blocked || (!disposed && !enabled(id))
+        if (gone && !target.removeProfile(id)) log.w { "usage history removal failed for $id" }
     }
 
     /** A saved server is being removed: stop reading it and clear its widget rows; the sweep removes the opt-in. */
