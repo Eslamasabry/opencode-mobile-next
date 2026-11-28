@@ -386,12 +386,30 @@ class AppTeamHost(
                     .header("Authorization", "Bearer $token")
                     .post(json.toRequestBody(JSON))
                     .build()
-            client.newCall(request).execute().use { response ->
-                check(response.code == 200)
-                val bytes = response.body.bytes()
-                check(bytes.size <= HEALTH_BODY)
-                bytes.toString(Charsets.UTF_8)
+            try {
+                client.newCall(request).execute().use { response ->
+                    check(response.code == 200)
+                    val bytes = readBounded(response.body, HEALTH_BODY)
+                    bytes.toString(Charsets.UTF_8)
+                }
+            } finally {
+                client.dispatcher.cancelAll()
+                client.connectionPool.evictAll()
+                client.dispatcher.executorService.shutdown()
             }
+        }
+
+    private fun readBounded(body: okhttp3.ResponseBody, limit: Int): ByteArray =
+        body.byteStream().use { input ->
+            val out = java.io.ByteArrayOutputStream()
+            val chunk = ByteArray(POST_READ_CHUNK_BYTES)
+            while (true) {
+                val count = input.read(chunk)
+                if (count < 0) break
+                check(out.size() + count <= limit)
+                if (count > 0) out.write(chunk, 0, count)
+            }
+            out.toByteArray()
         }
 
     private suspend fun get(transport: AndroidQuotaTransport, url: String, token: String, limit: Int): String {
@@ -421,6 +439,7 @@ class AppTeamHost(
         val JSON = "application/json".toMediaType()
         val CODE = Regex("^[A-Za-z][A-Za-z0-9_]{0,63}$")
         const val HEALTH_BODY = 64 * 1024
+        const val POST_READ_CHUNK_BYTES = 8 * 1024
 
         /** Flutter `TeamProjectController._draftKey` (registered with the profile sweep as deferred team data). */
         const val DRAFTS = "oc.teamEditorDrafts."

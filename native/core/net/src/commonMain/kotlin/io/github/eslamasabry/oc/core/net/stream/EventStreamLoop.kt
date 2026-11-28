@@ -271,6 +271,7 @@ public class EventStreamLoop(
         }
         val all = interrupts + reader
         val end = select { all.forEach { d -> d.onAwait { it } } }
+        if (end != End.Clean) body.close()
         all.forEach { it.cancel() }
         end
     }

@@ -93,18 +93,19 @@ object GitWiring {
             )
         val now = { clock.now().toEpochMilliseconds() }
         val tokens = GitHubTokenStore(stores.secrets, redactor)
+        val workspaces =
+            ServerGitWorkspaces(
+                registry,
+                http,
+                credentialSources,
+                redactor,
+                application,
+                stores,
+                dispatchers,
+            )
         val services =
             GitServices(
-                workspaces =
-                    ServerGitWorkspaces(
-                        registry,
-                        http,
-                        credentialSources,
-                        redactor,
-                        application,
-                        stores,
-                        dispatchers,
-                    ),
+                workspaces = workspaces,
                 tokens = tokens,
                 flow = GitHubDeviceFlow(NetGitHubHttp(github, api), redactor, now),
                 redactor = redactor,
@@ -120,7 +121,9 @@ object GitWiring {
         appScope.launch {
             if (stores.warm() !is Outcome.Ok) return@launch
             stores.profiles.profiles.collect { loaded ->
-                services.forgetRemovedProfiles(loaded.map { it.id }.toSet())
+                val existing = loaded.map { it.id }.toSet()
+                services.forgetRemovedProfiles(existing)
+                workspaces.evictRemovedProfiles(existing)
             }
         }
         return services
@@ -270,6 +273,16 @@ private class ServerGitWorkspaces(
             clients[profile.id] = graph to client
             client
         }
+
+    /** Closes and removes any cached Git HTTP clients whose profiles were deleted. */
+    suspend fun evictRemovedProfiles(existing: Set<ProfileId>) {
+        val removed =
+            lock.withLock {
+                val gone = clients.keys.filter { it !in existing }
+                gone.mapNotNull { clients.remove(it)?.second }
+            }
+        removed.forEach { it.close() }
+    }
 
     private fun phoneStillOwns(phone: ProfileId): Boolean =
         try {

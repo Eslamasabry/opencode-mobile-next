@@ -20,8 +20,6 @@ import io.github.eslamasabry.oc.protocol.oc2.wire.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
-import io.ktor.client.statement.bodyAsBytes
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.utils.io.readAvailable
 import kotlin.io.encoding.Base64
@@ -504,7 +502,10 @@ internal class Oc2Gateway(
                 NetworkGate(network),
                 clock,
                 Random.Default,
-                StreamInputs(reconnectAllowed = spec.reconnectAllowed),
+                StreamInputs(
+                    visibility = spec.visibility,
+                    reconnectAllowed = spec.reconnectAllowed,
+                ),
             )
         loop = live
         stream =
@@ -613,9 +614,9 @@ internal class Oc2Gateway(
         return net.exchange(
             { request(route.path, route.method, route.query) },
             readFailure = ::readFailure,
-        ) {
-            it.bodyAsBytes()
-        }
+        ) { reply ->
+            boundedBody(reply, MAX_TRANSFER_BYTES)
+        }.flatMap { bytes -> bytes?.ok() ?: Failure.UnreadableReply().failed() }
     }
 
     private suspend fun rawJson(
@@ -638,7 +639,11 @@ internal class Oc2Gateway(
                 },
                 readFailure = ::readFailure,
             ) { reply ->
-                if (reply.status == HttpStatusCode.NoContent) "null" else reply.bodyAsText()
+                if (reply.status == HttpStatusCode.NoContent) {
+                    "null"
+                } else {
+                    boundedBody(reply, MAX_JSON_BYTES)?.decodeToString()
+                }
             }
         return when (response) {
             is Outcome.Failed -> {
@@ -652,7 +657,7 @@ internal class Oc2Gateway(
                 else response
             }
             is Outcome.Ok ->
-                Oc2Wire.parse(response.value)?.ok() ?: Failure.UnreadableReply().failed()
+                response.value?.let(Oc2Wire::parse)?.ok() ?: Failure.UnreadableReply().failed()
         }
     }
 
@@ -664,8 +669,7 @@ internal class Oc2Gateway(
         val status = reply.status.value
         val fallback = StatusMapping.failureFor(status, auth != null)
         if (status == 401 || status == 403) return fallback
-        val bytes = reply.bodyAsBytes()
-        if (bytes.size > 65_536) return fallback
+        val bytes = boundedBody(reply, MAX_ERROR_BYTES) ?: return fallback
         val obj = Oc2Wire.parse(bytes.decodeToString()) as? JsonObject ?: return fallback
         val text = obj.str("_tag") ?: obj.str("code")
         val tag =
@@ -919,7 +923,7 @@ internal class Oc2Gateway(
                 header(HttpHeaders.Accept, "application/json")
                 auth?.let { header(HttpHeaders.Authorization, it) }
             }) { reply ->
-                reply.bodyAsText()
+                boundedBody(reply, MAX_ERROR_BYTES)?.decodeToString()
             }
         val obj =
             (response as? Outcome.Ok)?.value?.let { Oc2Wire.parse(it) } as? JsonObject
@@ -1467,21 +1471,25 @@ internal class Oc2Gateway(
      * body is never held whole, whatever its Content-Length says.
      */
     private suspend fun boundedBody(response: HttpResponse, byteLimit: Int): ByteArray? {
+        val declared = response.headers[HttpHeaders.ContentLength]?.toLongOrNull() ?: 0L
         val channel = response.bodyAsChannel()
         val chunks = ArrayList<ByteArray>()
         val buffer = ByteArray(8192)
         var size = 0
-        while (true) {
+        var overflow = declared > byteLimit
+        while (!overflow) {
             val count = channel.readAvailable(buffer, 0, buffer.size)
             if (count < 0) break
             if (count > byteLimit - size) {
-                channel.cancel(null)
-                return null
-            }
-            if (count > 0) {
+                overflow = true
+            } else if (count > 0) {
                 chunks += buffer.copyOf(count)
                 size += count
             }
+        }
+        if (overflow) {
+            channel.cancel(null)
+            return null
         }
         val bytes = ByteArray(size)
         var offset = 0
@@ -2508,8 +2516,10 @@ internal class Oc2Gateway(
                 setBody(jsonBody)
             }
         }) { reply ->
-            ApiRouteReply(reply.status.value, reply.bodyAsText().takeIf { it.isNotEmpty() })
-        }
+            val bytes = boundedBody(reply, MAX_JSON_BYTES)
+            if (bytes == null) null
+            else ApiRouteReply(reply.status.value, bytes.decodeToString().takeIf { it.isNotEmpty() })
+        }.flatMap { answer -> answer?.ok() ?: Failure.UnreadableReply().failed() }
     }
 
     // ---- Stable-line features and operations (new files Oc2Operations / Oc2WebSearch /
@@ -2628,6 +2638,15 @@ internal class Oc2Gateway(
     companion object {
         /** The largest file the viewer reads whole; more is refused, never held in memory. */
         const val MAX_FILE_BYTES: Int = 16 * 1024 * 1024
+
+        /** Error envelopes and legacy health probes never need more than 64 KiB. */
+        private const val MAX_ERROR_BYTES: Int = 64 * 1024
+
+        /** Generous cap for API JSON responses to stop runaway replies from causing OOM. */
+        private const val MAX_JSON_BYTES: Int = 32 * 1024 * 1024
+
+        /** Generous cap for raw session export downloads while preventing unbounded allocations. */
+        private const val MAX_TRANSFER_BYTES: Int = 32 * 1024 * 1024
 
         /** Stands for a body that was not read because it declared more than [MAX_FILE_BYTES]. */
         private val TOO_BIG = ByteArray(0)

@@ -6,6 +6,7 @@ import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.IncompatibleKind
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
+import io.github.eslamasabry.oc.core.common.pace.Visibility
 import io.github.eslamasabry.oc.core.domain.ConnectionCredentials
 import io.github.eslamasabry.oc.core.domain.GatewayPair
 import io.github.eslamasabry.oc.core.model.BackendKind
@@ -21,6 +22,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -152,4 +154,21 @@ class ConnectionRegistryTest {
             assertSame(credentials, fake.opened.single().credentials)
             registry.close(profile.id)
         }
+
+    @Test
+    fun `B-617 ConnectionVisibilitySource is forwarded into GatewaySpec visibility`() = runTest {
+        val fake = FakeGatewayFactory()
+        val visibility = MutableStateFlow(Visibility.HiddenIdle)
+        val registry =
+            ConnectionRegistry(
+                setOf(fake),
+                { p, pair, scope -> HandGraph(p, pair, scope) },
+                AppCoroutineScope(backgroundScope.coroutineContext),
+                TestDispatchers(StandardTestDispatcher(testScheduler)),
+                visibilitySources = setOf(ConnectionVisibilitySource { visibility }),
+            )
+        assertIs<Outcome.Ok<ConnectionGraph>>(registry.open(profile))
+        assertSame(visibility, fake.opened.single().visibility)
+        registry.close(profile.id)
+    }
 }

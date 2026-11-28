@@ -19,10 +19,15 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlinx.coroutines.cancel
 
 /** An open event-stream body. [read] returns -1 at a clean end and throws on an IO error. */
 public interface SseBody {
     public suspend fun read(buffer: ByteArray): Int
+
+    /** Cancels/closes an open stream immediately when the loop exits early. */
+    public fun close(): Unit = Unit
 }
 
 public sealed interface SseConnectResult {
@@ -73,7 +78,17 @@ public class KtorSseConnector(
                     response.contentType()?.match(ContentType.Text.EventStream) != true ->
                         SseConnectResult.Failed(Failure.UnreadableReply(Redacted.shape(null, status)), stop = false)
                     else -> {
-                        session(ChannelBody(response.bodyAsChannel()))
+                        val channel = response.bodyAsChannel()
+                        val body =
+                            ChannelBody(channel) {
+                                channel.cancel(null)
+                                response.cancel()
+                            }
+                        try {
+                            session(body)
+                        } finally {
+                            if (!channel.isClosedForRead) body.close()
+                        }
                         SseConnectResult.Ended
                     }
                 }
@@ -81,12 +96,23 @@ public class KtorSseConnector(
         }
         return when (outcome) {
             is io.github.eslamasabry.oc.core.common.Outcome.Ok -> outcome.value
-            is io.github.eslamasabry.oc.core.common.Outcome.Failed -> SseConnectResult.Failed(outcome.failure, stop = false)
+            is io.github.eslamasabry.oc.core.common.Outcome.Failed ->
+                SseConnectResult.Failed(outcome.failure, stop = false)
         }
     }
 
-    private class ChannelBody(private val channel: ByteReadChannel) : SseBody {
-        override suspend fun read(buffer: ByteArray): Int = channel.readAvailable(buffer, 0, buffer.size)
+    private class ChannelBody(
+        private val channel: ByteReadChannel,
+        private val onClose: () -> Unit,
+    ) : SseBody {
+        private val closed = AtomicBoolean(false)
+
+        override suspend fun read(buffer: ByteArray): Int =
+            channel.readAvailable(buffer, 0, buffer.size)
+
+        override fun close() {
+            if (closed.compareAndSet(false, true)) onClose()
+        }
     }
 
     private companion object {

@@ -65,9 +65,31 @@ import kotlinx.coroutines.withTimeoutOrNull
 class ReplyWatchFlag {
     private val mutable = MutableStateFlow(false)
     val active: StateFlow<Boolean> = mutable
+    private val pending = MutableStateFlow(false)
+    private val rearming = MutableStateFlow(false)
+    private val watchingState = MutableStateFlow(false)
+
+    /** True while reply watch is active, handing off on stop, or armed to re-arm. */
+    val watching: StateFlow<Boolean> = watchingState
 
     internal fun set(on: Boolean) {
         mutable.value = on
+        if (on) pending.value = false
+        refreshWatching()
+    }
+
+    internal fun setPending(on: Boolean) {
+        pending.value = on
+        refreshWatching()
+    }
+
+    internal fun setRearming(on: Boolean) {
+        rearming.value = on
+        refreshWatching()
+    }
+
+    private fun refreshWatching() {
+        watchingState.value = mutable.value || pending.value || rearming.value
     }
 }
 
@@ -168,12 +190,14 @@ class ReplyWatchHub(
         scope.launch {
             body.ended.collect { end ->
                 if (end == null) return@collect
+                val willRearm = ReplyWatchPolicy.rearms(end) && started.isEmpty()
+                if (willRearm) flag.setRearming(true)
                 flag.set(false)
                 follow?.cancel()
                 follow = null
                 // Live mode still holds the row: its own content and Pause action come back at once.
                 if (background.live.value.active) attention.repost()
-                if (ReplyWatchPolicy.rearms(end)) rearm()
+                if (willRearm) rearm()
             }
         }
         scope.launch { background.live.collect { if (it.active && flag.active.value) body.yieldToLive() } }
@@ -260,10 +284,12 @@ class ReplyWatchHub(
 
     override fun onActivityStarted(activity: Activity) {
         started += activity
+        flag.setPending(false)
         decision?.cancel()
         decision = null
         rearmJob?.cancel()
         rearmJob = null
+        flag.setRearming(false)
     }
 
     override fun onActivityStopped(activity: Activity) {
@@ -271,6 +297,9 @@ class ReplyWatchHub(
         if (started.isNotEmpty()) return
         val changing = activity.isChangingConfigurations
         val covering = ownRequestCovering()
+        if (!changing && !covering && measure(SystemClock.elapsedRealtime())) {
+            flag.setPending(true)
+        }
         decision?.cancel()
         decision = scope.launch { decide(changing, covering) }
     }
@@ -278,7 +307,10 @@ class ReplyWatchHub(
     private suspend fun decide(changing: Boolean, covering: Boolean) {
         // A short read off the main thread; Android allows the start for a few seconds after the app hides.
         val server = withTimeoutOrNull(SERVER_READ_MS) { serverRunning() } == true
-        if (started.isNotEmpty()) return
+        if (started.isNotEmpty()) {
+            flag.setPending(false)
+            return
+        }
         val now = SystemClock.elapsedRealtime()
         progressing.value = measure(now)
         serverHoldsRow.value = server
@@ -294,12 +326,19 @@ class ReplyWatchHub(
                 serverHoldsRow = server,
             )
         when (ReplyWatchPolicy.onStop(facts)) {
-            ReplyWatchStart.StartService -> startService()
+            ReplyWatchStart.StartService ->
+                if (startService()) {
+                    delay(HANDOFF_TIMEOUT_MS)
+                    if (!flag.active.value) flag.setPending(false)
+                } else {
+                    flag.setPending(false)
+                }
             ReplyWatchStart.JoinServerRow -> {
                 body.joinServerRow()
                 activated()
+                if (!flag.active.value) flag.setPending(false)
             }
-            is ReplyWatchStart.Skip -> Unit
+            is ReplyWatchStart.Skip -> flag.setPending(false)
         }
     }
 
@@ -310,16 +349,34 @@ class ReplyWatchHub(
      */
     private fun rearm() {
         rearmJob?.cancel()
-        if (started.isNotEmpty()) return
-        rearmJob =
+        if (started.isNotEmpty()) {
+            rearmJob = null
+            flag.setRearming(false)
+            return
+        }
+        flag.setRearming(true)
+        var job: Job? = null
+        job =
             scope.launch {
-                withTimeoutOrNull(ReplyWatchPolicy.HARD_CAP_MS) {
-                    runtime.snapshot.first {
-                        started.isEmpty() && !body.active && measure(SystemClock.elapsedRealtime())
+                try {
+                    withTimeoutOrNull(ReplyWatchPolicy.HARD_CAP_MS) {
+                        runtime.snapshot.first {
+                            started.isEmpty() && !body.active && measure(SystemClock.elapsedRealtime())
+                        }
+                    } ?: return@launch
+                    if (started.isEmpty() && !body.active) decide(changing = false, covering = false)
+                } finally {
+                    if (rearmJob === job) {
+                        rearmJob = null
+                        flag.setRearming(false)
                     }
-                } ?: return@launch
-                if (started.isEmpty() && !body.active) decide(changing = false, covering = false)
+                }
             }
+        rearmJob = job
+        if (!job.isActive) {
+            rearmJob = null
+            flag.setRearming(false)
+        }
     }
 
     override fun onActivityDestroyed(activity: Activity) {
@@ -334,18 +391,21 @@ class ReplyWatchHub(
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
 
-    private fun startService() {
+    private fun startService(): Boolean {
         val intent =
             Intent()
                 .setClassName(application.packageName, SERVICE_FQCN)
                 .setAction(ACTION_REPLY_WATCH)
-        try {
+        return try {
             ContextCompat.startForegroundService(application, intent)
+            true
         } catch (_: IllegalStateException) {
             // ForegroundServiceStartNotAllowedException (Android 12+), the spent dataSync budget (Android 15+):
             // no watch this time; the next leave tries again.
+            false
         } catch (_: SecurityException) {
             // Same: never a crash.
+            false
         }
     }
 
@@ -421,6 +481,7 @@ class ReplyWatchHub(
         private const val SERVER_READ_MS = 400L
         private const val SERVER_POLL_MS = 5_000L
         private const val FOLLOW_TICK_MS = 1_000L
+        private const val HANDOFF_TIMEOUT_MS = 5_000L
     }
 }
 

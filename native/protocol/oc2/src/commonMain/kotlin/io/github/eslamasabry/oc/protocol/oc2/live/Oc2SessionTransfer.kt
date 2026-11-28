@@ -32,7 +32,7 @@ internal class Oc2SessionTransfer(
                     mapOf("sanitize" to sanitize.toString()),
                 )
         ) {
-            is Outcome.Ok -> Outcome.Ok(result.value.copyOf())
+            is Outcome.Ok -> result
             is Outcome.Failed ->
                 if (missing(result.failure)) {
                     exportSupported = false
