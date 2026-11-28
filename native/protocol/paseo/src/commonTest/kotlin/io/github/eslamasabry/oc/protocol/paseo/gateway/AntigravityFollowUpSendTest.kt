@@ -232,6 +232,38 @@ class AntigravityFollowUpSendTest {
         }
 
     @Test
+    fun `B-399-1h Antigravity follow-up names the model by its last listing when the live list holds no models`() =
+        runTest {
+            val model = ModelRef("antigravity", "gemini-3.8-flash-high")
+            val backend = AntigravityDaemon(cwd = project, reportedModel = { "antigravity/gemini-3.8-flash-high" })
+            val h = harness(backend.build())
+            assertIs<Outcome.Ok<*>>(h.gateway.providers())
+            val id = startConversation(h, model)
+            finishFirstTurn(h, backend, "real-1")
+            // The helper's refresh answers the runtime ready with an empty model list, and that list is read.
+            h.daemon.handlers["get_providers_snapshot_request"] = {
+                val entry =
+                    mapOf(
+                        "provider" to "antigravity",
+                        "status" to "ready",
+                        "enabled" to true,
+                        "models" to emptyList<Any>(),
+                    )
+                "get_providers_snapshot_response" to jsonOf("entries" to listOf(entry))
+            }
+            h.daemon.push("providers_snapshot_update", jsonOf())
+            h.pump()
+            assertIs<Outcome.Ok<*>>(h.gateway.providers())
+
+            assertIs<Outcome.Ok<*>>(h.gateway.setSessionModel(id, model, ""))
+            val readback = assertIs<Outcome.Ok<Session>>(h.gateway.session(id)).value
+            assertEquals(model, readback.selection?.model, "the last listing names it while the live list is empty")
+            val followUp = OutgoingPrompt("follow up", ModelSelection(model))
+            assertIs<Outcome.Ok<*>>(h.gateway.promptWithMessageId(id, MessageId("m2"), followUp) { true })
+            assertEquals(1, h.daemon.of("send_agent_message_request").size)
+        }
+
+    @Test
     fun `B-399-1d moving a pinned gateway to another project still refuses follow-up as StaleScope`() = runTest {
         val model = ModelRef("antigravity", "gemini-3.8-flash-high")
         val backend = AntigravityDaemon(cwd = project)
