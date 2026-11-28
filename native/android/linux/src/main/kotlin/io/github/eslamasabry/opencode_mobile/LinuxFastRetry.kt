@@ -15,20 +15,40 @@ object LinuxFastRetry {
     data class Plan(val probe: Boolean, val restartOpenCode: Boolean, val restartHelper: Boolean)
 
     /**
-     * What runs in compatible mode, as the retry reads it today: OpenCode when the kernel shows it without proot's
-     * filter ([liveProotMode] "ptrace"). The saved mode ([compatMarker]) and the agents' helper are not read.
+     * What runs in compatible mode, read before the saved mode is touched. OpenCode: the kernel shows it without
+     * proot's filter ([liveProotMode] "ptrace"), or the kernel does not say and the saved mode ([compatMarker])
+     * decides. The agents' helper: always by the saved mode, the only record of how it was started (it keeps that
+     * mode until its next start).
      */
     fun running(
         compatMarker: Boolean,
         liveProotMode: String?,
         openCodeRunning: Boolean,
         helperRunning: Boolean,
-    ): Running = Running(openCodeCompatible = openCodeRunning && liveProotMode == "ptrace", helperCompatible = false)
+    ): Running =
+        Running(
+            openCodeCompatible = openCodeRunning && (compatMarker || liveProotMode == "ptrace"),
+            helperCompatible = helperRunning && compatMarker,
+        )
 
-    /** The retry as it is decided today: always tested; OpenCode starts again when the phone's work is idle. */
-    fun plan(running: Running, idle: Boolean): Plan =
-        Plan(probe = true, restartOpenCode = running.openCodeCompatible && idle, restartHelper = false)
+    /**
+     * Something that runs in compatible mode has to start again, which is safe only while the phone's work is idle
+     * ([idle]): a phone that is not idle refuses the tap and nothing is touched. With nothing to restart, fast mode
+     * is tested whatever is running.
+     */
+    fun plan(running: Running, idle: Boolean): Plan {
+        val openCode = running.openCodeCompatible
+        val helper = running.helperCompatible
+        if (!idle && (openCode || helper)) return Plan(probe = false, restartOpenCode = false, restartHelper = false)
+        return Plan(probe = true, restartOpenCode = openCode, restartHelper = helper)
+    }
 
-    /** Whether the row may read Fast after a test that passed: today, always. */
-    fun fastReached(plan: Plan, openCodeRestarted: Boolean, helperRestarted: Boolean): Boolean = plan.probe
+    /**
+     * Whether the row may read Fast after a test that passed: only when everything that ran in compatible mode
+     * started again ([openCodeRestarted], [helperRestarted]); what did not run needs no restart.
+     */
+    fun fastReached(plan: Plan, openCodeRestarted: Boolean, helperRestarted: Boolean): Boolean =
+        plan.probe &&
+            (!plan.restartOpenCode || openCodeRestarted) &&
+            (!plan.restartHelper || helperRestarted)
 }

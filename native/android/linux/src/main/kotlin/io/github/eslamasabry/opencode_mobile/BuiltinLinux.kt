@@ -2913,6 +2913,24 @@ class BuiltinLinux(private val context: Context) {
     }
 
     /**
+     * B-486: what runs in compatible mode now, for "Try fast mode again" to read BEFORE the saved mode is touched
+     * ([LinuxFastRetry.running]). The helper keeps the mode it was started in until its next start.
+     */
+    fun compatibleRunning(): LinuxFastRetry.Running =
+        LinuxFastRetry.running(
+            compatMarker = serverCompat(),
+            liveProotMode = performance()["prootMode"] as? String,
+            openCodeRunning = serverRunning,
+            helperRunning = runningServices().any { it.startsWith("agent-host.") },
+        )
+
+    /**
+     * B-486: a restart that did not happen leaves something in compatible mode, so the saved mode says compatible
+     * again: the next start of anything is compatible, and the Help row reads so.
+     */
+    fun keepCompatibleMode(): Boolean = NodeCompatState.writeProotCompat(rootfs)
+
+    /**
      * B-486: Clears the saved compatibility fallback marker and tests fast (normal) proot mode
      * once, automatically falling back and restoring compatible mode if fast mode fails or hangs.
      */

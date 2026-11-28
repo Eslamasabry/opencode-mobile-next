@@ -29,6 +29,7 @@ import io.github.eslamasabry.oc.android.platform.CurrentActivity
 import io.github.eslamasabry.oc.core.common.AppBuildInfo
 import io.github.eslamasabry.oc.core.common.AppCoroutineScope
 import io.github.eslamasabry.oc.core.common.AppDispatchers
+import io.github.eslamasabry.oc.core.common.BusyKind
 import io.github.eslamasabry.oc.core.common.Channel
 import io.github.eslamasabry.oc.core.common.Failure
 import io.github.eslamasabry.oc.core.common.LogEntry
@@ -97,6 +98,7 @@ import io.github.eslamasabry.oc.ui.routes.VoiceRoute
 import io.github.eslamasabry.oc.ui.shell.nav.SystemMotion
 import io.github.eslamasabry.oc.ui.words.res.Res
 import io.github.eslamasabry.oc.ui.words.res.shareAppMessage
+import io.github.eslamasabry.opencode_mobile.LinuxFastRetry
 import java.io.File
 import java.util.Locale
 import kotlin.time.Clock
@@ -245,13 +247,14 @@ class AndroidSettingsHost(
     private val kept: io.github.eslamasabry.oc.feature.diagnostics.presentation.KeptDiagnosticsHost,
     // Settings › Conversations › Other conversations: Rings / Edge light / Hidden (device-wide).
     private val dock: AppEdgeDock,
-    // B-486: Settings › Help phone Linux speed mode and one-tap fast-mode retry.
+    // B-486: Settings › Help phone Linux speed mode and one-tap fast-mode retry (the helper it restarts).
     private val builtinRuntime: Lazy<BuiltinRuntime>,
+    private val agentHost: Lazy<AppLocalAgentHostStarter>,
 ) : SettingsHost {
     private val scope = CoroutineScope(appScope.coroutineContext)
 
     override val linuxSpeed: io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedSetting =
-        AndroidLinuxSpeedSetting(application, dispatchers, scope, builtinRuntime)
+        AndroidLinuxSpeedSetting(application, dispatchers, scope, builtinRuntime, agentHost)
 
     override val edgeDock: io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting =
         object : io.github.eslamasabry.oc.feature.settings.presentation.EdgeDockSetting {
@@ -1309,13 +1312,16 @@ internal fun certificateFingerprint(der: ByteArray): String =
 
 /**
  * B-486: Settings › Help adapter over [BuiltinLinux]'s speed mode and bounded fast-mode probe.
- * Reads run on IO; a successful switch back to fast mode restarts OpenCode only when idle.
+ * Reads run on IO. What runs in compatible mode is read before anything is touched ([LinuxFastRetry]): a phone
+ * whose work is not idle refuses the tap, and after a test that passed the row reads Fast only when everything
+ * that ran in compatible mode started again.
  */
 private class AndroidLinuxSpeedSetting(
     private val application: Application,
     private val dispatchers: AppDispatchers,
     private val scope: CoroutineScope,
     private val builtinRuntime: Lazy<BuiltinRuntime>,
+    private val agentHost: Lazy<AppLocalAgentHostStarter>,
 ) : io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedSetting {
     private val mutable =
         MutableStateFlow(io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedFacts())
@@ -1343,41 +1349,75 @@ private class AndroidLinuxSpeedSetting(
 
     override suspend fun tryFastMode():
         Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> {
-        val result =
+        // Read before the saved mode is touched: what runs compatible, and whether the phone's work is idle.
+        val before =
             withContext(dispatchers.io) {
                 attempt(::classifyRuntime) {
                     val linux = io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(application)
-                    if (!linux.installed) null to false
-                    else {
-                        val wasPtrace = linux.performance()["prootMode"] == "ptrace"
-                        linux.retryFastProotMode() to (linux.serverRunning && wasPtrace)
-                    }
+                    if (linux.installed) linux.compatibleRunning() else null
                 }
             }
-        if (result is Outcome.Failed) return result
-        val (probe, restartIfIdle) = (result as Outcome.Ok).value
-        return when (probe) {
-            io.github.eslamasabry.opencode_mobile.BuiltinLinux.FastModeRetry.Fast -> {
-                val mode = io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Fast
-                mutable.value = mutable.value.copy(installed = true, mode = mode)
-                if (restartIfIdle && builtinRuntime.value.mayUpdate()) {
-                    if (builtinRuntime.value.stopToReplace() is Outcome.Ok) {
-                        builtinRuntime.value.startServer()
-                    }
+        if (before is Outcome.Failed) return before
+        val running = (before as Outcome.Ok).value ?: return notTested()
+        val plan = LinuxFastRetry.plan(running, builtinRuntime.value.mayUpdate())
+        if (!plan.probe) return keptCompatible()
+        val probe =
+            withContext(dispatchers.io) {
+                attempt(::classifyRuntime) {
+                    io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(application).retryFastProotMode()
                 }
-                Outcome.Ok(mode)
             }
+        if (probe is Outcome.Failed) return probe
+        return when ((probe as Outcome.Ok).value) {
+            io.github.eslamasabry.opencode_mobile.BuiltinLinux.FastModeRetry.Fast -> restarted(plan)
             io.github.eslamasabry.opencode_mobile.BuiltinLinux.FastModeRetry.Compatible -> {
                 val mode = io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Compatible
                 mutable.value = mutable.value.copy(installed = true, mode = mode)
                 Outcome.Ok(mode)
             }
-            else -> {
-                refresh()
-                Outcome.Failed(
-                    Failure.Runtime(io.github.eslamasabry.oc.core.common.RuntimeProblem.Generic)
-                )
-            }
+            else -> notTested()
         }
+    }
+
+    /**
+     * The test passed: what ran in compatible mode starts again, OpenCode first (when the phone's work is idle, as
+     * before) and then a helper that was running. The row reads Fast only when all of it did ([LinuxFastRetry]):
+     * a restart that did not happen leaves something in compatible mode, so the saved mode says so again and the
+     * tap is answered like a busy phone's.
+     */
+    private suspend fun restarted(plan: LinuxFastRetry.Plan):
+        Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> {
+        val runtime = builtinRuntime.value
+        val openCodeRestarted =
+            plan.restartOpenCode &&
+                runtime.mayUpdate() &&
+                runtime.stopToReplace() is Outcome.Ok &&
+                runtime.startServer() is Outcome.Ok
+        val helperRestarted =
+            plan.restartHelper && agentHost.value.restartForFolder() is Outcome.Ok
+        if (!LinuxFastRetry.fastReached(plan, openCodeRestarted, helperRestarted)) {
+            withContext(dispatchers.io) {
+                io.github.eslamasabry.opencode_mobile.BuiltinLinux.get(application).keepCompatibleMode()
+            }
+            return keptCompatible()
+        }
+        val mode = io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Fast
+        mutable.value = mutable.value.copy(installed = true, mode = mode)
+        return Outcome.Ok(mode)
+    }
+
+    /** Nothing changed: compatible mode is kept, and the tap answers the busy failure (the row keeps its words). */
+    private fun keptCompatible():
+        Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> {
+        val mode = io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode.Compatible
+        mutable.value = mutable.value.copy(installed = true, mode = mode)
+        return Failure.Busy(BusyKind.SessionBusy).failed()
+    }
+
+    /** The row is read again from the phone; the tap is a failure, and nothing was switched. */
+    private fun notTested():
+        Outcome<io.github.eslamasabry.oc.feature.settings.presentation.LinuxSpeedMode> {
+        refresh()
+        return Outcome.Failed(Failure.Runtime(io.github.eslamasabry.oc.core.common.RuntimeProblem.Generic))
     }
 }
