@@ -70,27 +70,20 @@ class KitPaceBendChartRulesTest {
         by: Float,
         rect: PaceLabelRect,
     ): Boolean {
-        val dx = bx - ax
-        val dy = by - ay
-        val (txMin, txMax) =
-            if (dx == 0f) {
-                if (ax < rect.left || ax > rect.right) return false
-                0f to 1f
-            } else {
-                val u1 = (rect.left - ax) / dx
-                val u2 = (rect.right - ax) / dx
-                minOf(u1, u2) to maxOf(u1, u2)
-            }
-        val (tyMin, tyMax) =
-            if (dy == 0f) {
-                if (ay < rect.top || ay > rect.bottom) return false
-                0f to 1f
-            } else {
-                val v1 = (rect.top - ay) / dy
-                val v2 = (rect.bottom - ay) / dy
-                minOf(v1, v2) to maxOf(v1, v2)
-            }
-        return maxOf(0f, txMin, tyMin) <= minOf(1f, txMax, tyMax)
+        val tx = axisRange(ax, bx, rect.left, rect.right)
+        val ty = axisRange(ay, by, rect.top, rect.bottom)
+        return tx != null && ty != null && maxOf(0f, tx.first, ty.first) <= minOf(1f, tx.second, ty.second)
+    }
+
+    private fun axisRange(start: Float, end: Float, low: Float, high: Float): Pair<Float, Float>? {
+        val delta = end - start
+        return if (delta == 0f) {
+            if (start in low..high) 0f to 1f else null
+        } else {
+            val u1 = (low - start) / delta
+            val u2 = (high - start) / delta
+            minOf(u1, u2) to maxOf(u1, u2)
+        }
     }
 
     private fun outCase(

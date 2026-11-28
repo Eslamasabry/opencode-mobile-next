@@ -68,53 +68,75 @@ class UsagePaceBendRenders {
             Variant(dark = true, scale = 1.3f),
         )
 
+    private fun subscription(
+        key: String,
+        name: String,
+        state: SubscriptionState,
+        plan: String?,
+        windows: List<UsageWindow>,
+    ): UsageSubscription =
+        UsageSubscription(
+            key = key,
+            providerId = key,
+            displayName = name,
+            state = state,
+            planLabel = plan,
+            windows = windows,
+            fetchedAt = Instant.fromEpochMilliseconds(now - minute),
+            readFrom = phone,
+        )
+
     private fun sceneState(): LimitsUi {
         val codex =
-            UsageSubscription(
+            subscription(
                 key = "codex",
-                providerId = "codex",
-                displayName = "Codex",
+                name = "Codex",
                 state = SubscriptionState.NearLimit,
-                planLabel = "Plus",
+                plan = "Plus",
                 windows =
                     listOf(
                         UsageWindow("5h", 85.0, 18_000, Instant.fromEpochMilliseconds(now + 3 * hour)),
                         UsageWindow("weekly", 50.0, 604_800, Instant.fromEpochMilliseconds(now + 5 * day)),
                     ),
-                fetchedAt = Instant.fromEpochMilliseconds(now - minute),
-                readFrom = phone,
             )
         val claude =
-            UsageSubscription(
+            subscription(
                 key = "claude",
-                providerId = "claude",
-                displayName = "Claude",
+                name = "Claude",
                 state = SubscriptionState.Ok,
-                planLabel = "Max",
+                plan = "Max",
                 windows =
                     listOf(
                         UsageWindow("five_hour", 30.0, 18_000, Instant.fromEpochMilliseconds(now + 2 * hour)),
                         UsageWindow("seven_day", 20.0, 604_800, Instant.fromEpochMilliseconds(now + 4 * day)),
                     ),
-                fetchedAt = Instant.fromEpochMilliseconds(now - minute),
-                readFrom = phone,
             )
         val early =
-            UsageSubscription(
+            subscription(
                 key = "gemini",
-                providerId = "gemini",
-                displayName = "Gemini",
+                name = "Gemini",
                 state = SubscriptionState.Ok,
+                plan = null,
                 windows =
                     listOf(
                         UsageWindow("weekly", 1.0, 604_800, Instant.fromEpochMilliseconds(now + 6 * day)),
                         UsageWindow("no_reset", 40.0, 18_000, resetsAt = null),
                     ),
-                fetchedAt = Instant.fromEpochMilliseconds(now - minute),
-                readFrom = phone,
+            )
+        val outAndHighLeft =
+            subscription(
+                key = "cursor",
+                name = "Cursor",
+                state = SubscriptionState.Exhausted,
+                plan = "Pro",
+                windows =
+                    listOf(
+                        UsageWindow("five_hour", 100.0, 18_000, Instant.fromEpochMilliseconds(now + 3 * hour)),
+                        UsageWindow("seven_day", 10.0, 604_800, Instant.fromEpochMilliseconds(now + 4 * day)),
+                    ),
             )
         return limitsUi(
-            snapshot = UsageSnapshot(subscriptions = listOf(codex, claude, early), loaded = true),
+            snapshot = UsageSnapshot(subscriptions = listOf(codex, claude, early, outAndHighLeft), loaded = true),
             refreshing = false,
             nowMs = now,
             timezone = "UTC",
@@ -151,7 +173,7 @@ class UsagePaceBendRenders {
         try {
             Locale.setDefault(Locale.ENGLISH)
             for (v in variants) {
-                runDesktopComposeUiTest(360, 2_400) {
+                runDesktopComposeUiTest(360, 3_400) {
                     setContent { Themed(v.dark, v.scale) { LimitsContent(ui, NoActions) } }
                     waitForIdle()
                     mainClock.advanceTimeBy(1_000)

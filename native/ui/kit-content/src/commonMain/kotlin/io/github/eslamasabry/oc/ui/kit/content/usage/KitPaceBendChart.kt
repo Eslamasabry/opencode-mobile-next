@@ -37,7 +37,6 @@ import io.github.eslamasabry.oc.ui.kit.KitText
 import io.github.eslamasabry.oc.ui.kit.theme.KitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitColors
 import io.github.eslamasabry.oc.ui.kit.theme.LocalKitTypography
-import kotlin.math.abs
 
 /** Visual state of [KitPaceBendChart]. */
 public sealed interface KitPaceBendState {
@@ -146,7 +145,8 @@ public fun KitPaceBendChart(
             data.state is KitPaceBendState.Lasts -> shortPlotDp(labelHeightDp)
             else -> SHORT_PLOT_DP
         }
-    val extraBottomDp = if (data.state is KitPaceBendState.RunsOut) labelHeightDp + EXTRA_ROW_GAP_DP else 0f
+    val needsBottomRow = data.state is KitPaceBendState.RunsOut || data.state is KitPaceBendState.Out
+    val extraBottomDp = if (needsBottomRow) labelHeightDp + EXTRA_ROW_GAP_DP else 0f
     val totalHeightDp = topDp + plotDp + BASE_LABEL_GAP_DP + labelHeightDp + BOTTOM_PAD_DP + extraBottomDp
 
     val safeElapsed = if (data.elapsed.isFinite()) data.elapsed.coerceIn(0f, 1f) else 0f
@@ -341,7 +341,7 @@ private object PaceBendPainter {
             is KitPaceBendState.TooLittle -> Unit
             is KitPaceBendState.Lasts -> drawLasts(this, ctx, nowPt, state, accentColor)
             is KitPaceBendState.RunsOut -> drawRunsOut(this, ctx, nowPt, elapsed, state)
-            is KitPaceBendState.Out -> drawOut(this, ctx, nowPt, state)
+            is KitPaceBendState.Out -> drawOut(this, ctx, nowPt, elapsed, state)
         }
         drawCircle(ctx.colors.ground, NOW_RING_DP.dp.toPx(), nowPt)
         drawCircle(accentColor, NOW_DOT_DP.dp.toPx(), nowPt)
@@ -388,23 +388,39 @@ private object PaceBendPainter {
         }
     }
 
-    private fun drawOut(scope: DrawScope, ctx: ChartDrawContext, nowPt: Offset, state: KitPaceBendState.Out) =
-        with(scope) {
-            val geom = ctx.geom
-            drawHatched(this, ctx, nowPt.x, geom.xReset)
-            if (state.noneLeftLabel.isNotBlank()) {
-                val layout = ctx.measurer.measure(state.noneLeftLabel, ctx.styles.secondary)
-                if (abs(geom.xReset - nowPt.x) >= layout.size.width * MIN_OUT_SPAN_RATIO) {
-                    val center = (nowPt.x + geom.xReset) / 2f
-                    val maxX = (geom.x1 - layout.size.width).coerceAtLeast(geom.x0)
-                    val x = (center - layout.size.width / 2f).coerceIn(geom.x0, maxX)
-                    val y =
-                        (geom.base - HATCH_HALF_DP.dp.toPx() - layout.size.height - OUT_LABEL_PAD_DP.dp.toPx())
-                            .coerceAtLeast(geom.top)
-                    drawText(layout, topLeft = Offset(x, y))
-                }
+    private fun drawOut(
+        scope: DrawScope,
+        ctx: ChartDrawContext,
+        nowPt: Offset,
+        elapsed: Float,
+        state: KitPaceBendState.Out,
+    ) = with(scope) {
+        val geom = ctx.geom
+        drawHatched(this, ctx, nowPt.x, geom.xReset)
+        if (state.noneLeftLabel.isNotBlank()) {
+            val layout = ctx.measurer.measure(state.noneLeftLabel, ctx.styles.attention)
+            val labelH = layout.size.height.toFloat()
+            val rect =
+                PaceBendRules.placeNoneLeftLabel(
+                    PaceNoneLeftInput(
+                        x0 = geom.x0,
+                        x1 = geom.x1,
+                        top = geom.top,
+                        plotHeight = geom.plotH,
+                        canvasHeight = size.height,
+                        rtl = geom.rtl,
+                        elapsed = elapsed,
+                        labelSize = PaceLabelSize(layout.size.width.toFloat(), labelH),
+                        axisRowHeight = labelH,
+                        axisLabelGap = AXIS_LABEL_GAP_DP.dp.toPx(),
+                        rowGap = NONE_LEFT_ROW_GAP_DP.dp.toPx(),
+                    ),
+                )
+            if (rect != null) {
+                drawText(layout, topLeft = Offset(rect.left, rect.top))
             }
         }
+    }
 
     private fun drawDotted(scope: DrawScope, start: Offset, end: Offset, color: Color) = with(scope) {
         drawLine(
@@ -591,7 +607,10 @@ public object PaceBendRules {
     private fun evenPaceY(x: Float, input: PaceGuideLayoutInput): Float =
         yForLeft(1f - fractionForX(x, input), input.top, input.plotHeight)
 
-    /** Places the 'None left' label for an exhausted ([KitPaceBendState.Out]) window. */
+    /**
+     * Places the 'None left' label below the axis labels for an exhausted ([KitPaceBendState.Out])
+     * window, centred between now and reset and clamped inside the canvas.
+     */
     public fun placeNoneLeftLabel(input: PaceNoneLeftInput): PaceLabelRect? {
         val size = input.labelSize
         if (size.width <= 0f || size.height <= 0f) return null
@@ -601,8 +620,13 @@ public object PaceBendRules {
         val center = (xNow + xReset) / 2f
         val maxX = (input.x1 - size.width).coerceAtLeast(input.x0)
         val left = (center - size.width / 2f).coerceIn(input.x0, maxX)
-        val y = (base - HATCH_HALF_DP - size.height - OUT_LABEL_PAD_DP).coerceAtLeast(input.top)
-        return PaceLabelRect(left = left, top = y, right = left + size.width, bottom = y + size.height)
+        val y = base + input.axisLabelGap + input.axisRowHeight + input.rowGap
+        val bottom = y + size.height
+        return if (bottom <= input.canvasHeight) {
+            PaceLabelRect(left = left, top = y, right = left + size.width, bottom = bottom)
+        } else {
+            null
+        }
     }
 
     /**
@@ -645,41 +669,64 @@ private class LandingLabel(
     private val span = input.x1 - input.x0
     private val startX = if (input.rtl) input.x1 else input.x0
     private val dir = if (input.rtl) -1f else 1f
+    private val elapsed = input.elapsed.coerceIn(0f, 1f)
+    private val nowX = PaceBendRules.xForFraction(elapsed, input.x0, input.x1, input.rtl)
+    private val nowY = PaceBendRules.yForLeft(input.left, input.top, input.plotHeight)
+    private val xReset = PaceBendRules.xForFraction(1f, input.x0, input.x1, input.rtl)
     private val landY = PaceBendRules.yForLeft(atReset, input.top, input.plotHeight)
     private val gap = input.minGap + LABEL_NUDGE
     private val dot =
         input.nowDotRadius.takeIf { it > 0f }?.let { radius ->
-            val cx = PaceBendRules.xForFraction(input.elapsed, input.x0, input.x1, input.rtl)
-            val cy = PaceBendRules.yForLeft(input.left, input.top, input.plotHeight)
-            PaceLabelRect(cx - radius, cy - radius, cx + radius, cy + radius)
+            PaceLabelRect(nowX - radius, nowY - radius, nowX + radius, nowY + radius)
         }
 
     /** The label's place on this chart. */
     fun place(): PaceLabelRect {
         val anchored = atLanding()
         val box = dot
-        if (box == null || !anchored.overlaps(box, input.minGap)) return anchored
-        val moves = listOfNotNull(towardReset(anchored, box), aboveDot(anchored, box), underLine(box))
+        if (isClear(anchored, box)) return anchored
+        val moves =
+            listOfNotNull(
+                box?.let { towardReset(anchored, it) },
+                box?.let { aboveDot(anchored, it) },
+                underLine(box),
+            )
         return moves.firstOrNull { isClear(it, box) } ?: anchored
     }
 
-    /** Beside the landing point, on the side of it away from the diagonal, as high as the forecast line allows. */
+    /** Beside the landing point, above the forecast line when room exists, or below it above the diagonal. */
     private fun atLanding(): PaceLabelRect {
-        val xReset = PaceBendRules.xForFraction(1f, input.x0, input.x1, input.rtl)
         val maxLeft = (input.x1 - size.width).coerceAtLeast(input.x0)
         val rawLeft = if (input.rtl) xReset + input.pad else xReset - input.pad - size.width
         val left = rawLeft.coerceIn(input.x0, maxLeft)
         val right = left + size.width
-        val nowY = PaceBendRules.yForLeft(input.left, input.top, input.plotHeight)
-        val elapsed = input.elapsed.coerceIn(0f, 1f)
         val nearEdgeX = if (input.rtl) right else left
-        val nearFrac = fraction(nearEdgeX).coerceIn(elapsed, 1f)
-        val remain = 1f - elapsed
-        val t = if (remain > FRAC_EPSILON) ((nearFrac - elapsed) / remain).coerceIn(0f, 1f) else 1f
-        val ceilingY = minOf(landY, nowY + t * (landY - nowY), lineY((left + right) / 2f))
+        val farEdgeX = if (input.rtl) left else right
+        val forecastNear = forecastY(nearEdgeX)
+        val ceilingY = minOf(landY, forecastNear, input.lineY((left + right) / 2f))
         val maxTop = (base - size.height).coerceAtLeast(input.top)
-        val topY = (ceilingY - input.pad - size.height).coerceIn(input.top, maxTop)
+        val aboveTop = (ceilingY - input.pad - size.height).coerceIn(input.top, maxTop)
+        val clearMargin = input.minGap / FORECAST_CLEAR_DIVISOR
+        val topY =
+            if (aboveTop + size.height <= minOf(forecastNear, landY) - clearMargin) {
+                aboveTop
+            } else {
+                belowForecastTop(maxOf(forecastNear, forecastY(farEdgeX)), nearEdgeX, maxTop)
+            }
         return PaceLabelRect(left = left, top = topY, right = right, bottom = minOf(topY + size.height, base))
+    }
+
+    /** Places the label below the forecast segment while staying above the even-pace diagonal when possible. */
+    private fun belowForecastTop(forecastMaxY: Float, nearEdgeX: Float, maxTop: Float): Float {
+        val diagAtNear = input.lineY(nearEdgeX)
+        val diagNear = minOf(diagAtNear, base)
+        val preferredTop = forecastMaxY + input.pad
+        val preferredMax = minOf(diagAtNear - input.pad, base) - size.height
+        return when {
+            preferredTop <= preferredMax -> preferredTop
+            forecastMaxY + size.height < diagNear -> (forecastMaxY + diagNear - size.height) / 2f
+            else -> preferredTop.coerceIn(input.top, maxTop)
+        }
     }
 
     /** Along its own row toward the landing point, past the dot. */
@@ -701,29 +748,35 @@ private class LandingLabel(
     }
 
     /** Under the even-pace diagonal, as near to the reset as the diagonal and the dot leave room for. */
-    private fun underLine(box: PaceLabelRect): PaceLabelRect? {
+    private fun underLine(box: PaceLabelRect?): PaceLabelRect? {
         val maxTop = (base - size.height).coerceAtLeast(input.top)
         val dCeiling = (maxTop - gap - input.top) * span / input.plotHeight.coerceAtLeast(1f)
-        val boxStart = if (input.rtl) input.x1 - box.right else box.left - input.x0
-        val boxReset = if (input.rtl) input.x1 - box.left else box.right - input.x0
-        val dNear = maxOf(minOf(dCeiling, boxStart - gap), size.width)
+        val boxStart = box?.let { if (input.rtl) input.x1 - it.right else it.left - input.x0 }
+        val boxReset = box?.let { if (input.rtl) input.x1 - it.left else it.right - input.x0 }
+        val dNear = maxOf(boxStart?.let { minOf(dCeiling, it - gap) } ?: dCeiling, size.width)
         if (dNear > span) return null
         val xNear = startX + dir * dNear
-        val underDot = dNear > boxStart - gap && dNear - size.width < boxReset + gap
-        val floor = if (underDot) maxOf(lineY(xNear), box.bottom) else lineY(xNear)
+        val underDot =
+            if (boxStart != null && boxReset != null) {
+                dNear > boxStart - gap && dNear - size.width < boxReset + gap
+            } else {
+                false
+            }
+        val floor = if (underDot && box != null) maxOf(input.lineY(xNear), box.bottom) else input.lineY(xNear)
         val top = (floor + gap).coerceIn(input.top, maxTop)
         return rect(dNear - size.width, dNear, top)
     }
 
-    /** Inside the plot, off the dot, and on one side of the even-pace diagonal. */
-    private fun isClear(candidate: PaceLabelRect, box: PaceLabelRect): Boolean {
+    /** Inside the plot, off the dot, off the forecast segment, and on one side of the even-pace diagonal. */
+    private fun isClear(candidate: PaceLabelRect, box: PaceLabelRect?): Boolean {
         val insideX = candidate.left >= input.x0 && candidate.right <= input.x1
         val insideY = candidate.top >= input.top && candidate.bottom <= base
-        val lineA = lineY(candidate.left)
-        val lineB = lineY(candidate.right)
+        val lineA = input.lineY(candidate.left)
+        val lineB = input.lineY(candidate.right)
         val offLine = candidate.bottom < minOf(lineA, lineB) || candidate.top > maxOf(lineA, lineB)
-        val settled = insideX && insideY && offLine
-        return settled && !candidate.overlaps(box, input.minGap)
+        val offDot = box == null || !candidate.overlaps(box, input.minGap)
+        val inside = insideX && insideY && offLine
+        return inside && offDot && !segmentEntersRect(nowX, nowY, xReset, landY, candidate)
     }
 
     private fun rect(dFar: Float, dNear: Float, top: Float): PaceLabelRect {
@@ -732,16 +785,52 @@ private class LandingLabel(
         return PaceLabelRect(minOf(a, b), top, maxOf(a, b), minOf(top + size.height, base))
     }
 
-    /** The window fraction at [x]: 0 at the start edge, 1 at the reset. */
-    private fun fraction(x: Float): Float =
-        ((if (input.rtl) input.x1 - x else x - input.x0) / span.coerceAtLeast(1f)).coerceIn(0f, 1f)
+    /** The forecast segment's y at [x], clamped to `[elapsed, 1]`. */
+    private fun forecastY(x: Float): Float {
+        val nearFrac = input.fractionAt(x).coerceIn(elapsed, 1f)
+        val remain = 1f - elapsed
+        val t = if (remain > FRAC_EPSILON) ((nearFrac - elapsed) / remain).coerceIn(0f, 1f) else 1f
+        return nowY + t * (landY - nowY)
+    }
+}
 
-    /** The even-pace diagonal's y at [x]. */
-    private fun lineY(x: Float): Float = PaceBendRules.yForLeft(1f - fraction(x), input.top, input.plotHeight)
+/** The window fraction at [x]: 0 at the start edge, 1 at the reset. */
+private fun PaceGuideLayoutInput.fractionAt(x: Float): Float {
+    val span = (x1 - x0).coerceAtLeast(1f)
+    return ((if (rtl) x1 - x else x - x0) / span).coerceIn(0f, 1f)
+}
+
+/** The even-pace diagonal's y at [x]. */
+private fun PaceGuideLayoutInput.lineY(x: Float): Float =
+    PaceBendRules.yForLeft(1f - fractionAt(x), top, plotHeight)
+
+/** True when the closed line segment from `(ax, ay)` to `(bx, by)` intersects [rect]. */
+private fun segmentEntersRect(
+    ax: Float,
+    ay: Float,
+    bx: Float,
+    by: Float,
+    rect: PaceLabelRect,
+): Boolean {
+    val tx = segmentAxisRange(ax, bx, rect.left, rect.right)
+    val ty = segmentAxisRange(ay, by, rect.top, rect.bottom)
+    return tx != null && ty != null && maxOf(0f, tx.first, ty.first) <= minOf(1f, tx.second, ty.second)
+}
+
+private fun segmentAxisRange(start: Float, end: Float, low: Float, high: Float): Pair<Float, Float>? {
+    val delta = end - start
+    return if (delta == 0f) {
+        if (start in low..high) 0f to 1f else null
+    } else {
+        val t1 = (low - start) / delta
+        val t2 = (high - start) / delta
+        minOf(t1, t2) to maxOf(t1, t2)
+    }
 }
 
 /** A hair more than a gap, so "a gap apart" never reads as touching once floats are rounded. */
 private const val LABEL_NUDGE = 0.01f
+private const val FORECAST_CLEAR_DIVISOR = 4f
 
 private const val MAX_FRAME_SCALE = 1.3f
 private const val MIN_LABEL_DP = 16f
@@ -773,8 +862,6 @@ private const val HATCH_HALF_DP = 3f
 private const val HATCH_STEP_DP = 5f
 private const val HATCH_STROKE_DP = 2f
 private const val NONE_LEFT_ROW_GAP_DP = 4f
-private const val OUT_LABEL_PAD_DP = 6f
-private const val MIN_OUT_SPAN_RATIO = 0.9f
 /** The now dot's ring, in dp; the chart's rules keep guide labels clear of it. */
 internal const val NOW_RING_DP = 6.5f
 private const val NOW_DOT_DP = 4.5f
