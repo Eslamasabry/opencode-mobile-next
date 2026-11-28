@@ -220,6 +220,50 @@ class AutomationAlertsCoordinatorTest {
     }
 
     @Test
+    fun `B-620 a failed run that spans a reconnect tells once on the automation's own alert`() = runTest {
+        val shade = FakeShade()
+        val coordinator = coordinator(shade, MutableServerAutomations(sample(id = "aut_1", runCount = 1)))
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunStarted(profile, "ses_9")
+        coordinator.setConnected(profile, false)
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "offline the run is still the automation's")
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // the read after a reconnect is a baseline again
+        assertTrue(shade.shown.isEmpty())
+
+        coordinator.onRunEnded(profile, "ses_9", failure)
+        assertEquals(AlertKind.AutomationFailed, shade.shown.single().first.kind)
+        assertEquals(1, shade.shown.single().first.automationCoveredRuns)
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "the chat's stopped alert stands down")
+    }
+
+    @Test
+    fun `B-620 a quiet run that spans a reconnect stays quiet until a person's own prompt takes the chat`() = runTest {
+        val shade = FakeShade()
+        val coordinator = coordinator(shade, MutableServerAutomations(sample(id = "aut_1", runCount = 1)))
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        prompt(1)
+        reply("msg_1", "Disk is almost full")
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunStarted(profile, "ses_9")
+        reply("msg_2", "   ")
+        coordinator.setConnected(profile, false)
+        coordinator.setConnected(profile, true)
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
+        assertTrue(shade.shown.isEmpty(), "a quiet run tells nothing, on either path")
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "the chat's finished alert stands down")
+
+        // A prompt that no automation sent is the person's own: the chat's alerts speak for what follows.
+        coordinator.onMessage(profile, MessageInfo(id = "inb_person", sessionId = "ses_9", role = Role.User))
+        assertFalse(coordinator.isAutomationSession(profile, "ses_9"))
+    }
+
+    @Test
     fun `B-620 Pause this automation pauses via server API and automation row then shows paused`() = runTest {
         val shade = FakeShade()
         val server = MutableServerAutomations(sample(id = "aut_1", status = AutomationStatus.Active, runCount = 1))

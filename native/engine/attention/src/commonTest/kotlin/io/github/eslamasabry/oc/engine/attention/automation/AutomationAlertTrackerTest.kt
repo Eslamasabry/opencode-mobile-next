@@ -199,6 +199,66 @@ class AutomationAlertTrackerTest {
     }
 
     @Test
+    fun `B-620 a failed run that spans a reconnect is still told once on the automation's alert`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 3)))
+        tracker.onAutomationMessage("ses_1", prompt(run = 4))
+        val four = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertEquals(1, four.post.single().coveredRuns)
+
+        // Run 5 starts, the stream drops and comes back, and only then the run ends.
+        tracker.onAutomationMessage("ses_1", prompt(run = 5))
+        tracker.setConnected(false)
+        assertTrue(tracker.isAutomationSession("ses_1"), "offline the run is still the automation's")
+        tracker.setConnected(true)
+        assertTrue(tracker.isAutomationSession("ses_1"), "the chat's own alerts keep standing down")
+        // The read after a reconnect is a baseline, as ever.
+        assertTrue(tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 5))).post.isEmpty())
+
+        val five = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertEquals(AutomationAlertReason.Failed, five.post.single().reason)
+        assertEquals(2, five.post.single().coveredRuns)
+        val again = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertTrue(again.post.isEmpty(), "told once")
+    }
+
+    @Test
+    fun `B-620 a quiet run that spans a reconnect stays quiet and stays the automation's`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 4)))
+        tracker.onAutomationMessage("ses_1", prompt(run = 5))
+        tracker.setConnected(false)
+        tracker.setConnected(true)
+
+        val quiet = tracker.onSessionRunEnded("ses_1", failed = false, interrupted = false, replyExcerpt = "  ")
+        assertTrue(quiet.post.isEmpty())
+        assertTrue(tracker.isAutomationSession("ses_1"), "the chat's finished alert does not speak for it either")
+    }
+
+    @Test
+    fun `B-620 an automation prompt queued behind a person's run waits for its own run`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 3)))
+
+        // A person's run is going in the chat when the automation's prompt is queued behind it.
+        tracker.onRunStarted("ses_1")
+        tracker.onAutomationMessage("ses_1", prompt(run = 4))
+        assertFalse(tracker.isAutomationSession("ses_1"), "the run going is the person's: the chat's alert speaks")
+        val persons = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertTrue(persons.post.isEmpty(), "a person's failed run is not the automation's failure")
+
+        // Then the automation's own run starts and fails: that is its one alert.
+        tracker.onRunStarted("ses_1")
+        assertTrue(tracker.isAutomationSession("ses_1"))
+        val own = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertEquals(AutomationAlertReason.Failed, own.post.single().reason)
+        assertEquals(1, own.post.single().coveredRuns)
+    }
+
+    @Test
     fun `B-620 noisy automation groups by automation and caps visible slots while counting all runs`() {
         val tracker = AutomationAlertTracker(profileId = "p1", maxVisiblePerAutomation = 3)
         tracker.setConnected(true)
