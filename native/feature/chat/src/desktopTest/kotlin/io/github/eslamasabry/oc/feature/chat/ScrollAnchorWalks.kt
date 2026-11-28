@@ -1,8 +1,10 @@
 package io.github.eslamasabry.oc.feature.chat
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -22,6 +24,7 @@ import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollToIndex
@@ -41,6 +44,7 @@ import io.github.eslamasabry.oc.core.model.transcript.ToolState
 import io.github.eslamasabry.oc.core.model.transcript.ToolStatus
 import io.github.eslamasabry.oc.core.security.Redactor
 import io.github.eslamasabry.oc.engine.transcript.state.FooterRow
+import io.github.eslamasabry.oc.engine.transcript.state.NoticeKind
 import io.github.eslamasabry.oc.engine.transcript.state.WorkLineRow
 import io.github.eslamasabry.oc.engine.transcript.state.WorkState
 import io.github.eslamasabry.oc.feature.chat.composer.ComposerChrome
@@ -53,6 +57,8 @@ import io.github.eslamasabry.oc.feature.chat.presentation.LiveTurnUi
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsPresenter
 import io.github.eslamasabry.oc.feature.chat.presentation.TurnFactsUi
 import io.github.eslamasabry.oc.feature.chat.ui.ChatScreen
+import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscript
+import io.github.eslamasabry.oc.feature.chat.ui.ChatTranscriptWords
 import io.github.eslamasabry.oc.feature.chat.ui.ScrollPlaceStore
 import io.github.eslamasabry.oc.feature.chat.world.TurnFeedKeeper
 import io.github.eslamasabry.oc.ui.design.effects.KitAppearance
@@ -65,15 +71,20 @@ import io.github.eslamasabry.oc.ui.kit.KitTheme
 import io.github.eslamasabry.oc.ui.kit.chip.KitPhraseChips
 import io.github.eslamasabry.oc.ui.kit.platform.DesktopKitPlatform
 import io.github.eslamasabry.oc.ui.kitchat.LocalKitRedactor
+import io.github.eslamasabry.oc.ui.kitchat.stream.KitMotionLevel
+import io.github.eslamasabry.oc.ui.kitchat.stream.rememberRevealRegistry
 import io.github.eslamasabry.oc.ui.kitchat.tool.STEP_FOLD_ROW_TAG
 import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalTranscriptAnchor
 import io.github.eslamasabry.oc.ui.kitchat.transcript.LocalTranscriptProbe
 import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptAnchor
+import io.github.eslamasabry.oc.ui.kitchat.transcript.TranscriptListState
+import io.github.eslamasabry.oc.ui.kitchat.transcript.rememberTranscriptListState
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.abs
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -1437,5 +1448,66 @@ internal object ScrollAnchorWalks {
 
     fun walk019FollowsAfterGroupToggle(anchor: TranscriptAnchor) {
         runFollowsAfterGroupToggle(anchor)
+    }
+
+    private object Words : ChatTranscriptWords {
+        override val jumpToLatest: String = "Jump to latest"
+
+        override fun workLine(calls: Int, failed: Int, state: WorkState): String = "$calls steps"
+
+        override fun notice(kind: NoticeKind): String = "Notice"
+
+        override fun footer(failed: Boolean): String = "More"
+
+        override fun thought(firstLine: String): String = firstLine
+    }
+
+    private fun turns(count: Int) =
+        stateOf(*(1..count).flatMap { turn(it, answer = "Answer number $it with a few words") }.toTypedArray())
+
+    /**
+     * STEPS-SCROLL-022: a chat opened fresh (nothing saved, nothing kept) keeps following while rows arrive, as a
+     * reply streams. The place the entry takes while it is shown describes where the list already is: it is kept for
+     * later, never put back.
+     */
+    fun walk022TodayNewEntryFollowsArrivals() {
+        withFlickerReport("022") {
+            kitUiTest(PHONE_W, PHONE_H, options = REPORT_OPTIONS) {
+                ScrollPlaceStore.clear()
+                var rows by mutableStateOf(turns(6))
+                lateinit var list: TranscriptListState
+                mainClock.autoAdvance = false
+                setContent {
+                    Root(TranscriptAnchor.Today) {
+                        list = rememberTranscriptListState()
+                        Box(Modifier.size(PHONE_W.dp, PHONE_H.dp)) {
+                            ChatTranscript(rows, Words, list, rememberRevealRegistry(), KitMotionLevel.Off)
+                        }
+                    }
+                }
+                mainClock.advanceTimeBy(SETTLE_MS)
+                assertTrue(list.following, "022 a new entry follows its newest row")
+                assertEquals(0, list.lazy.firstVisibleItemIndex, "022 the newest row is at the bottom edge")
+                // Two more turns land below, as a reply's next blocks do while it streams.
+                rows = turns(8)
+                var lostFollowFrame = -1
+                var awayFrame = -1
+                repeat(END_FRAMES) { i ->
+                    mainClock.advanceTimeByFrame()
+                    if (!list.following && lostFollowFrame < 0) lostFollowFrame = i + 1
+                    if (list.lazy.firstVisibleItemIndex != 0 && awayFrame < 0) awayFrame = i + 1
+                }
+                assertTrue(
+                    lostFollowFrame < 0 && awayFrame < 0,
+                    "022 following was lost when rows arrived: lostFollow=$lostFollowFrame away=$awayFrame",
+                )
+                assertEquals(0, list.lazy.firstVisibleItemScrollOffset, "022 the newest row sits on the bottom edge")
+                assertTrue(
+                    onAllNodesWithText("Answer number 8 with a few words").fetchSemanticsNodes().isNotEmpty(),
+                    "022 the newest answer is on the page",
+                )
+                assertTrue(!jumpControlShown(), "022 no jump control while following")
+            }
+        }
     }
 }

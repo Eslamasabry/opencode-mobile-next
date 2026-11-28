@@ -69,4 +69,9 @@ class ScrollAnchorHybridTest {
             throw AssertionError(e.findings.joinToString(" | ") { "${it.rule} ${it.detail}" }, e)
         }
     }
+
+    @Test
+    fun `STEPS-SCROLL-022 today a new entry keeps following while rows arrive`() {
+        ScrollAnchorWalks.walk022TodayNewEntryFollowsArrivals()
+    }
 }
