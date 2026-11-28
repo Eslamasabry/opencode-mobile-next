@@ -3572,8 +3572,9 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
     private suspend fun awaitActiveUndo() {
         var gate = activeUndo
         while (gate != null) {
-            val finished = withTimeoutOrNull(UNDO_WAIT_TIMEOUT_MS) { gate.await() } != null
-            gate = if (finished && activeUndo !== gate) activeUndo else null
+            val current = gate
+            val finished = withTimeoutOrNull(UNDO_WAIT_TIMEOUT_MS) { current.await() } != null
+            gate = if (finished && activeUndo !== current) activeUndo else null
         }
         if (mutableLoad.value is ChatLoad.Loading) {
             withTimeoutOrNull(UNDO_WAIT_TIMEOUT_MS) {
