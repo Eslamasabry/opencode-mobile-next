@@ -169,15 +169,12 @@ internal object ScrollPlaceRules {
         list.scrollToNewest()
     }
 
-    fun restoreOnFirstFrame(
-        list: TranscriptListState,
-        holder: ScrollPlaceHolder,
-        keys: List<String>,
-    ): Boolean {
-        val saved = pendingPlace(holder)
-        val canSync = saved != null && list.anchor != TranscriptAnchor.Hybrid && keys.isNotEmpty()
+    /** Puts the list on the place the entry opens on ([opening]) before its first measure; false: nothing to put. */
+    fun restoreOnFirstFrame(list: TranscriptListState, opening: KeptPlace?, keys: List<String>): Boolean {
+        val saved = opening?.place ?: return false
+        val canSync = list.anchor != TranscriptAnchor.Hybrid && keys.isNotEmpty()
         val found = if (canSync) target(saved, keys) else null
-        val follow = found != null && holder.following && found.first == 0
+        val follow = found != null && opening.following && found.first == 0
         val applied = found != null && (!follow || found.second == 0)
         if (applied) {
             list.following = follow
@@ -188,8 +185,7 @@ internal object ScrollPlaceRules {
 
     suspend fun restoreAsync(
         list: TranscriptListState,
-        holder: ScrollPlaceHolder,
-        saved: ScrollPlace,
+        opening: KeptPlace,
         restored: BooleanArray,
         currentKeys: () -> List<String>,
     ) {
@@ -197,11 +193,11 @@ internal object ScrollPlaceRules {
         val current = snapshotFlow { currentKeys() }.first { it.isNotEmpty() }
         if (restored[0]) return
         restored[0] = true
-        target(saved, current)?.let { (index, offset) ->
+        target(opening.place, current)?.let { (index, offset) ->
             // Rows that arrived below put the place away from the newest edge.
-            list.following = holder.following && index == 0
+            list.following = opening.following && index == 0
             if (list.anchor == TranscriptAnchor.Hybrid) {
-                list.scrollToPlace(index, offset, saved.normal)
+                list.scrollToPlace(index, offset, opening.place.normal)
             } else {
                 list.lazy.scrollToItem(list.lazyIndex(index), offset)
             }
@@ -242,8 +238,15 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
     keysState.value = keys
     val current by keysState
     val restored = remember(list) { booleanArrayOf(false) }
+    // What this entry opens on: the place saved for it or kept for the conversation in this run, read once, before the
+    // collector below takes the entry's own places. Those say where the list already is and are never put back.
+    val taken = remember { booleanArrayOf(false) }
+    val opening =
+        remember(list) {
+            if (taken[0]) null else ScrollPlaceRules.pendingPlace(holder)?.let { KeptPlace(it, holder.following) }
+        }
     SideEffect {
-        if (!restored[0] && resets == 0 && ScrollPlaceRules.restoreOnFirstFrame(list, holder, keys)) {
+        if (!restored[0] && resets == 0 && ScrollPlaceRules.restoreOnFirstFrame(list, opening, keys)) {
             restored[0] = true
         }
     }
@@ -252,13 +255,14 @@ internal fun KeepScrollPlace(list: TranscriptListState, keys: List<String>, conv
             restored[0] = false
             ScrollPlaceRules.reset(list, holder)
         }
-        val saved = if (restored[0]) null else ScrollPlaceRules.pendingPlace(holder)
+        val saved = if (restored[0] || resets > 0) null else opening
         if (saved != null) {
-            ScrollPlaceRules.restoreAsync(list, holder, saved, restored) { current }
+            ScrollPlaceRules.restoreAsync(list, saved, restored) { current }
         }
         snapshotFlow { list.placeIn(current) to list.following }
             .collect { (place, following) ->
                 if (place == null) return@collect
+                taken[0] = true
                 holder.place = place
                 holder.following = following
                 if (conversation != null) ScrollPlaceStore.put(conversation, place, following)
