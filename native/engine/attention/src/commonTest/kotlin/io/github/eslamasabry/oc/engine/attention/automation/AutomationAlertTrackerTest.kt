@@ -280,6 +280,28 @@ class AutomationAlertTrackerTest {
     }
 
     @Test
+    fun `B-620 the idle after a person's run does not end the automation run queued behind it`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 3)))
+        tracker.onRunStarted("ses_1")
+        tracker.onAutomationMessage("ses_1", prompt(run = 4), messageId = "inb_4")
+        // Another prompt of the person's, behind the automation's, does not drop the automation's turn.
+        tracker.onPersonPrompt("ses_1", messageId = "inb_person")
+
+        // The server ends every run twice: its own end, then an idle. Both are the person's run ending.
+        val end = tracker.onSessionRunEnded("ses_1", failed = false, interrupted = false, replyExcerpt = "Done")
+        val idle = tracker.onSessionRunEnded("ses_1", failed = false, interrupted = false, replyExcerpt = "Done")
+        assertTrue(end.post.isEmpty() && idle.post.isEmpty(), "the person's reply is not the automation's finding")
+
+        // The automation's own run starts, and what it finds is told once.
+        tracker.onRunStarted("ses_1")
+        val own = tracker.onSessionRunEnded("ses_1", failed = false, interrupted = false, replyExcerpt = "2 errors")
+        assertEquals(AutomationAlertReason.Message, own.post.single().reason)
+        assertEquals("2 errors", own.post.single().detail)
+    }
+
+    @Test
     fun `B-620 noisy automation groups by automation and caps visible slots while counting all runs`() {
         val tracker = AutomationAlertTracker(profileId = "p1", maxVisiblePerAutomation = 3)
         tracker.setConnected(true)
