@@ -127,9 +127,10 @@ internal fun repoRoot(): File {
     return checkNotNull(d) { "$NOTES_PATH not found from ${System.getProperty("user.dir")}" }
 }
 
-/** The real 3.0.3 notes with one https link in them (B-628). */
+/** The real 3.0.3 notes, opening with one https link so a 360 dp screen shows it without scrolling (B-628). */
 internal fun notesWithLink(): String =
-    File(repoRoot(), NOTES_PATH).readText().trimEnd() + "\n\nSee the [$NOTE_LINK_TEXT]($NOTE_LINK_URL)."
+    "Read the [$NOTE_LINK_TEXT]($NOTE_LINK_URL) for every change in this version.\n\n" +
+        File(repoRoot(), NOTES_PATH).readText().trimEnd()
 
 /** Raw Markdown that reached the screen: bold or link marks, a list marker or a heading's hashes. */
 internal fun showsRawMarkdown(text: String): Boolean =
