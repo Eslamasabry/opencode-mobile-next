@@ -351,32 +351,66 @@ internal object SetupCompatFallback {
         logDetail: (String) -> Unit,
         onInterruptRetry: (Int) -> Unit,
     ): String? {
-        var attempt = 1
-        var compatFallbackUsed = false
-        val trackedHooks =
-            object : Hooks by hooks {
-                override fun onCompatRetry(reasonLine: String) {
-                    compatFallbackUsed = true
-                    hooks.onCompatRetry(reasonLine)
-                }
-            }
-        while (true) {
-            try {
-                val outcome = run(stepId, currentCompat(), trackedHooks, allowCompatRetry = !compatFallbackUsed)
-                if (outcome.retriedInCompat) compatFallbackUsed = true
-                outcome.terminalDetail?.let(logDetail)
-                val interrupted = SetupStepRetry.interrupted(outcome.failure)
-                if (!SetupStepRetry.again(attempt, hooks.isCancelled(), interrupted)) return outcome.failure
-            } catch (error: InstallerInterruptedException) {
-                if (!SetupStepRetry.again(attempt, hooks.isCancelled(), interrupted = true)) throw error
-            }
-            attempt++
-            onInterruptRetry(attempt)
+        val tracker = CompatRetryTracker(hooks)
+        return try {
+            runRetryingLoop(stepId, currentCompat, tracker, logDetail, onInterruptRetry)
+        } finally {
+            tracker.clearTemporaryCompat()
         }
     }
 }
 
 private const val MAX_DETAIL_SUFFIX_CHARS: Int = 200
+
+private class CompatRetryTracker(
+    private val delegate: SetupCompatFallback.Hooks,
+) : SetupCompatFallback.Hooks by delegate {
+    var fallbackUsed: Boolean = false
+    private var temporaryPersisted: Boolean = false
+
+    override fun persistCompat() {
+        temporaryPersisted = true
+        delegate.persistCompat()
+    }
+
+    override fun clearCompat() {
+        temporaryPersisted = false
+        delegate.clearCompat()
+    }
+
+    override fun onCompatRetry(reasonLine: String) {
+        fallbackUsed = true
+        delegate.onCompatRetry(reasonLine)
+    }
+
+    fun clearTemporaryCompat() {
+        if (temporaryPersisted) clearCompat()
+    }
+}
+
+private fun runRetryingLoop(
+    stepId: String,
+    currentCompat: () -> Boolean,
+    tracker: CompatRetryTracker,
+    logDetail: (String) -> Unit,
+    onInterruptRetry: (Int) -> Unit,
+): String? {
+    var attempt = 1
+    while (true) {
+        try {
+            val outcome =
+                SetupCompatFallback.run(stepId, currentCompat(), tracker, allowCompatRetry = !tracker.fallbackUsed)
+            if (outcome.retriedInCompat) tracker.fallbackUsed = true
+            outcome.terminalDetail?.let(logDetail)
+            val interrupted = SetupStepRetry.interrupted(outcome.failure)
+            if (!SetupStepRetry.again(attempt, tracker.isCancelled(), interrupted)) return outcome.failure
+        } catch (error: InstallerInterruptedException) {
+            if (!SetupStepRetry.again(attempt, tracker.isCancelled(), interrupted = true)) throw error
+        }
+        attempt++
+        onInterruptRetry(attempt)
+    }
+}
 
 private fun retryOnceInCompat(
     stepId: String,
@@ -398,6 +432,7 @@ private fun retryOnceInCompat(
             SetupCompatFallback.Outcome("cancelled", usedCompat = true, retriedInCompat = true, listOf(reason), null)
         }
         second.failure == null && !second.stalled -> {
+            hooks.clearCompat()
             val doneLine = SetupCompatFallback.linuxModeDetail(stepId, compatible = true, outcome = "finished")
             SetupCompatFallback.Outcome(
                 null,
@@ -407,31 +442,38 @@ private fun retryOnceInCompat(
                 doneLine,
             )
         }
-        else -> {
-            hooks.clearCompat()
-            val stalledOutcome = first.stalled || second.stalled
-            val failure =
-                if (stalledOutcome) SetupCompatFallback.stalledFailure(compatible = true) else second.failure
-            val outcomeWord = if (second.stalled) "stopped making progress" else "failed"
-            val detailSuffix =
-                second.failure
-                    ?.trim()
-                    ?.takeIf { first.stalled && !second.stalled && it.isNotEmpty() }
-                    ?.replace('\n', ' ')
-                    ?.take(MAX_DETAIL_SUFFIX_CHARS)
-                    ?.let { ": $it" }
-                    .orEmpty()
-            val failLine =
-                SetupCompatFallback.linuxModeDetail(stepId, compatible = true, outcome = outcomeWord) + detailSuffix
-            SetupCompatFallback.Outcome(
-                failure,
-                usedCompat = true,
-                retriedInCompat = true,
-                listOf(reason, failLine),
-                failLine,
-            )
-        }
+        else -> compatRetryFailure(stepId, first, second, reason, hooks)
     }
+}
+
+private fun compatRetryFailure(
+    stepId: String,
+    first: SetupCompatFallback.StepAttempt,
+    second: SetupCompatFallback.StepAttempt,
+    reason: String,
+    hooks: SetupCompatFallback.Hooks,
+): SetupCompatFallback.Outcome {
+    val keepForInterruptRetry = !first.stalled && !second.stalled && SetupStepRetry.interrupted(second.failure)
+    if (!keepForInterruptRetry) hooks.clearCompat()
+    val failure =
+        if (first.stalled || second.stalled) SetupCompatFallback.stalledFailure(compatible = true) else second.failure
+    val outcomeWord = if (second.stalled) "stopped making progress" else "failed"
+    val detailSuffix =
+        second.failure
+            ?.trim()
+            ?.takeIf { first.stalled && !second.stalled && it.isNotEmpty() }
+            ?.replace('\n', ' ')
+            ?.take(MAX_DETAIL_SUFFIX_CHARS)
+            ?.let { ": $it" }
+            .orEmpty()
+    val failLine = SetupCompatFallback.linuxModeDetail(stepId, compatible = true, outcome = outcomeWord) + detailSuffix
+    return SetupCompatFallback.Outcome(
+        failure,
+        usedCompat = true,
+        retriedInCompat = true,
+        listOf(reason, failLine),
+        failLine,
+    )
 }
 
 private fun singleAttemptFailure(

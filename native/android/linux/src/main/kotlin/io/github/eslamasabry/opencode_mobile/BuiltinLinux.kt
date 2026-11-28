@@ -1138,10 +1138,10 @@ class BuiltinLinux(private val context: Context) {
         } catch (error: Exception) {
             Log.w(TAG, "Git shared-folder setting not written: ${error.javaClass.simpleName}")
         }
-        // B-488: keep /etc/resolv.conf aligned with the phone's active network DNS.
+        // B-488: best-effort sync of /etc/resolv.conf with the phone's active network DNS.
         try {
             BuiltinDnsConfig.sync(context, rootfs)
-        } catch (error: java.io.IOException) {
+        } catch (@Suppress("TooGenericExceptionCaught") error: Exception) {
             Log.w(TAG, "DNS setting not written: ${error.javaClass.simpleName}")
         }
     }
