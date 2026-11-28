@@ -111,7 +111,10 @@ class OcApplication : Application(), GraphOwner {
         startupLog.i { "Application.onCreate total ${SystemClock.elapsedRealtime() - tOnCreate}ms" }
     }
 
-    /** The starters nothing in the first frame waits for, in their original relative order. */
+    /**
+     * The starters nothing in the first frame waits for: built-in Linux supervision first (B-486, so the phone's
+     * OpenCode and its agents start at once), then the others in their order.
+     */
     private fun startDeferred() {
         Thread(
                 {

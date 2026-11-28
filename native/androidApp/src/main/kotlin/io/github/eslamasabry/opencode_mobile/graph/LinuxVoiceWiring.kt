@@ -5,6 +5,8 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -1756,8 +1758,9 @@ internal constructor(
                 override fun onActivityDestroyed(activity: Activity) = Unit
             }
         )
-        // B-486: if MainActivity already resumed before oc-startup registered this callback, catch up at once.
-        if (localGates.hasResumedActivity() && !foreground) resumed(true)
+        // B-486: if MainActivity already resumed before oc-startup registered this callback, catch up at once, on
+        // the main thread like every other resume ([resumed] never waits for runtime I/O).
+        Handler(Looper.getMainLooper()).post { if (localGates.hasResumedActivity() && !foreground) resumed(true) }
         scope.launch { publish() }
     }
 
