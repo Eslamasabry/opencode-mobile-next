@@ -74,4 +74,16 @@ class ScrollAnchorHybridTest {
     fun `STEPS-SCROLL-022 today a new entry keeps following while rows arrive`() {
         ScrollAnchorWalks.walk022TodayNewEntryFollowsArrivals()
     }
+
+    @Test
+    fun `STEPS-SCROLL-023 reopening chat with waiting decision has no jump dock flicker`() {
+        val suite = WaitingDecisionVisibleTest()
+        suite.`F-023 a tap in the message box while a decision waits takes the page back to it`()
+        try {
+            suite
+                .`F-016 the same card in place under its step shows Allow once and Deny whole above the message box`()
+        } catch (e: FlickerFailure) {
+            throw AssertionError(e.findings.joinToString(" | ") { "${it.rule} ${it.detail}" }, e)
+        }
+    }
 }
