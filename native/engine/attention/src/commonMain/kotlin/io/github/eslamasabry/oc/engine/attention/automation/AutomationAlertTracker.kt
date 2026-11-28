@@ -165,15 +165,6 @@ public class AutomationAlertTracker(
         return AutomationAlertDiff(post = listOfNotNull(notification))
     }
 
-    /** [endRun] and [tellRun] in one step, for a caller that already holds the run's own reply line. */
-    public fun onSessionRunEnded(
-        sessionId: String,
-        failed: Boolean,
-        interrupted: Boolean,
-        replyExcerpt: String,
-    ): AutomationAlertDiff =
-        endRun(sessionId)?.let { tellRun(it, failed, interrupted, replyExcerpt) } ?: AutomationAlertDiff()
-
     /**
      * The person paused the automation from the shade: its alerts go, and the server's echo of that pause tells
      * nothing. The group starts counting again when the automation is resumed.
@@ -181,7 +172,8 @@ public class AutomationAlertTracker(
     public fun markPausedLocally(automationId: String): AutomationAlertDiff = rows.pausedLocally(automationId)
 
     /** The groups of every automation the tracker knows, for clearing the shade. */
-    public fun groups(): Set<String> = rows.groups()
+    public val groups: Set<String>
+        get() = rows.groups()
 
     /**
      * The connection's state. Going offline, or coming back, forgets the baseline and the runs in flight: what happened
@@ -210,6 +202,18 @@ public class AutomationAlertTracker(
         public const val DEFAULT_VISIBLE_SLOTS: Int = 3
     }
 }
+
+/**
+ * [AutomationAlertTracker.endRun] and [AutomationAlertTracker.tellRun] in one step, for a caller that already holds
+ * the run's own reply line when the run ends.
+ */
+public fun AutomationAlertTracker.onSessionRunEnded(
+    sessionId: String,
+    failed: Boolean,
+    interrupted: Boolean,
+    replyExcerpt: String,
+): AutomationAlertDiff =
+    endRun(sessionId)?.let { tellRun(it, failed, interrupted, replyExcerpt) } ?: AutomationAlertDiff()
 
 /** The rows of one server's automations, as its tracker last saw them, and what a new reading posts. */
 private class AutomationRows(private val profileId: String, private val maxVisible: Int) {

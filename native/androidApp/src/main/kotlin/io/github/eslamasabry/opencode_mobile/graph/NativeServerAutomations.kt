@@ -21,6 +21,7 @@ import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.failed
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ids.SessionId
+import io.github.eslamasabry.oc.core.common.map
 import io.github.eslamasabry.oc.core.common.ok
 import io.github.eslamasabry.oc.core.domain.ServerOperationsGateway
 import io.github.eslamasabry.oc.core.domain.events.RunOutcome
@@ -268,19 +269,26 @@ class AutomationAlertsCoordinator(
     /**
      * **Pause this automation** (B-620), without opening the app: the token of the exact posted alert authorizes one
      * call to the server. A blank, unknown, used or mismatched token is `Refused(StaleScope)` (B-SEC-183). A pause the
-     * server refused or could not reach comes back as it is, and the alerts stay: nothing pretends paused.
+     * server refused or could not reach comes back as it is, and the alerts stay: nothing pretends paused. A pause
+     * that took also clears the automation's group here and now, and retires the pauses of its rows.
      */
     suspend fun pauseFromShade(profile: ProfileId, automationId: String, actionToken: String): Outcome<Unit> {
         val pause = pauses.take(profile, automationId, actionToken)
             ?: return Outcome.Failed(Failure.Refused(RefusalReason.StaleScope))
-        return pauseOnServer(profile, pause)
+        val answer = source.pauseAutomation(profile, pause.automationId)
+        if (answer is Outcome.Ok) {
+            post(profile, servers.tracked(profile).tracker.markPausedLocally(pause.automationId))
+            shade.dismissGroup(pause.group)
+            pauses.retireGroup(profile, pause.group)
+        }
+        return answer.map { Unit }
     }
 
     /** The app came to the screen: what the alerts said is on screen now (B-ANDR-011), and every group counts anew. */
     fun alertsSeen() {
         val groups = mutableSetOf<String>()
         for (entry in servers.values) {
-            groups += entry.tracker.groups()
+            groups += entry.tracker.groups
             entry.tracker.alertsCleared()
         }
         pauses.clear()
@@ -290,17 +298,7 @@ class AutomationAlertsCoordinator(
     /** The server's profile is gone: nothing of it is kept, and its alerts go. */
     fun forget(profile: ProfileId) {
         pauses.forget(profile)
-        servers.remove(profile)?.tracker?.groups().orEmpty().forEach(shade::dismissGroup)
-    }
-
-    /** The server's own answer; a pause that took also clears the group here and now. */
-    private suspend fun pauseOnServer(profile: ProfileId, pause: Pause): Outcome<Unit> {
-        val answer = source.pauseAutomation(profile, pause.automationId)
-        if (answer is Outcome.Failed) return answer
-        post(profile, servers.tracked(profile).tracker.markPausedLocally(pause.automationId))
-        shade.dismissGroup(pause.group)
-        pauses.retireGroup(profile, pause.group)
-        return Outcome.Ok(Unit)
+        servers.remove(profile)?.tracker?.groups.orEmpty().forEach(shade::dismissGroup)
     }
 
     /**
