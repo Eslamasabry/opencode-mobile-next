@@ -13,7 +13,10 @@ public object ColdStartLaunch {
         public val phoneHelpers: List<ProfileId>,
     )
 
-    /** Callbacks that seed saved chats and boot phone-agent helpers before primary connect awaits. */
+    /**
+     * Callbacks that seed saved chats and boot phone-agent helpers before primary connect awaits, and adopt the
+     * phone agents once the primary connection ended.
+     */
     public class HelperHooks(
         public val seed: suspend (ProfileId) -> Unit,
         public val start: (ProfileId) -> Unit,
@@ -29,8 +32,9 @@ public object ColdStartLaunch {
     )
 
     /**
-     * Seeds [targets], starts shown phone helpers and adoption alongside primary connect, completes
-     * [PrimaryHooks.onComplete], and then runs [PrimaryHooks.syncRemaining].
+     * Seeds [targets] and starts shown phone helpers alongside the primary connect, completes
+     * [PrimaryHooks.onComplete], and then adopts phone helpers and runs [PrimaryHooks.syncRemaining].
+     * Adoption waits for the primary connection: a helper start it needs is refused before the app is in front.
      */
     public suspend fun <T> run(
         targets: Targets,
@@ -40,9 +44,9 @@ public object ColdStartLaunch {
         if (targets.active != null) helpers.seed(targets.active)
         for (helper in targets.phoneHelpers) helpers.seed(helper)
         for (helper in targets.phoneHelpers) helpers.start(helper)
-        helpers.adopt()
         val result = if (targets.active != null) primary.connect(targets.active) else primary.empty()
         primary.onComplete(result)
+        helpers.adopt()
         primary.syncRemaining()
     }
 }

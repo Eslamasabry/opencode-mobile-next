@@ -136,6 +136,8 @@ class PreviewRuntime(
     // Retained only for a saved profile whose deletion reached the draft fence.
     private val draftRecovery = mutableSetOf<ProfileId>()
     private val restoreRequested = AtomicBoolean(false)
+    /** B-486: set once an activity resumed in this run; the phone's Linux admits a helper's start only after that. */
+    private val activityResumedOnce = AtomicBoolean(false)
     // AGENT-2's session-creation receipts share the process owner of the pending-command journals
     // (DeliveryStorage), so creation, delivery and deletion see one journal per profile.
     private val pendingCommands: PendingCommandJournals =
@@ -393,7 +395,9 @@ class PreviewRuntime(
         // The helper's own source connecting is a stage of the start ([LaunchStages]).
         val helper = isPhoneHelper(id)
         if (helper) stages.agentConnecting(id, true)
-        dropSeed(id)
+        // Only a source whose saved rows stood in (one the app starts, or the server in use) gets them back on a
+        // failed connection: another computer never shows chats the app did not read.
+        val wasSeeded = dropSeed(id)
         synchronized(personStopped) { personStopped.remove(id) }
         val result =
             try {
@@ -401,7 +405,7 @@ class PreviewRuntime(
             } finally {
                 if (helper) stages.agentConnecting(id, false)
             }
-        if (result is Outcome.Failed && id !in listings && listSourceShown(id)) seedWhileStarting(id)
+        if (result is Outcome.Failed && wasSeeded && listSourceShown(id)) seedWhileStarting(id)
         val stopped = result is Outcome.Failed && synchronized(personStopped) { personStopped.remove(id) }
         when {
             // The person's own stop is a state (Home says so, with Start OpenCode); it is never a source failure.
@@ -478,9 +482,14 @@ class PreviewRuntime(
         rebuildFeed()
     }
 
-    /** The source is connecting now: its real listing takes the saved rows' place (same rows, same identities). */
-    private fun dropSeed(id: ProfileId) {
-        if (seededListings.remove(id)) listings.remove(id)
+    /**
+     * The source is connecting now: its real listing takes the saved rows' place (same rows, same identities).
+     * True when its saved rows stood in.
+     */
+    private fun dropSeed(id: ProfileId): Boolean {
+        if (!seededListings.remove(id)) return false
+        listings.remove(id)
+        return true
     }
 
     /**
@@ -558,6 +567,8 @@ class PreviewRuntime(
                 want = { wantHelper(it) },
             )
         }
+        // B-486: remembers the first resume of this run, for the one retry of the Phone agents adoption.
+        scope.launch { localGates.activityResumed.collect { if (it) activityResumedOnce.set(true) } }
     }
 
     /** The helper sources whose start loop is in its first window (the home reads "Starting" only for these). */
@@ -667,11 +678,17 @@ class PreviewRuntime(
 
     /**
      * Cold start: with a phone agent installed, the "Phone agents" source is saved and joins the list on its own,
-     * with no visit to the Agents page. Never raises a failure: the OpenCode list shows either way.
+     * with no visit to the Agents page. Never raises a failure: the OpenCode list shows either way. The phone's
+     * Linux admits the helper's start only while the app is in front: an adoption that failed before any activity
+     * resumed is tried once more at the first resume; one that failed with the app in front is not repeated.
      */
     private fun adoptPhoneAgents() {
         scope.launch {
-            val adopted = phoneHelper.value.adoptSource()
+            var adopted = phoneHelper.value.adoptSource()
+            if (adopted is Outcome.Failed && !activityResumedOnce.get()) {
+                localGates.activityResumed.first { it }
+                adopted = phoneHelper.value.adoptSource()
+            }
             if (adopted is Outcome.Ok && adopted.value != null) synchronizeListSources()
         }
     }
