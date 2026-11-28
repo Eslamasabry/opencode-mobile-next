@@ -12,18 +12,26 @@ import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.RefusalReason
 import io.github.eslamasabry.oc.core.common.ids.ProfileId
 import io.github.eslamasabry.oc.core.common.ok
+import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.AutomationAction
 import io.github.eslamasabry.oc.core.model.AutomationOutcome
 import io.github.eslamasabry.oc.core.model.AutomationStatus
 import io.github.eslamasabry.oc.core.model.AutomationTrigger
 import io.github.eslamasabry.oc.core.model.ServerAutomation
 import io.github.eslamasabry.oc.core.model.transcript.MessageAutomation
+import io.github.eslamasabry.oc.core.model.transcript.MessageInfo
+import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
+import io.github.eslamasabry.oc.core.model.transcript.Part
+import io.github.eslamasabry.oc.core.model.transcript.PartType
+import io.github.eslamasabry.oc.core.model.transcript.Role
 import io.github.eslamasabry.oc.feature.settings.presentation.ServerAutomationsSource
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.test.runTest
 
@@ -109,32 +117,122 @@ class AutomationAlertsCoordinatorTest {
         sessionId = "ses_9",
     )
 
-    @Test
-    fun `B-620 Pause this automation pauses via server API and automation row then shows paused`() = runTest {
-        val shade = FakeShade()
-        val server = MutableServerAutomations(sample(id = "aut_1", status = AutomationStatus.Active, runCount = 1))
-        val coordinator = AutomationAlertsCoordinator(
+    /** The chat of the automation's runs, as the server would page it: oldest first. */
+    private val chat = mutableListOf<MessageWithParts>()
+
+    private fun coordinator(shade: FakeShade, server: MutableServerAutomations) =
+        AutomationAlertsCoordinator(
             shade = shade,
             source = server,
             serverName = { "Home server" },
             alertFacts = { backgroundFacts },
             redact = { it },
+            replies = { _, session -> chat.filter { it.info.sessionId == session } },
         )
+
+    private fun run(number: Int) = MessageAutomation(id = "aut_1", name = "Nightly check", run = number)
+
+    /** The automation's prompt of run [number], as the stream shows it and as the chat keeps it. */
+    private fun prompt(number: Int): MessageInfo =
+        MessageInfo(id = "inb_$number", sessionId = "ses_9", role = Role.User, automation = run(number))
+            .also { chat += MessageWithParts(it, persistentListOf(text(it.id, "Check nightly builds"))) }
+
+    private fun reply(id: String, words: String) {
+        val info = MessageInfo(id = id, sessionId = "ses_9", role = Role.Assistant)
+        chat += MessageWithParts(info, persistentListOf(text(id, words)))
+    }
+
+    private fun text(message: String, words: String) =
+        Part("prt_$message", message, sessionId = "ses_9", type = PartType.Text, rawType = "text", text = words)
+
+    private val failure = RunOutcome.Failed(kind = null, tag = null, details = null)
+
+    @Test
+    fun `B-620 a failed automation run in the chat feed tells once on the automation's own alert`() = runTest {
+        val shade = FakeShade()
+        val server = MutableServerAutomations(sample(id = "aut_1", runCount = 1))
+        val coordinator = coordinator(shade, server)
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunStarted(profile, "ses_9")
+        // From its prompt on the run is the automation's: the chat's stopped and finished alerts stand down.
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"))
+        coordinator.onRunEnded(profile, "ses_9", failure)
+        assertEquals(AlertKind.AutomationFailed, shade.shown.single().first.kind)
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "still the automation's after it ended")
+
+        // The idle that follows a failure, and the read's word of the same run, tell nothing more.
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Idle)
+        server.items["aut_1"] = failed("aut_1", run = 2)
+        coordinator.pollAutomations(profile)
+        assertEquals(1, shade.shown.size)
+        assertEquals(1, shade.shown.single().first.automationCoveredRuns)
+
+        // The chat's next run is the person's own: its alerts speak for it again.
+        coordinator.onRunStarted(profile, "ses_9")
+        assertFalse(coordinator.isAutomationSession(profile, "ses_9"))
+    }
+
+    @Test
+    fun `B-620 a readable finding tells the first line of its own run's reply`() = runTest {
+        val shade = FakeShade()
+        val coordinator = coordinator(shade, MutableServerAutomations(sample(id = "aut_1", runCount = 1)))
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        prompt(1)
+        reply("msg_1", "Disk is almost full")
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunStarted(profile, "ses_9")
+        reply("msg_2", "2 errors in logs\nSee the build page")
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
+
+        val posted = shade.shown.single().first
+        assertEquals(AlertKind.AutomationMessage, posted.kind)
+        assertEquals("2 errors in logs", posted.detail)
+        assertEquals("ses_9", posted.sessionId)
+    }
+
+    @Test
+    fun `B-620 a quiet run after an older readable reply makes no notification`() = runTest {
+        val shade = FakeShade()
+        val coordinator = coordinator(shade, MutableServerAutomations(sample(id = "aut_1", runCount = 1)))
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        // Run 1 found something while nobody was told; run 2 says nothing readable.
+        prompt(1)
+        reply("msg_1", "Disk is almost full")
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunStarted(profile, "ses_9")
+        reply("msg_2", "   ")
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
+        assertTrue(shade.shown.isEmpty(), "run 1's words are not run 2's finding")
+        assertTrue(coordinator.isAutomationSession(profile, "ses_9"), "a quiet run has no finished alert either")
+
+        // A run whose prompt the page no longer holds has no reply to tell: nothing older speaks for it.
+        val late = MessageInfo(id = "inb_3", sessionId = "ses_9", role = Role.User, automation = run(3))
+        coordinator.onMessage(profile, late)
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
+        assertTrue(shade.shown.isEmpty())
+    }
+
+    @Test
+    fun `B-620 Pause this automation pauses via server API and automation row then shows paused`() = runTest {
+        val shade = FakeShade()
+        val server = MutableServerAutomations(sample(id = "aut_1", status = AutomationStatus.Active, runCount = 1))
+        val coordinator = coordinator(shade, server)
 
         coordinator.setConnected(profile, true)
         coordinator.pollAutomations(profile) // baseline
         assertTrue(shade.shown.isEmpty())
 
         // Finding arrives via metadata.automation.
-        val auto = MessageAutomation(id = "aut_1", name = "Nightly check", run = 2)
-        coordinator.onAutomationMessage(profile, "ses_9", auto)
-        coordinator.onSessionRunEnded(
-            profile = profile,
-            sessionId = "ses_9",
-            failed = false,
-            interrupted = false,
-            replyExcerpt = "2 errors in logs",
-        )
+        coordinator.onMessage(profile, prompt(2))
+        reply("msg_2", "2 errors in logs")
+        coordinator.onRunEnded(profile, "ses_9", RunOutcome.Succeeded)
         val posted = shade.shown.single().first
         assertEquals(AlertKind.AutomationMessage, posted.kind)
         assertEquals("aut_1", posted.requestId)
@@ -163,13 +261,7 @@ class AutomationAlertsCoordinatorTest {
     fun `B-620 a quiet automation's Pause stays good while a noisy one replaces its own rows`() = runTest {
         val shade = FakeShade()
         val server = MutableServerAutomations(sample(id = "aut_1", runCount = 0), sample(id = "aut_2", runCount = 0))
-        val coordinator = AutomationAlertsCoordinator(
-            shade = shade,
-            source = server,
-            serverName = { "Home server" },
-            alertFacts = { backgroundFacts },
-            redact = { it },
-        )
+        val coordinator = coordinator(shade, server)
         coordinator.setConnected(profile, true)
         coordinator.pollAutomations(profile) // baseline
 
@@ -192,13 +284,7 @@ class AutomationAlertsCoordinatorTest {
     fun `B-620 a replaced row's Pause and a dismissed row's Pause are retired`() = runTest {
         val shade = FakeShade()
         val server = MutableServerAutomations(sample(id = "aut_1", runCount = 0))
-        val coordinator = AutomationAlertsCoordinator(
-            shade = shade,
-            source = server,
-            serverName = { "Home server" },
-            alertFacts = { backgroundFacts },
-            redact = { it },
-        )
+        val coordinator = coordinator(shade, server)
         coordinator.setConnected(profile, true)
         coordinator.pollAutomations(profile) // baseline
         for (run in 1..4) {
@@ -225,20 +311,14 @@ class AutomationAlertsCoordinatorTest {
     fun `B-620 offline connection posts nothing and failed pause does not pretend paused`() = runTest {
         val shade = FakeShade()
         val server = MutableServerAutomations(sample(id = "aut_1", status = AutomationStatus.Active, runCount = 1))
-        val coordinator = AutomationAlertsCoordinator(
-            shade = shade,
-            source = server,
-            serverName = { "Home server" },
-            alertFacts = { backgroundFacts },
-            redact = { it },
-        )
+        val coordinator = coordinator(shade, server)
 
         // Offline: poll and messages do nothing.
         coordinator.pollAutomations(profile)
-        val auto = MessageAutomation(id = "aut_1", name = "Nightly check", run = 2)
-        coordinator.onAutomationMessage(profile, "ses_9", auto)
-        coordinator.onSessionRunEnded(profile, "ses_9", failed = true, interrupted = false, replyExcerpt = "")
+        coordinator.onMessage(profile, prompt(2))
+        coordinator.onRunEnded(profile, "ses_9", failure)
         assertTrue(shade.shown.isEmpty())
+        assertFalse(coordinator.isAutomationSession(profile, "ses_9"), "offline, nothing is the automation's")
 
         // Online failure, then server goes offline before user taps Pause.
         coordinator.setConnected(profile, true)
