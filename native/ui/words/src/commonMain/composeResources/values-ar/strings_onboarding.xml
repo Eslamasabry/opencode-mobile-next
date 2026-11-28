@@ -230,7 +230,7 @@
     </plurals>
     <string name="phoneSetupStartAboutMinutes__eq1">نحو دقيقة</string>
     <string name="phoneSetupStartAboutMinutes__eq2">نحو دقيقتين</string>
-    <string name="phoneSetupStartSetUp">ابدأ الإعداد</string>
+    <string name="phoneSetupStartSetUp">إعداد OpenCode على هذا الهاتف</string>
     <string name="phoneSetupStartIncludes">يشمل %1$s.</string>
     <string name="phoneSetupStartCustomize">تخصيص</string>
     <string name="phoneSetupStartByAddress">الاتصال بحاسوب عبر عنوانه</string>

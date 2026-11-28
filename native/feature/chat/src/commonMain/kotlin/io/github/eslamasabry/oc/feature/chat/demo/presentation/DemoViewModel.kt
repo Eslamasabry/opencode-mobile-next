@@ -10,12 +10,14 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import io.github.eslamasabry.oc.core.common.AppDispatchers
 import io.github.eslamasabry.oc.core.common.Outcome
 import io.github.eslamasabry.oc.core.common.ids.RequestId
+import io.github.eslamasabry.oc.core.model.PermissionRequest
 import io.github.eslamasabry.oc.engine.requests.PendingRequest
 import io.github.eslamasabry.oc.engine.requests.ask.PermissionAsk
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerActions
 import io.github.eslamasabry.oc.feature.chat.composer.presentation.BasicComposerUi
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatActions
 import io.github.eslamasabry.oc.feature.chat.presentation.ChatPresenter
+import io.github.eslamasabry.oc.feature.chat.presentation.ChatUi
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.CardState
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.ChatRequestActions
 import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestCardUi
@@ -23,24 +25,35 @@ import io.github.eslamasabry.oc.feature.chat.requests.presentation.RequestSlotUi
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModel
 import io.github.eslamasabry.oc.feature.chat.world.ComposerModels
 import io.github.eslamasabry.oc.ui.routes.AppNavigator
+import io.github.eslamasabry.oc.ui.routes.PhoneSetupRoute
+import io.github.eslamasabry.oc.ui.routes.ServersRoute
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+public data class DemoScreenUi(
+    val chat: ChatUi,
+    val stage: DemoStage = DemoStage.Ready,
+    val ownReplyKey: String? = null,
+    val requests: RequestSlotUi = RequestSlotUi(),
+)
+
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppScope::class, binding = binding<ViewModel>())
-public class DemoViewModel(nav: AppNavigator, dispatchers: AppDispatchers) :
+public class DemoViewModel(private val nav: AppNavigator, dispatchers: AppDispatchers) :
     ViewModel(), BasicComposerActions {
     private val world = DemoWorld(dispatchers)
     private val presenter =
         ChatPresenter(world, nav, { block -> viewModelScope.launch { block() } })
     public val actions: ChatActions = presenter
     public val state =
-        presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(5_000))
+        presenter.states(viewModelScope, world.work, SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS))
     public val stage = world.stage
+    public val ownReplyKey = world.ownReplyKey
     public val composer =
         combine(world.draft, world.stage, world.model, world.title) { draft, phase, model, title ->
                 // One sample model, so the model chip names something and its sheet is not an empty list; its group
@@ -61,28 +74,28 @@ public class DemoViewModel(nav: AppNavigator, dispatchers: AppDispatchers) :
             }
             .stateIn(
                 viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
+                SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS),
                 BasicComposerUi(available = false, sending = false, steers = false),
             )
 
     /** The sample agent's request as the app's own request card: one waiting permission ask, or nothing. */
     public val requests =
         world.request
-            .map { asked ->
-                RequestSlotUi(
-                    asked?.let {
-                        RequestCardUi.Permission(
-                            id = it.id,
-                            waitingSinceMs = null,
-                            state = CardState.Waiting,
-                            ask = PermissionAsk.of(it),
-                            canAlwaysAllow = false,
-                            captured = PendingRequest.Permission(it),
-                        )
-                    }
-                )
+            .map(::requestSlotOf)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS), RequestSlotUi())
+
+    /** One atomic screen snapshot so button dismiss, reply insert, and request card land in the same frame. */
+    public val ui =
+        combine(state, world.step) { chat, snap ->
+                if (chat.newestRowKey != snap.newestRowKey) null
+                else DemoScreenUi(chat, snap.stage, snap.ownReplyKey, requestSlotOf(snap.request))
             }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RequestSlotUi())
+            .filterNotNull()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(KEEP_SUBSCRIBED_MS),
+                DemoScreenUi(state.value, stage.value, ownReplyKey.value, requests.value),
+            )
 
     /** Allow and Deny answer the sample; the demo has no questions, no saved rules and nothing to undo. */
     public val requestActions: ChatRequestActions =
@@ -142,7 +155,37 @@ public class DemoViewModel(nav: AppNavigator, dispatchers: AppDispatchers) :
         viewModelScope.launch { world.reset() }
     }
 
+    public fun runSample(): Unit {
+        viewModelScope.launch { world.runSample() }
+    }
+
+    public fun setUpPhone(): Unit {
+        nav.back()
+        nav.open(PhoneSetupRoute.Setup)
+    }
+
+    public fun connectComputer(): Unit {
+        nav.back()
+        nav.open(ServersRoute.Edit())
+    }
+
     override fun onCleared() {
         world.close()
     }
 }
+
+private const val KEEP_SUBSCRIBED_MS = 5_000L
+
+private fun requestSlotOf(asked: PermissionRequest?): RequestSlotUi =
+    RequestSlotUi(
+        asked?.let {
+            RequestCardUi.Permission(
+                id = it.id,
+                waitingSinceMs = null,
+                state = CardState.Waiting,
+                ask = PermissionAsk.of(it),
+                canAlwaysAllow = false,
+                captured = PendingRequest.Permission(it),
+            )
+        }
+    )

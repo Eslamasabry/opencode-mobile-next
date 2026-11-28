@@ -123,6 +123,8 @@ import io.github.eslamasabry.oc.ui.words.res.firstReplyAskYes
 import io.github.eslamasabry.oc.ui.words.res.kitReportProblem
 import io.github.eslamasabry.oc.ui.words.res.kitTourSkip
 import io.github.eslamasabry.oc.ui.kit.KitButtonRole
+import io.github.eslamasabry.oc.feature.chat.demo.ui.DemoOwnReplyActions
+import io.github.eslamasabry.oc.feature.chat.demo.ui.LocalDemoOwnReply
 import io.github.eslamasabry.oc.ui.kit.foundation.KitTappable
 import io.github.eslamasabry.oc.ui.kit.foundation.KitLineAction
 import io.github.eslamasabry.oc.ui.kit.state.KitNotice
@@ -1387,14 +1389,23 @@ private fun ChatRow(
                         continues = row.continues,
                     )
             }
-            if (onOpenMenu != null && listWords != null) {
-                KitMessageActions(
-                    label = listWords.messageActions,
-                    onOpen = { onOpenMenu(row.key) },
-                ) {
-                    content()
+            val body: @Composable () -> Unit = {
+                if (onOpenMenu != null && listWords != null) {
+                    KitMessageActions(
+                        label = listWords.messageActions,
+                        onOpen = { onOpenMenu(row.key) },
+                    ) {
+                        content()
+                    }
+                } else content()
+            }
+            val demoOwn = LocalDemoOwnReply.current
+            if (demoOwn != null) {
+                Column {
+                    body()
+                    if (demoOwn.rowKey == row.key) DemoOwnReplyActions(demoOwn)
                 }
-            } else content()
+            } else body()
         }
         is PromptRow ->
             Column {

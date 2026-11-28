@@ -41,6 +41,14 @@ public enum class DemoStage {
     Finished,
 }
 
+/** One atomic demo transition paired with [newestRowKey] so UI state never lands out of sync with the transcript. */
+public data class DemoStep(
+    val newestRowKey: String? = null,
+    val stage: DemoStage = DemoStage.Ready,
+    val request: PermissionRequest? = null,
+    val ownReplyKey: String? = null,
+)
+
 /**
  * Localized sample content is supplied by the UI, never copied into presentation code. [reply] is what the agent says
  * before it asks; [before] and [after] the sample file's line as it is and as the agent would make it; [allowed] and
@@ -115,6 +123,12 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
     /** The sample model's name, once the words are known. */
     public val model: MutableStateFlow<String> = MutableStateFlow("")
 
+    /** The row key of the newest off-script reply so the UI can attach one-tap sample and exit actions to it. */
+    public val ownReplyKey: MutableStateFlow<String?> = MutableStateFlow(null)
+
+    /** Atomic snapshot of stage, request, and ownReplyKey keyed to [transcript]'s newest row. */
+    public val step: MutableStateFlow<DemoStep> = MutableStateFlow(DemoStep())
+
     public fun configure(content: DemoWords) {
         words = content
         model.value = content.model
@@ -140,27 +154,45 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
 
     override suspend fun send(text: String): Outcome<Unit> = lock.withLock {
         val content = words ?: return@withLock unavailable()
-        if (closed || text.isBlank() || stage.value == DemoStage.Review)
+        if (closed || text.isBlank() || stage.value == DemoStage.Review) {
             return@withLock unavailable()
-        append(text, prompt = true)
-        if (stage.value == DemoStage.Finished) {
-            // The sample is one ask and one answer; anything after it gets one honest line.
-            append(content.more, prompt = false)
-        } else {
-            replyInReady(text, content)
         }
-        draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
-        Outcome.Ok(Unit)
+        sendLocked(text, content)
     }
 
-    private fun replyInReady(text: String, content: DemoWords) {
-        if (isSample(text, content)) {
-            append(content.reply, prompt = false)
-            request.value = editRequest(content)
-            stage.value = DemoStage.Review
-        } else {
-            append(content.own, prompt = false)
+    /** Sends the suggested sample question in one tap without manual retyping (B-623). */
+    public suspend fun runSample(): Outcome<Unit> = lock.withLock {
+        val content = words ?: return@withLock unavailable()
+        if (closed || stage.value != DemoStage.Ready || content.prompt.isBlank()) {
+            return@withLock unavailable()
         }
+        sendLocked(content.prompt, content)
+    }
+
+    private data class ReplyStep(
+        val text: String,
+        val stage: DemoStage,
+        val request: PermissionRequest?,
+        val own: Boolean,
+    )
+
+    private fun sendLocked(text: String, content: DemoWords): Outcome<Unit> {
+        val next =
+            when {
+                stage.value == DemoStage.Finished ->
+                    ReplyStep(content.more, DemoStage.Finished, null, own = false)
+                isSample(text, content) ->
+                    ReplyStep(content.reply, DemoStage.Review, editRequest(content), own = false)
+                else -> ReplyStep(content.own, DemoStage.Ready, null, own = true)
+            }
+        val replyKey = appendPair(text, next.text)
+        val nextOwn = if (next.own) replyKey else null
+        ownReplyKey.value = nextOwn
+        request.value = next.request
+        stage.value = next.stage
+        step.value = DemoStep(replyKey, next.stage, next.request, nextOwn)
+        draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
+        return Outcome.Ok(Unit)
     }
 
     private fun isSample(text: String, content: DemoWords): Boolean =
@@ -186,22 +218,38 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
     public suspend fun decide(allow: Boolean): Outcome<Unit> = lock.withLock {
         val content = words ?: return@withLock unavailable()
         if (closed || stage.value != DemoStage.Review) return@withLock unavailable()
-        request.value = null
         owner.prefs.setBoolean(DECISION, allow)
-        append(
-            if (owner.prefs.boolean(DECISION) == true) content.allowed else content.denied,
-            prompt = false,
-        )
+        val replyKey =
+            append(
+                if (owner.prefs.boolean(DECISION) == true) content.allowed else content.denied,
+                prompt = false,
+            )
+        request.value = null
         stage.value = DemoStage.Finished
+        step.value = DemoStep(replyKey, DemoStage.Finished, null, ownReplyKey.value)
         Outcome.Ok(Unit)
     }
 
-    private fun append(text: String, prompt: Boolean) {
+    private fun append(text: String, prompt: Boolean): String {
         val saved = owner.prefs.stringList(HISTORY).orEmpty().toMutableList()
         saved += (if (prompt) "p:" else "r:") + text
         owner.prefs.setStringList(HISTORY, saved)
+        publishHistory(saved)
+        return "demo-${saved.lastIndex}"
+    }
+
+    private fun appendPair(prompt: String, reply: String): String {
+        val saved = owner.prefs.stringList(HISTORY).orEmpty().toMutableList()
+        saved += "p:$prompt"
+        saved += "r:$reply"
+        owner.prefs.setStringList(HISTORY, saved)
+        publishHistory(saved)
+        return "demo-${saved.lastIndex}"
+    }
+
+    private fun publishHistory(saved: List<String>) {
         val rows: List<TranscriptRow> =
-            owner.prefs.stringList(HISTORY).orEmpty().mapIndexed { index, stored ->
+            saved.mapIndexed { index, stored ->
                 val key = "demo-$index"
                 if (stored.startsWith("p:")) PromptRow(key, "demo-turn", stored.substring(2))
                 else
@@ -230,8 +278,10 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
         if (closed) return@withLock
         owner.prefs.clear()
         request.value = null
+        ownReplyKey.value = null
         stage.value = DemoStage.Ready
         transcript.value = TranscriptState.Empty.copy(revision = ++sequence)
+        step.value = DemoStep(null, DemoStage.Ready, null, null)
         draft.value = DraftFacts(restoreRevision = draft.value.restoreRevision + 1)
         words?.let { draftChanged(it.prompt) }
     }
@@ -239,6 +289,8 @@ public class DemoWorld(dispatchers: AppDispatchers) : ChatWorld {
     public fun close() {
         closed = true
         request.value = null
+        ownReplyKey.value = null
+        step.value = step.value.copy(request = null, ownReplyKey = null)
         owner.prefs.clear()
     }
 

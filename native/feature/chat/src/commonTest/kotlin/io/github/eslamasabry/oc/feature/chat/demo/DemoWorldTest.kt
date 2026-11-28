@@ -159,4 +159,36 @@ class DemoWorldTest {
         assertNotNull(world.request.value)
         assertEquals(DemoStage.Review, world.stage.value)
     }
+
+    @Test
+    fun `B-623 asking your own question records the honest reply key and runSample runs the sample in one call`() =
+        runTest {
+            val world = world(StandardTestDispatcher(testScheduler))
+            assertNull(world.ownReplyKey.value)
+            assertIs<Outcome.Ok<Unit>>(world.send("Which Excel formula adds up column B?"))
+            assertEquals("demo-1", world.ownReplyKey.value)
+            assertEquals(DemoStage.Ready, world.stage.value)
+            assertNull(world.request.value)
+            assertIs<Outcome.Ok<Unit>>(world.runSample())
+            assertNull(world.ownReplyKey.value)
+            assertEquals(DemoStage.Review, world.stage.value)
+            assertNotNull(world.request.value)
+            assertEquals(
+                listOf("you: Make it friendlier.", "agent: I'll change it."),
+                world.said().takeLast(2),
+            )
+        }
+
+    @Test
+    fun `B-623 runSample refuses once review or finish has started and reset clears ownReplyKey`() = runTest {
+        val world = world(StandardTestDispatcher(testScheduler))
+        world.send("Which Excel formula adds up column B?")
+        assertEquals("demo-1", world.ownReplyKey.value)
+        world.reset()
+        assertNull(world.ownReplyKey.value)
+        assertIs<Outcome.Ok<Unit>>(world.runSample())
+        assertIs<Outcome.Failed>(world.runSample())
+        world.decide(true)
+        assertIs<Outcome.Failed>(world.runSample())
+    }
 }
