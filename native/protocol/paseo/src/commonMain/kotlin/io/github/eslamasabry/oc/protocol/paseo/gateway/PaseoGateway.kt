@@ -335,10 +335,17 @@ public class PaseoGateway(
 
     /** Whether a conversation that runs in [directory] belongs to the folder [scope] this gateway is pinned to. */
     internal fun holds(scope: String?, directory: String?): Boolean =
-        directory == scope ||
+        sameFolder(directory, scope) ||
             (includeSubfolders &&
-                (under(scope, directory) || directory == subfolderRoot || under(subfolderRoot, directory) ||
+                (under(scope, directory) || sameFolder(directory, subfolderRoot) || under(subfolderRoot, directory) ||
                     heldRoots.any { under(it, directory) }))
+
+    /**
+     * B-399: one folder, written with or without a closing slash (a daemon may answer `/work/app/` for the `/work/app`
+     * it was given). Before, such an agent read as another folder's and its follow-up was refused as stale.
+     */
+    private fun sameFolder(a: String?, b: String?): Boolean =
+        a == b || (a != null && b != null && a.trimEnd('/').isNotEmpty() && a.trimEnd('/') == b.trimEnd('/'))
 
     private fun under(scope: String?, directory: String?): Boolean =
         scope != null &&
@@ -431,6 +438,14 @@ public class PaseoGateway(
     internal val heldEvents = ArrayList<PaseoPush>()
     internal var providerEntries: List<JsonObject>? = null
     internal var providerRevision = 0
+
+    /**
+     * B-399: each runtime's last answer that listed its models, kept for naming only ([canonicalModelId]). The list
+     * itself ([providerEntries]) is dropped by every refresh push and every reconnect, and until it was read again an
+     * agent read back under the daemon's long model id, which a follow-up's model check refused as a stale connection.
+     * Forgotten with the folder ([applyLocation]) and the gateway ([close]).
+     */
+    internal val listedModels = HashMap<String, JsonObject>()
 
     /** When each agent's check was last asked for again after a refusal ([recheckProvider]). */
     private val providerRechecks = HashMap<String, Long>()
@@ -679,6 +694,7 @@ public class PaseoGateway(
         appIds.clear()
         heldEvents.clear()
         providerEntries = null
+        listedModels.clear()
         recoveryDegraded = false
         requests.clear()
         subagentBook.clear()
@@ -1733,21 +1749,37 @@ public class PaseoGateway(
             keepDraft(id)
             return@call
         }
+        // B-399: the model list names what the agent reads back as; a gateway that has not read it yet reads it first.
+        val unnamed = providerEntries == null && model.providerId !in listedModels
+        if (unnamed) providerSnapshot(waitingFor = model.providerId)
         if (id !in agents) fetchAgent(id)
         val agent = agents[id]
         if (agent == null || model.providerId != agent.str("provider"))
             paseoFail(PaseoFailureKind.Unavailable)
+        setLiveModel(id, agent, model, variant)
+    }
+
+    /**
+     * The model and thinking level of an agent the daemon holds. B-399: "default" is the app's own word for "the
+     * runtime's model" (a runtime that lists none): it is never sent as a model id, as when the agent is created and
+     * when a prompt carries it ([applySelection]). Before, a follow-up sent it and read another id back, which was
+     * refused as a stale connection.
+     */
+    private suspend fun setLiveModel(id: String, agent: JsonObject, model: ModelRef, variant: String) {
         val scope = scopeDir
         val epoch = locationEpoch
-        transport.request(
-            "set_agent_model_request",
-            jsonOf("agentId" to real(id), "modelId" to model.modelId),
-            mutation = true,
-        )
-        checkLocation(scope, epoch)
-        // A successful model change is kept even if the thinking request that follows fails.
-        var updated = agent.with("model", JsonPrimitive(model.modelId))
-        remember(updated)
+        var updated = agent
+        if (model.modelId.isNotEmpty() && model.modelId != DEFAULT_MODEL) {
+            transport.request(
+                "set_agent_model_request",
+                jsonOf("agentId" to real(id), "modelId" to model.modelId),
+                mutation = true,
+            )
+            checkLocation(scope, epoch)
+            // A successful model change is kept even if the thinking request that follows fails.
+            updated = agent.with("model", JsonPrimitive(model.modelId))
+            remember(updated)
+        }
         updated = setThinking(id, updated, variant)
         checkLocation(scope, epoch)
         remember(updated)
@@ -1935,6 +1967,10 @@ public class PaseoGateway(
                 paseoReply("get_providers_snapshot_response") {
                     paseoList(result["entries"], max = 256).mapNotNull { it.objectOrNull() }
                 }
+            for (entry in entries) {
+                val listed = entry.str("provider")?.takeIf { !entry.arr("models").isNullOrEmpty() } ?: continue
+                listedModels[listed] = entry
+            }
             if (entries.none { it.str("status") == "loading" }) {
                 if (revision == providerRevision) {
                     providerEntries = entries
@@ -2673,6 +2709,7 @@ public class PaseoGateway(
             awaitingTurn.clear()
             turnActive.clear()
             providerEntries = null
+            listedModels.clear()
             localWork?.invalidate()
             live.clear()
             realIds.clear()

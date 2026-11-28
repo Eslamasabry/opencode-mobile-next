@@ -7,6 +7,7 @@ import io.github.eslamasabry.oc.core.model.AgentFeature
 import io.github.eslamasabry.oc.core.model.AgentFeatureKind
 import io.github.eslamasabry.oc.core.model.AgentFeatureOption
 import io.github.eslamasabry.oc.protocol.paseo.PaseoFailureKind
+import io.github.eslamasabry.oc.protocol.paseo.arr
 import io.github.eslamasabry.oc.protocol.paseo.arrayOrNull
 import io.github.eslamasabry.oc.protocol.paseo.boolOrNull
 import io.github.eslamasabry.oc.protocol.paseo.jsonOf
@@ -78,11 +79,13 @@ internal fun parseAgentFeatures(raw: JsonElement?): List<AgentFeature> {
 
 /**
  * The model list's own id for [model] of [provider] (an alias or `<provider>/<id>` names it); null
- * when unknown.
+ * when unknown. While the list is away (dropped by a refresh push or a reconnect, not read again yet) the runtime's
+ * last listed models still name it (B-399, [PaseoGateway.listedModels]).
  */
 internal fun PaseoGateway.canonicalModelId(provider: String?, model: String?): String? {
     if (provider == null || model == null) return null
-    for (entry in providerEntries.orEmpty()) {
+    val listed = providerEntries?.filter { it.str("provider") == provider && !it.arr("models").isNullOrEmpty() }
+    for (entry in listed?.takeIf { it.isNotEmpty() } ?: listOfNotNull(listedModels[provider])) {
         if (entry.str("provider") != provider) continue
         val models = entry["models"].arrayOrNull() ?: return null
         val items = models.mapNotNull { it.objectOrNull() }

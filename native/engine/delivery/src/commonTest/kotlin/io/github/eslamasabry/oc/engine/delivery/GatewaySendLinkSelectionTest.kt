@@ -162,4 +162,30 @@ class GatewaySendLinkSelectionTest {
         assertEquals(Failure.Busy().failed(), link.applySelection(S1, null, "build"))
         assertEquals(1, g.agentMutations.size)
     }
+
+    @Test
+    fun `B-399-1e default model sentinel accepts known default readback and fails closed on mismatch`() = runTest {
+        val g = Server()
+        val link = GatewaySendLink(P1, "http://h", g)
+        val defaultSel = sel(provider = "antigravity", id = "default", variant = null)
+
+        g.readback(SessionSelection(model = null, variant = "", agent = null, modelKnown = true, agentKnown = true))
+        assertEquals(Outcome.Ok(Unit), link.applySelection(S1, defaultSel, null))
+
+        g.readback(known(ModelRef("antigravity", "gemini-3.8-flash-high"), ""))
+        assertEquals(Outcome.Ok(Unit), link.applySelection(S1, defaultSel, null))
+
+        // Unknown model, different runtime, or different effort must still fail closed as StaleScope.
+        g.readback(SessionSelection(model = null, variant = "", agent = null, modelKnown = false, agentKnown = true))
+        val unknown = assertIs<Outcome.Failed>(link.applySelection(S1, defaultSel, null))
+        assertEquals(RefusalReason.StaleScope, assertIs<Failure.Refused>(unknown.failure).reason)
+
+        g.readback(known(ModelRef("other", "m"), ""))
+        val wrongRuntime = assertIs<Outcome.Failed>(link.applySelection(S1, defaultSel, null))
+        assertEquals(RefusalReason.StaleScope, assertIs<Failure.Refused>(wrongRuntime.failure).reason)
+
+        g.readback(SessionSelection(model = null, variant = "high", agent = null, modelKnown = true, agentKnown = true))
+        val wrongEffort = assertIs<Outcome.Failed>(link.applySelection(S1, defaultSel, null))
+        assertEquals(RefusalReason.StaleScope, assertIs<Failure.Refused>(wrongEffort.failure).reason)
+    }
 }

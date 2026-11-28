@@ -2621,6 +2621,11 @@ internal class GraphChatWorld @Suppress("LongParameterList") constructor(
         baselines[localId] =
             expected?.handle?.messageIds()?.mapTo(HashSet()) { "prompt:$it" }.orEmpty()
         // A new attempt finds its own row again (a new client id, a new baseline): the old one no longer stands for it.
+        // B-399: nor does the old attempt's delivery. Its "not sent" result stays in the engine's list, and the
+        // delivery watch (it runs at once on the phone's main dispatcher, when the new attempt's bubble appears) read
+        // it again for this bubble before the new attempt's id was known: Try again flipped straight back to "not
+        // sent" and stayed there, also when the retry was delivered.
+        deliveryIds.remove(localId)
         setPending(localId) { it.copy(state = PendingState.Sending, failure = null, serverRowKey = null) }
         // Try again sends the same words, files and model; the live composer is irrelevant.
         val original = sentSnapshots[localId] ?: SentSnapshot(persistentListOf(), null)

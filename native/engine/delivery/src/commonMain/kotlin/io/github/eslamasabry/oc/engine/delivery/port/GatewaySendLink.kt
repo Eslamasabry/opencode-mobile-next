@@ -17,9 +17,11 @@ import io.github.eslamasabry.oc.core.domain.SessionSelectionGateway
 import io.github.eslamasabry.oc.core.domain.capabilities.ServerCapabilities
 import io.github.eslamasabry.oc.core.domain.facet
 import io.github.eslamasabry.oc.core.model.MidTurnPrompt
+import io.github.eslamasabry.oc.core.model.ModelRef
 import io.github.eslamasabry.oc.core.model.ModelSelection
 import io.github.eslamasabry.oc.core.model.OutgoingPrompt
 import io.github.eslamasabry.oc.core.model.PromptAdmission
+import io.github.eslamasabry.oc.core.model.SessionSelection
 import io.github.eslamasabry.oc.core.model.StopResult
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.Role
@@ -124,25 +126,10 @@ public class GatewaySendLink(
             when (val readback = gateway.session(session)) {
                 is Outcome.Failed -> return readback
                 is Outcome.Ok -> {
-                    val chosen = readback.value.selection
-                    val matches =
-                        chosen != null &&
-                            chosen.modelKnown &&
-                            chosen.model?.providerId == model.model.providerId &&
-                            chosen.model?.modelId == model.model.modelId &&
-                            chosen.variant.trim().let { if (it == "default") "" else it } == variant
-                    if (!matches) {
-                        // SEND-STALE: this refusal is about the model, not the connection: its Details say which
-                        // part read back differently (fixed words, never the ids), so a report can tell it apart.
-                        val parts =
-                            listOfNotNull(
-                                "unknown".takeIf { chosen == null || !chosen.modelKnown },
-                                "runtime".takeIf { chosen?.model?.providerId != model.model.providerId },
-                                "model".takeIf { chosen?.model?.modelId != model.model.modelId },
-                                "effort".takeIf {
-                                    chosen?.variant?.trim()?.let { v -> if (v == "default") "" else v } != variant
-                                },
-                            )
+                    // SEND-STALE: this refusal is about the model, not the connection: its Details say which
+                    // part read back differently (fixed words, never the ids), so a report can tell it apart.
+                    val parts = readbackDifferences(readback.value.selection, model.model, variant)
+                    if (parts.isNotEmpty()) {
                         val why = "model read back differently: " + parts.joinToString()
                         log.w { "send refused as stale: $why" }
                         return Failure.Refused(RefusalReason.StaleScope, SELECTION_DETAILS.details(why)).failed()
@@ -151,6 +138,26 @@ public class GatewaySendLink(
             }
         }
         return Unit.ok()
+    }
+
+    /**
+     * The parts of the session's [chosen] selection that differ from the requested [model] and normalized [variant], in
+     * fixed words; empty when the server holds the choice. B-399: [RUNTIME_MODEL] asks for the runtime's own model (a
+     * runtime that lists none): the server then holds no model, or names the one the runtime picked, so only the
+     * runtime and the effort are compared. Before, only a model the server itself called "default" matched, and the
+     * follow-up was refused as a changed connection.
+     */
+    private fun readbackDifferences(chosen: SessionSelection?, model: ModelRef, variant: String): List<String> {
+        val held = chosen?.model
+        val runtimeOwn = model.modelId == RUNTIME_MODEL
+        val otherRuntime = if (runtimeOwn && held == null) false else held?.providerId != model.providerId
+        val effort = chosen?.variant?.trim()?.let { if (it == "default") "" else it }
+        return listOfNotNull(
+            "unknown".takeIf { chosen?.modelKnown != true },
+            "runtime".takeIf { otherRuntime },
+            "model".takeIf { !runtimeOwn && held?.modelId != model.modelId },
+            "effort".takeIf { effort != variant },
+        )
     }
 
     override fun newClientMessageId(): MessageId? =
@@ -330,6 +337,9 @@ public class GatewaySendLink(
 
         /** The real server answers `user` (plan 04 N4-D13); Flutter's check expected `prompt`. */
         public val PROMPT_TYPES: Set<String> = setOf("user", "prompt")
+
+        /** The app's word for "the runtime's own model", the only choice of a runtime that lists no models. */
+        private const val RUNTIME_MODEL: String = "default"
 
         /** Only fixed words pass through it (the readback refusal's Details). */
         private val SELECTION_DETAILS = io.github.eslamasabry.oc.core.security.Redactor()
