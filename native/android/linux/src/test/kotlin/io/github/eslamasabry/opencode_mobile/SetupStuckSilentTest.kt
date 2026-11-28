@@ -25,6 +25,10 @@ class SetupStuckSilentTest {
             "BuiltinLinux must sync resolv.conf from the phone's active network DNS",
             source.contains("BuiltinDnsConfig.sync("),
         )
+        assertFalse(
+            "Best-effort DNS sync on guest start must catch Exception, not only IOException",
+            source.contains("BuiltinDnsConfig.sync(context, rootfs)\n        } catch (error: java.io.IOException)"),
+        )
     }
 
     @Test

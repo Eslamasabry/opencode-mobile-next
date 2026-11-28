@@ -65,7 +65,7 @@ class SetupStepSilenceTest {
     }
 
     @Test
-    fun `B-SETUP-023 silent step in normal mode automatically retries once in compatible mode and persists marker`() {
+    fun `B-SETUP-023 silent step in normal mode retries once in compatible mode and clears temp marker on finish`() {
         val hooks =
             FakeHooks { compatible ->
                 if (!compatible) SetupCompatFallback.StepAttempt("stalled", exitCode = null, stalled = true)
@@ -79,7 +79,7 @@ class SetupStepSilenceTest {
         assertTrue(outcome.retriedInCompat)
         assertEquals(listOf(false, true), hooks.modes)
         assertTrue(hooks.persisted)
-        assertFalse(hooks.cleared)
+        assertTrue(hooks.cleared)
         assertEquals(1, hooks.retryReasons.size)
         assertTrue(hooks.retryReasons.single().contains("compatibility mode"))
     }
@@ -123,7 +123,7 @@ class SetupStepSilenceTest {
         assertTrue(outcome.retriedInCompat)
         assertEquals(listOf(false, true), hooks.modes)
         assertTrue(hooks.persisted)
-        assertFalse(hooks.cleared)
+        assertTrue(hooks.cleared)
     }
 
     @Test
@@ -405,11 +405,12 @@ class SetupStepSilenceTest {
         assertEquals("Segmentation fault", failure)
         assertEquals("compat fallback must run at most once across outer retries", 1, compatRetries)
         assertEquals(1, interruptRetries)
-        assertEquals(listOf(false, true, false), modes)
+        assertEquals(listOf(false, true, true), modes)
+        assertFalse("temporary compat marker must be cleared when step finishes failing", serverCompat)
     }
 
     @Test
-    fun `B-SETUP-039 interrupt exception during compat attempt blocks a second compat fallback cycle`() {
+    fun `B-SETUP-039 interrupt exception during compat attempt keeps compat on retry and clears temp marker`() {
         var serverCompat = false
         var compatRetries = 0
         val modes = mutableListOf<Boolean>()
@@ -439,11 +440,66 @@ class SetupStepSilenceTest {
                 currentCompat = { serverCompat },
                 hooks = hooks,
                 logDetail = { logged += it },
-                onInterruptRetry = { serverCompat = false },
+                onInterruptRetry = { logged += "retry" },
             )
         assertTrue(SetupCompatFallback.isStalled(failure))
         assertEquals(1, compatRetries)
-        assertEquals(listOf(false, true, false), modes)
+        assertEquals(listOf(false, true, true), modes)
+        assertFalse("temporary compat marker must be cleared after final failure", serverCompat)
+    }
+
+    @Test
+    fun `B-SETUP-040 temporary compat marker clears after step succeeds while pre-existing marker stays`() {
+        var serverCompat = false
+        val modes = mutableListOf<Boolean>()
+        val logged = mutableListOf<String>()
+        val hooks =
+            SetupCompatFallback.hooks(
+                isCancelled = { false },
+                persistCompat = { serverCompat = true },
+                clearCompat = { serverCompat = false },
+                onCompatRetry = { logged += it },
+                runOnce = { compat ->
+                    modes += compat
+                    when (modes.size) {
+                        1 -> SetupCompatFallback.StepAttempt("Segmentation fault", SetupStepRetry.SEGFAULT_EXIT, false)
+                        2 ->
+                            SetupCompatFallback.StepAttempt("proot info: vpid 1: terminated with signal 15", 143, false)
+                        else -> SetupCompatFallback.StepAttempt(null, exitCode = 0, stalled = false)
+                    }
+                },
+            )
+        val failure =
+            SetupCompatFallback.runRetrying(
+                stepId = "node",
+                currentCompat = { serverCompat },
+                hooks = hooks,
+                logDetail = { logged += it },
+                onInterruptRetry = { logged += "retry" },
+            )
+        assertNull(failure)
+        assertEquals(listOf(false, true, true), modes)
+        assertFalse("temporary compat marker must be cleared once step finishes", serverCompat)
+
+        var persistedCompat = true
+        val preExistingHooks =
+            SetupCompatFallback.hooks(
+                isCancelled = { false },
+                persistCompat = { persistedCompat = true },
+                clearCompat = { persistedCompat = false },
+                onCompatRetry = { logged += it },
+                runOnce = { SetupCompatFallback.StepAttempt(null, exitCode = 0, stalled = false) },
+            )
+        assertNull(
+            SetupCompatFallback.runRetrying(
+                stepId = "node",
+                currentCompat = { persistedCompat },
+                hooks = preExistingHooks,
+                logDetail = { logged += it },
+                onInterruptRetry = { logged += "retry" },
+            ),
+        )
+        assertTrue("pre-existing compat marker must not be cleared", persistedCompat)
     }
 
     @Test
