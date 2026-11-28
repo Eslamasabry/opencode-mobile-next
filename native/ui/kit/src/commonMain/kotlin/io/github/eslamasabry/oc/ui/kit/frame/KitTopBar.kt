@@ -465,7 +465,6 @@ public fun KitTopBar(
                 actions = if (barFit.tight) actionRow else stepped,
             )
         } else {
-        val inlineSubtitle = under != null && scope == null
         Row(
             Modifier.fillMaxWidth().heightIn(min = (if (hasLine) tokens.minTarget else tokens.rowHeightOne).dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -473,27 +472,14 @@ public fun KitTopBar(
         ) {
             // No exit: the title's words start on the gutter, like the page's first row (Flutter kit_top_bar.dart,
             // "the title starts on the gutter"); the bar's 4 dp and the title row's 8 dp leave 4 dp to add.
-            if (inlineSubtitle) {
-                Column(
-                    Modifier.weight(1f).padding(start = titleStart),
-                    verticalArrangement = Arrangement.spacedBy(TITLE_LINE_GAP),
-                ) {
-                    Box(Modifier.zIndex(1f).clipToBounds().endUnderText(titleLine, 0.dp)) { title() }
-                    under()
-                }
-            } else {
-                Row(
-                    Modifier.weight(1f).padding(start = titleStart),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    title()
-                }
+            Row(Modifier.weight(1f).padding(start = titleStart), verticalAlignment = Alignment.CenterVertically) {
+                title()
             }
             actionRow()
             if (exit == KitTopBarExit.Close && onExit != null)
                 ExitButton(ExitGlyph.Close, exitLabel.orEmpty(), onExit, 1f)
         }
-        if (under != null && !inlineSubtitle) {
+        if (under != null) {
             // Under the title's first letter; the scope's own words keep their 8 dp inset like the title's.
             val lead = titleStart + if (scope != null) Space.S1.dp else 0.dp
             // The line's words keep their 48 dp targets, but the targets overlap the bar's empty edges by 8 dp so the

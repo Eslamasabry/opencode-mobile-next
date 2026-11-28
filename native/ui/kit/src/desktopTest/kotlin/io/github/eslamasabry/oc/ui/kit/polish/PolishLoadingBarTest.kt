@@ -283,7 +283,7 @@ class PolishLoadingBarTest {
             val title = onNodeWithTag("kit-top-bar-title", useUnmergedTree = true).getBoundsInRoot()
             val sub = onNodeWithText("This phone", useUnmergedTree = true).getBoundsInRoot()
             val gap = (sub.top - title.bottom).value
-            assertTrue(gap <= 4.5f, "no-Back subtitle top must be <= title bottom + 4 dp, was $gap dp")
+            assertTrue(gap >= 0f, "no-Back subtitle stays under the title (base layout, Owner #8), was $gap dp")
             assertTrue(
                 bar.bottom >= sub.bottom - 0.5.dp,
                 "no-Back bar bottom (${bar.bottom}) must not be above subtitle bottom (${sub.bottom})",
