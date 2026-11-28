@@ -98,7 +98,25 @@ public class UpdatesViewModel(
         appScope.launch { updates.setEnabled(on) }
     }
 
-    override fun onNoteLink(action: NoteLinkAction) = Unit
+    override fun onNoteLink(action: NoteLinkAction) {
+        when (action) {
+            is NoteLinkAction.Open ->
+                links.inspectNoteLink(action.url)?.let { prompt ->
+                    localLinks.update { it.copy(prompt = prompt, noBrowser = false) }
+                }
+            NoteLinkAction.Confirm ->
+                localLinks.value.prompt?.let { prompt ->
+                    localLinks.update { it.copy(prompt = null) }
+                    viewModelScope.launch {
+                        if (links.openNoteLink(prompt.url) is Outcome.Failed) {
+                            localLinks.update { it.copy(noBrowser = true) }
+                        }
+                    }
+                }
+            NoteLinkAction.DismissPrompt -> localLinks.update { it.copy(prompt = null) }
+            NoteLinkAction.DismissNoBrowser -> localLinks.update { it.copy(noBrowser = false) }
+        }
+    }
 
     override fun onCleared() {
         updates.setPageOpen(false)

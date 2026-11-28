@@ -144,7 +144,15 @@ public fun UpdatesScreen(
     ) {
         UpdatesPageBody(state, actions, gutter, showArrival, dismissArrival)
         KitConfirm(
-            spec = null,
+            spec =
+                state.linkPrompt?.let {
+                    KitConfirmSpec(
+                        title = stringResource(Res.string.chatFeelOpenLinkTitle),
+                        confirmLabel = stringResource(Res.string.chatFeelOpenLinkAction),
+                        kind = KitConfirmKind.Neutral,
+                        body = stringResource(Res.string.chatFeelOpenLinkBody, it.host),
+                    )
+                },
             onConfirm = { actions.onNoteLink(NoteLinkAction.Confirm) },
             onCancel = { actions.onNoteLink(NoteLinkAction.DismissPrompt) },
         )
@@ -296,7 +304,7 @@ private fun UpdatesWhatsNew(notes: String, actions: UpdatesActions, gutter: Dp) 
         val blocks = remember(notes) { KitMdSource.blocks("updates-notes", notes, streaming = false) }
         val links =
             remember(actions) {
-                KitMarkdownActions(onLink = {})
+                KitMarkdownActions(onLink = { actions.onNoteLink(NoteLinkAction.Open(it)) })
             }
         KitMarkdown(
             blocks,
