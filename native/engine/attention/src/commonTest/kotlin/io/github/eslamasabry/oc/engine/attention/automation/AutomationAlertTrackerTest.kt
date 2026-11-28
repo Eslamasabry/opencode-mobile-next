@@ -137,6 +137,67 @@ class AutomationAlertTrackerTest {
         assertEquals(3, paused.coveredRuns)
     }
 
+    private fun failedAt(run: Int) =
+        automation(id = "aut_1", runCount = run, lastRunAtMs = run * 1_000L, lastOutcome = AutomationOutcome.Failed)
+
+    private fun prompt(run: Int) = MessageAutomation(id = "aut_1", name = "Nightly check", run = run)
+
+    @Test
+    fun `B-620 a failed run the read told first is not told again by its live end`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 4)))
+        tracker.onAutomationMessage("ses_1", prompt(run = 5))
+
+        // The read sees run 5 failed before the stream says the run ended.
+        val polled = tracker.observeAutomations(listOf(failedAt(run = 5)))
+        assertEquals(AutomationAlertReason.Failed, polled.post.single().reason)
+        assertEquals(1, polled.post.single().coveredRuns)
+        assertTrue(tracker.observeAutomations(listOf(failedAt(run = 5))).post.isEmpty(), "the same read again")
+
+        val live = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertTrue(live.post.isEmpty(), "run 5 was already told by the read: one alert for one run")
+
+        // The next run is another run: it tells, and the group covers two runs, not three.
+        tracker.onAutomationMessage("ses_1", prompt(run = 6))
+        val next = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertEquals(2, next.post.single().coveredRuns)
+    }
+
+    @Test
+    fun `B-620 a run the stream told never hides the next run's failure in a read across both`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 3)))
+
+        // The stream tells run 4; the next read is already at run 5, which failed.
+        tracker.onAutomationMessage("ses_1", prompt(run = 4))
+        val four = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertEquals(1, four.post.single().coveredRuns)
+
+        val five = tracker.observeAutomations(listOf(failedAt(run = 5)))
+        assertEquals(AutomationAlertReason.Failed, five.post.single().reason)
+        assertEquals(2, five.post.single().coveredRuns)
+        assertTrue(tracker.observeAutomations(listOf(failedAt(run = 5))).post.isEmpty(), "run 5 is told once")
+    }
+
+    @Test
+    fun `B-620 an ended automation run stays the automation's and its second end tells nothing`() {
+        val tracker = AutomationAlertTracker(profileId = "p1")
+        tracker.setConnected(true)
+        tracker.observeAutomations(listOf(automation(id = "aut_1", runCount = 3)))
+
+        tracker.onAutomationMessage("ses_1", prompt(run = 4))
+        val failed = tracker.onSessionRunEnded("ses_1", failed = true, interrupted = false, replyExcerpt = "")
+        assertEquals(AutomationAlertReason.Failed, failed.post.single().reason)
+        // The chat's own stopped or finished alert must still stand down for this run.
+        assertTrue(tracker.isAutomationSession("ses_1"), "the ended run is still the automation's run")
+
+        // The idle that follows a failure is the same run ending again.
+        val idle = tracker.onSessionRunEnded("ses_1", failed = false, interrupted = false, replyExcerpt = "Old words")
+        assertTrue(idle.post.isEmpty(), "one run, one alert")
+    }
+
     @Test
     fun `B-620 noisy automation groups by automation and caps visible slots while counting all runs`() {
         val tracker = AutomationAlertTracker(profileId = "p1", maxVisiblePerAutomation = 3)

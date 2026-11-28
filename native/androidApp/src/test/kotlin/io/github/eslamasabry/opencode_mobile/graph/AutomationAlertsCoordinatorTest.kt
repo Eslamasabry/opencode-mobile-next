@@ -153,6 +153,74 @@ class AutomationAlertsCoordinatorTest {
         assertEquals(Failure.Refused(RefusalReason.StaleScope), replay.failure)
     }
 
+    private fun failed(id: String, run: Int) = sample(id = id, runCount = run, outcome = AutomationOutcome.Failed)
+
+    private fun stale(outcome: Outcome<Unit>) {
+        assertEquals(Failure.Refused(RefusalReason.StaleScope), assertIs<Outcome.Failed>(outcome).failure)
+    }
+
+    @Test
+    fun `B-620 a quiet automation's Pause stays good while a noisy one replaces its own rows`() = runTest {
+        val shade = FakeShade()
+        val server = MutableServerAutomations(sample(id = "aut_1", runCount = 0), sample(id = "aut_2", runCount = 0))
+        val coordinator = AutomationAlertsCoordinator(
+            shade = shade,
+            source = server,
+            serverName = { "Home server" },
+            alertFacts = { backgroundFacts },
+            redact = { it },
+        )
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+
+        server.items["aut_2"] = failed("aut_2", run = 1)
+        coordinator.pollAutomations(profile)
+        val quiet = shade.shown.single().first
+
+        // The noisy automation replaces its three rows 300 times; the quiet one's row is still in the shade.
+        for (run in 1..300) {
+            server.items["aut_1"] = failed("aut_1", run)
+            coordinator.pollAutomations(profile)
+        }
+        assertEquals(301, shade.shown.size)
+
+        assertIs<Outcome.Ok<Unit>>(coordinator.pauseFromShade(profile, "aut_2", quiet.actionToken))
+        assertEquals(listOf(profile to "aut_2"), server.pauseRequests)
+    }
+
+    @Test
+    fun `B-620 a replaced row's Pause and a dismissed row's Pause are retired`() = runTest {
+        val shade = FakeShade()
+        val server = MutableServerAutomations(sample(id = "aut_1", runCount = 0))
+        val coordinator = AutomationAlertsCoordinator(
+            shade = shade,
+            source = server,
+            serverName = { "Home server" },
+            alertFacts = { backgroundFacts },
+            redact = { it },
+        )
+        coordinator.setConnected(profile, true)
+        coordinator.pollAutomations(profile) // baseline
+        for (run in 1..4) {
+            server.items["aut_1"] = failed("aut_1", run)
+            coordinator.pollAutomations(profile)
+        }
+        val rows = shade.shown.map { it.first }
+        assertEquals(rows[0].key, rows[3].key, "the fourth alert replaces the first row")
+
+        // The first row is gone from the shade: its token pauses nothing.
+        stale(coordinator.pauseFromShade(profile, "aut_1", rows[0].actionToken))
+        assertTrue(server.pauseRequests.isEmpty())
+
+        // The row that replaced it is on screen: its Pause works, and clears the automation's group.
+        assertIs<Outcome.Ok<Unit>>(coordinator.pauseFromShade(profile, "aut_1", rows[3].actionToken))
+        assertEquals(listOf(profile to "aut_1"), server.pauseRequests)
+
+        // The group's other rows went with it: their tokens are retired too.
+        stale(coordinator.pauseFromShade(profile, "aut_1", rows[2].actionToken))
+        assertEquals(1, server.pauseRequests.size)
+    }
+
     @Test
     fun `B-620 offline connection posts nothing and failed pause does not pretend paused`() = runTest {
         val shade = FakeShade()
