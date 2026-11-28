@@ -9,6 +9,9 @@ import io.github.eslamasabry.oc.engine.attention.notify.NotificationText
 /** The id of a run whose prompt named no automation id: it cannot be paused from the shade. */
 private const val UNNAMED_PREFIX: String = "name:"
 
+/** How many told run numbers one automation keeps: far more than the stream and a reading can be apart. */
+private const val TOLD_KEPT: Int = 32
+
 /** What an automation's alert says (B-620): a message to read, a failed run, or a pause. */
 public enum class AutomationAlertReason { Message, Failed, Paused }
 
@@ -51,14 +54,35 @@ public data class AutomationAlertDiff(
 }
 
 /**
+ * One run of an automation's prompt in a session (B-620), from the prompt until the session starts its next run.
+ * [promptId] is the prompt's message id and [prompt] its `metadata.automation`: a reply is this run's own only when
+ * it follows that prompt.
+ */
+public class AutomationRun internal constructor(
+    public val sessionId: String,
+    public val prompt: MessageAutomation,
+    public val promptId: String,
+    internal val automationId: String,
+    internal val stretch: Int,
+) {
+    internal var ended: Boolean = false
+    internal var told: Boolean = false
+
+    /** True when [automation] in message [messageId] is this run's own prompt, shown again. */
+    internal fun isPrompt(automation: MessageAutomation, messageId: String): Boolean =
+        (messageId.isNotBlank() && messageId == promptId) || (automation.run != null && automation == prompt)
+}
+
+/**
  * Folds what one server's automations do into alerts (B-620), pure and in memory. Quiet runs never notify. A run
  * whose reply has a readable first line, a failed run and a pause each notify once, grouped per automation: a group
  * holds at most `maxVisiblePerAutomation` visible alerts, later ones replace them in turn, and every one still
  * counts in [AutomationNotification.coveredRuns].
  *
- * The live stream and the polled rows are read as one story: a failure the stream told is not told again by the
- * next read. Nothing is told while the connection is down, and the first read after every (re)connect is a
- * baseline, so runs that happened while offline stay on the automation's row, never late alerts.
+ * The live stream and the polled rows are read as one story, run by run: a run either of them told is not told
+ * again by the other, in whichever order they arrive, and a told run never hides another run. Nothing is told while
+ * the connection is down, and the first read after every (re)connect is a baseline, so runs that happened while
+ * offline stay on the automation's row, never late alerts.
  */
 public class AutomationAlertTracker(
     profileId: String,
@@ -67,6 +91,9 @@ public class AutomationAlertTracker(
     private val rows = AutomationRows(profileId, maxVisiblePerAutomation.coerceAtLeast(1))
     private val runs: MutableMap<String, AutomationRun> = mutableMapOf()
     private var connected: Boolean = false
+
+    /** Counts the connected stretches: a run of an earlier stretch is never told in a later one. */
+    private var stretch: Int = 0
 
     /** True while the server's event stream is up; nothing is read or told otherwise. */
     public val isConnected: Boolean
@@ -80,31 +107,53 @@ public class AutomationAlertTracker(
         rows.observe(connected, automations)
 
     /**
-     * The live stream showed a run's prompt (`metadata.automation`): from here to the run's end the session is that
-     * automation's run. A prompt that names no automation id still notifies, but cannot offer to pause it.
+     * The live stream showed a run's prompt (`metadata.automation`) in message [messageId]: the session's run is that
+     * automation's run until the session starts another one. The same prompt shown again changes nothing. A prompt
+     * that names no automation id still notifies, but cannot offer to pause it.
      */
-    public fun onAutomationMessage(sessionId: String, automation: MessageAutomation) {
-        if (!connected) return
-        val id = automation.id?.takeIf { it.isNotBlank() }
-        runs[sessionId] = AutomationRun(id ?: UNNAMED_PREFIX + automation.name, automation.name, automation.run)
+    public fun onAutomationMessage(sessionId: String, automation: MessageAutomation, messageId: String = "") {
+        if (!connected || runs[sessionId]?.isPrompt(automation, messageId) == true) return
+        val id = automation.id?.takeIf { it.isNotBlank() } ?: (UNNAMED_PREFIX + automation.name)
+        runs[sessionId] = AutomationRun(sessionId, automation, messageId, id, stretch)
     }
 
-    /** True while [sessionId] runs an automation's prompt; the caller then reads its reply when the run ends. */
+    /**
+     * [sessionId] started a run. While the automation's run is going this is one of its steps; once that run ended it
+     * is the chat's next run (a person's own prompt), and the session is no longer the automation's.
+     */
+    public fun onRunStarted(sessionId: String) {
+        if (runs[sessionId]?.ended == true) runs.remove(sessionId)
+    }
+
+    /**
+     * True while [sessionId]'s run is an automation's, ended or not: that run tells through the automation's alert
+     * only, so the chat's own finished and stopped alerts stand down for it.
+     */
     public fun isAutomationSession(sessionId: String): Boolean = sessionId in runs
 
     /**
-     * A run ended in [sessionId]. A failure notifies once; a finished run notifies when its reply has a readable first
-     * line ([replyExcerpt], which is masked here); a run the person stopped stays quiet. Any other session changes
-     * nothing.
+     * The automation's run in [sessionId] ended: returns it, once, for [tellRun]. Null for any other session, for a
+     * second end of the same run (the idle that follows a failure), and while offline.
      */
-    public fun onSessionRunEnded(
-        sessionId: String,
+    public fun endRun(sessionId: String): AutomationRun? {
+        val run = runs[sessionId]?.takeIf { connected && !it.ended } ?: return null
+        run.ended = true
+        return run
+    }
+
+    /**
+     * Tells an ended [run], once. A failure notifies; a finished run notifies when its own reply has a readable first
+     * line ([replyExcerpt], which is masked here); a run the person stopped stays quiet. A run the read already told,
+     * or one of an earlier connected stretch, tells nothing.
+     */
+    public fun tellRun(
+        run: AutomationRun,
         failed: Boolean,
         interrupted: Boolean,
         replyExcerpt: String,
     ): AutomationAlertDiff {
-        val run = runs.remove(sessionId)
-        if (!connected || run == null) return AutomationAlertDiff()
+        if (!connected || run.stretch != stretch || run.told) return AutomationAlertDiff()
+        run.told = true
         val line = NotificationText.redact(replyExcerpt)
         val reason = when {
             failed -> AutomationAlertReason.Failed
@@ -112,9 +161,18 @@ public class AutomationAlertTracker(
             else -> AutomationAlertReason.Message
         }
         val detail = if (reason == AutomationAlertReason.Message) line else ""
-        val notification = reason?.let { rows.told(run, it, sessionId, detail) }
+        val notification = reason?.let { rows.told(run, it, detail) }
         return AutomationAlertDiff(post = listOfNotNull(notification))
     }
+
+    /** [endRun] and [tellRun] in one step, for a caller that already holds the run's own reply line. */
+    public fun onSessionRunEnded(
+        sessionId: String,
+        failed: Boolean,
+        interrupted: Boolean,
+        replyExcerpt: String,
+    ): AutomationAlertDiff =
+        endRun(sessionId)?.let { tellRun(it, failed, interrupted, replyExcerpt) } ?: AutomationAlertDiff()
 
     /**
      * The person paused the automation from the shade: its alerts go, and the server's echo of that pause tells
@@ -132,6 +190,7 @@ public class AutomationAlertTracker(
     public fun setConnected(value: Boolean) {
         if (connected == value) return
         connected = value
+        stretch++
         rows.rebase()
         runs.clear()
     }
@@ -165,19 +224,18 @@ private class AutomationRows(private val profileId: String, private val maxVisib
             else -> AutomationAlertDiff().also { prime(automations) }
         }
 
-    /** The live stream told this run: its alert is posted, and the next reading must not tell the run again. */
-    fun told(
-        run: AutomationRun,
-        reason: AutomationAlertReason,
-        session: String,
-        detail: String,
-    ): AutomationNotification {
+    /**
+     * The live stream tells this run: its alert, or null when a reading already told this very run. Either way the
+     * next reading must not tell the run again.
+     */
+    fun told(run: AutomationRun, reason: AutomationAlertReason, detail: String): AutomationNotification? {
+        val number = run.prompt.run
         val state =
             known.getOrPut(run.automationId) {
-                Known(run.automationId, AutomationStatus.Unknown, (run.number ?: 1) - 1)
+                Known(run.automationId, AutomationStatus.Unknown, (number ?: 1) - 1)
             }
-        if (run.number == null) state.toldLatest = true else state.told += run.number
-        return state.emit(run.name, reason, session, detail)
+        if (number == null) state.toldLatest = true else if (!state.told.add(number)) return null
+        return state.emit(run.prompt.name, reason, run.sessionId, detail)
     }
 
     /** The person paused the automation here: its alerts go, and the server's echo of that pause tells nothing. */
@@ -219,14 +277,17 @@ private class AutomationRows(private val profileId: String, private val maxVisib
 
     /**
      * The baseline: what is there now is history. A group still showing keeps its count, so a new alert replaces one
-     * of its alerts instead of adding a slot.
+     * of its alerts instead of adding a slot, and the runs already told stay told.
      */
     private fun prime(automations: List<ServerAutomation>) {
-        val counts = known.mapValues { it.value.alerts }
+        val before = known.toMap()
         known.clear()
         for (automation in automations) {
             val state = Known(automation.id, automation.status, automation.runCount)
-            state.alerts = counts[state.id] ?: 0
+            before[state.id]?.let { was ->
+                state.alerts = was.alerts
+                state.told += was.told
+            }
             known[state.id] = state
         }
         primed = true
@@ -243,33 +304,46 @@ private class AutomationRows(private val profileId: String, private val maxVisib
         /** The person paused it from the shade: the server's echo of that pause tells nothing. */
         var pausedHere: Boolean = false
 
-        /** Run numbers the live stream already told, which the next reading must not tell again. */
+        /**
+         * The numbers of the runs already told, by the live stream or by a reading: neither tells one of them again.
+         * Only the newest [TOLD_KEPT] numbers are kept.
+         */
         val told: MutableSet<Int> = mutableSetOf()
 
-        /** The stream told a run whose number it did not name: the next reading's newest run is that one. */
+        /** The stream told a run whose number it did not name: the next reading's one new run is that one. */
         var toldLatest: Boolean = false
 
         /** Its alert since it was last read, or none: a run that failed, a pause, nothing for a quiet run. */
         fun changed(automation: ServerAutomation): List<AutomationNotification> {
-            val ran = automation.runCount - runCount
-            val streamTold = toldLatest || ((runCount + 1)..automation.runCount).any { it in told }
-            told.removeAll { it <= automation.runCount }
-            if (ran > 0) toldLatest = false
-            val paused = automation.status == AutomationStatus.Paused && status != AutomationStatus.Paused
-            val outcome = automation.lastOutcome
-            val reason = when {
-                paused && !pausedHere -> AutomationAlertReason.Paused
-                streamTold || ran <= 0 -> null
-                outcome == AutomationOutcome.Failed -> AutomationAlertReason.Failed
-                outcome == AutomationOutcome.Disabled && !pausedHere -> AutomationAlertReason.Paused
-                else -> null
-            }
+            val reason = reasonOf(automation)
+            // A reading speaks of the newest run only: its failure is that run's one alert.
+            if (reason == AutomationAlertReason.Failed) told += automation.runCount
+            told.removeAll { it <= automation.runCount - TOLD_KEPT }
+            if (automation.runCount > runCount) toldLatest = false
             // The server's own word of the pause ends the echo a pause from the shade waits for.
             if (automation.status == AutomationStatus.Paused) pausedHere = false
             status = automation.status
             runCount = automation.runCount
             val session = automation.sessionId.orEmpty()
             return listOfNotNull(reason?.let { emit(automation.name, it, session, "") })
+        }
+
+        /**
+         * What this reading has to tell. Its outcome is the newest run's, so only that run being told already keeps
+         * it quiet: an earlier run the stream told never hides the failure of the run after it.
+         */
+        private fun reasonOf(automation: ServerAutomation): AutomationAlertReason? {
+            val ran = automation.runCount - runCount
+            val alreadyTold = automation.runCount in told || (toldLatest && ran == 1)
+            val paused = automation.status == AutomationStatus.Paused && status != AutomationStatus.Paused
+            val outcome = automation.lastOutcome
+            return when {
+                paused && !pausedHere -> AutomationAlertReason.Paused
+                alreadyTold || ran <= 0 -> null
+                outcome == AutomationOutcome.Failed -> AutomationAlertReason.Failed
+                outcome == AutomationOutcome.Disabled && !pausedHere -> AutomationAlertReason.Paused
+                else -> null
+            }
         }
 
         fun emit(
@@ -296,6 +370,3 @@ private class AutomationRows(private val profileId: String, private val maxVisib
         }
     }
 }
-
-/** A session running an automation's prompt, until the run ends. */
-private class AutomationRun(val automationId: String, val name: String, val number: Int?)

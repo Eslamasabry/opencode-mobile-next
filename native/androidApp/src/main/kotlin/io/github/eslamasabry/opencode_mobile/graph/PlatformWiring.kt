@@ -75,7 +75,6 @@ import io.github.eslamasabry.oc.core.data.kv.PrefValue
 import io.github.eslamasabry.oc.core.data.kv.string
 import io.github.eslamasabry.oc.core.data.scope.ProfileScope
 import io.github.eslamasabry.oc.core.domain.events.GatewayEvent
-import io.github.eslamasabry.oc.core.domain.events.RunOutcome
 import io.github.eslamasabry.oc.core.model.StreamStatus
 import io.github.eslamasabry.oc.core.model.transcript.MessageWithParts
 import io.github.eslamasabry.oc.core.model.transcript.PartType
@@ -129,6 +128,7 @@ import io.github.eslamasabry.oc.ui.routes.UpdatesRoute
 import java.util.UUID
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -370,6 +370,7 @@ class PlatformHub(
             serverName = { profile -> serverNames()[profile].orEmpty() },
             alertFacts = { currentFacts(visible.value > 0).copy(serverAlertsOn = choice(FINISHED_ON)) },
             redact = ::shadeText,
+            replies = { profile, session -> automationChatPage(ConversationRef(profile, SessionId(session))) },
         )
     }
     private val widgets = AndroidWidgetSurface(application, widgetPersistence)
@@ -871,10 +872,8 @@ class PlatformHub(
                         if (registry.live.value[id] !== graph) return@collect
                         when (val event = envelope.event) {
                             is GatewayEvent.MessageUpserted -> {
-                                // B-620: a server automation's prompt (metadata.automation) marks its session.
-                                event.message.automation?.let {
-                                    automationAlerts.onAutomationMessage(id, event.message.sessionId, it)
-                                }
+                                // B-620: a server automation's prompt (metadata.automation) begins its run.
+                                automationAlerts.onMessage(id, event.message)
                                 widgetDetailsChanged()
                             }
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.PartUpserted,
@@ -888,6 +887,8 @@ class PlatformHub(
                                 postedReasons.remove(ref)
                                 runEvents.remove(ref)
                                 shade.dismiss(AlertKeys.status(id.raw, event.sessionId.raw))
+                                // B-620: after an automation's run ended, the chat's next run is its own again.
+                                automationAlerts.onRunStarted(id, event.sessionId.raw)
                             }
                             is io.github.eslamasabry.oc.core.domain.events.GatewayEvent.RunEnded -> {
                                 val ref = ConversationRef(id, event.sessionId)
@@ -905,7 +906,11 @@ class PlatformHub(
                                 if (failed != null)
                                     endedReasons[ref] = StoppedAlertRules.stopReason(failed)
                                 alerts(runtime.snapshot.value, lastWaiting, visible.value > 0)
-                                automationRunEnded(id, event)
+                                // B-620: an automation's run is ended in this very step, before the next event
+                                // can start another run in its chat; only reading its reply waits.
+                                appScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                                    automationAlerts.onRunEnded(id, event.sessionId.raw, event.outcome)
+                                }
                             }
                             else -> Unit
                         }
@@ -956,46 +961,16 @@ class PlatformHub(
     }
 
     /**
-     * B-620: a run of an automation's session ended. A failure tells at once; a finished run tells with its reply's
-     * first line (read as the finished alert reads it, B-ANDR-048); a run the person stopped tells nothing.
+     * B-620: the newest messages of an automation's chat, oldest first, for reading what a finished run found. The
+     * page is wide enough to hold the run's own prompt; empty when the server is gone or does not answer in time.
      */
-    private fun automationRunEnded(profile: ProfileId, event: GatewayEvent.RunEnded) {
-        val session = event.sessionId.raw
-        if (!automationAlerts.isAutomationSession(profile, session)) return
-        when (event.outcome) {
-            is RunOutcome.Failed ->
-                automationAlerts.onSessionRunEnded(
-                    profile,
-                    session,
-                    failed = true,
-                    interrupted = false,
-                    replyExcerpt = "",
-                )
-            is RunOutcome.Interrupted ->
-                automationAlerts.onSessionRunEnded(
-                    profile,
-                    session,
-                    failed = false,
-                    interrupted = true,
-                    replyExcerpt = "",
-                )
-            else -> appScope.launch { toldWithExcerpt(profile, event.sessionId) }
-        }
-    }
-
-    private suspend fun toldWithExcerpt(profile: ProfileId, session: SessionId) {
-        val ref = ConversationRef(profile, session)
-        val line = withTimeoutOrNull(EXCERPT_WAIT_MS) { lastReplyLine(ref) }.orEmpty()
-        // A late excerpt may not tell a run that a newer one has started in the same chat.
-        if (ref !in eventStarted) {
-            automationAlerts.onSessionRunEnded(
-                profile,
-                session.raw,
-                failed = false,
-                interrupted = false,
-                replyExcerpt = line,
-            )
-        }
+    private suspend fun automationChatPage(ref: ConversationRef): List<MessageWithParts> {
+        val graph = registry.live.value[ref.profileId] ?: return emptyList()
+        val page =
+            withTimeoutOrNull(EXCERPT_WAIT_MS) {
+                graph.session.server.messagePage(ref.sessionId, limit = AUTOMATION_PAGE_MESSAGES)
+            }
+        return (page as? Outcome.Ok)?.value?.items.orEmpty()
     }
 
     private fun openAutomationAlert(tap: AutomationAlertTap) {
@@ -1650,6 +1625,9 @@ class PlatformHub(
             endedKinds[ref] = kind
             if (kind == AlertKind.Error) postedReasons[ref] = reason
             eventStarted.remove(ref)
+            // B-620: an automation's run tells through the automation's own alert, or stays quiet. The end is
+            // claimed above like any other, so nothing of it is replayed here later.
+            if (automationAlerts.isAutomationSession(item.profileId, item.sessionId.raw)) continue
             val alert = endedAlert(kind, item, names[item.profileId]).copy(reason = reason)
             // Restated in place only while the first alert is still showing: a person who dismissed it (or never
             // got it) is not shown it again.
@@ -1972,6 +1950,7 @@ class PlatformHub(
         const val FINISHED_ON = "oc.notify.finishedRuns"
         const val PINS_PREFIX = "oc.sessionPins."
         const val AUTOMATION_POLL_MS = 60_000L
+        const val AUTOMATION_PAGE_MESSAGES = 24
         val FILE_KEYS = listOf("filePath", "filepath", "file_path", "path", "file")
     }
 }
